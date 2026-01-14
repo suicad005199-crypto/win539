@@ -1,166 +1,120 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>今彩539必中!!!</title>
-    <style>
-        :root { 
-            --bg: #f2f2f7; --card: #ffffff; --primary: #1c1c1e; 
-            --gold: #ffcc00; --red: #ff3b30; --green: #34c759; --blue: #007aff;
-        }
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            background: var(--bg); margin: 0; padding: 20px; color: var(--primary);
-            -webkit-tap-highlight-color: transparent;
-        }
-        .container { max-width: 500px; margin: auto; background: var(--card); padding: 25px; border-radius: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        .main-title { text-align: center; font-size: 30px; font-weight: 800; margin-bottom: 5px; }
-        .exclamation { color: var(--red); }
-        .update-tag { text-align: center; font-size: 11px; color: #8e8e93; margin-bottom: 20px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>天天樂牌組分析</title>
+<style>
+    :root {
+        --primary-color: #1A2238; /* 藏藍色 */
+        --accent-color: #4A90E2;
+        --text-color: #FFFFFF;
+        --card-bg: #2A334D;
+    }
 
-        /* 歷史表格 */
-        .history-card { background: #f8f8fa; border-radius: 15px; padding: 12px; margin-bottom: 20px; }
-        .h-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .h-table td { padding: 8px 4px; border-bottom: 1px solid #eee; }
-        .hot-mark { background: var(--gold); font-weight: bold; border-radius: 4px; padding: 2px 5px; }
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--primary-color);
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
 
-        /* 主按鈕 */
-        .btn-generate { 
-            width: 100%; padding: 18px; background: var(--green); color: white; border: none; 
-            border-radius: 16px; font-size: 20px; font-weight: 700; margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3);
-        }
-        .btn-generate:active { transform: scale(0.97); opacity: 0.9; }
+    header {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 10px 0;
+        text-align: center;
+    }
 
-        /* 選號結果卡片 */
-        .set-card { 
-            background: var(--primary); color: white; border-radius: 18px; padding: 18px; 
-            margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px;
-            animation: fadeIn 0.4s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .card-top { display: flex; justify-content: space-between; align-items: center; }
-        .ball-row { display: flex; gap: 8px; }
-        .ball { 
-            width: 36px; height: 36px; background: white; color: black; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;
-        }
-        .conf-text { color: var(--gold); font-size: 18px; font-weight: 800; }
-        
-        /* 詳解按鈕 */
-        .btn-detail {
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
-            color: white; padding: 8px 0; border-radius: 10px; font-size: 13px; font-weight: 600;
-            text-align: center; width: 100%; cursor: pointer;
-        }
-        .btn-detail:active { background: rgba(255,255,255,0.3); }
+    .card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
 
-        /* iOS 彈窗 */
-        .modal-bg { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(5px);
-        }
-        .modal { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: white; width: 85%; max-width: 350px; border-radius: 20px; padding: 25px; 
-            z-index: 101; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-        .modal h3 { margin: 0 0 15px 0; font-size: 20px; color: var(--blue); border-bottom: 1.5px solid #eee; padding-bottom: 10px; }
-        .modal-body { font-size: 15px; line-height: 1.6; color: #333; }
-        .modal-close { 
-            margin-top: 20px; width: 100%; padding: 12px; background: var(--blue); 
-            color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px;
-        }
-    </style>
+    h2 {
+        margin-top: 0;
+        color: var(--accent-color);
+        font-size: 1.2rem;
+    }
+
+    ul {
+        padding-left: 20px;
+    }
+
+    li {
+        margin: 5px 0;
+    }
+
+    .button {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--text-color);
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 1rem;
+        margin-top: 10px;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .button:active {
+        background-color: #356bbd;
+    }
+</style>
 </head>
 <body>
+    <header>天天樂牌組分析</header>
 
-<div class="container">
-    <div class="main-title">今彩539必中<span class="exclamation">!!!</span></div>
-    <div class="update-tag">已同步台彩官網數據 (截至 2026/01/10)</div>
-    
-    <div class="history-card">
-        <table class="h-table"><tbody id="hContent"></tbody></table>
+    <div class="card">
+        <h2>統計與趨勢分析</h2>
+        <ul>
+            <li>熱牌：近期頻繁開出</li>
+            <li>冷牌：長期未開，可能補出</li>
+            <li>尾數分析：選擇高頻尾數或冷尾數</li>
+        </ul>
     </div>
 
-    <button class="btn-generate" onclick="generateSets()">生成必中組合 (AI 權重)</button>
-    <div id="resultsArea"></div>
-</div>
+    <div class="card">
+        <h2>拖牌策略</h2>
+        <ul>
+            <li>跟牌拖：前期號碼常共開</li>
+            <li>熱牌拖：近期熱號搭配</li>
+            <li>冷牌拖：長期未開號碼補充</li>
+            <li>連莊拖：連續開出的號碼再搭配</li>
+        </ul>
+    </div>
 
-<div class="modal-bg" id="modalBg" onclick="closeMdl()"></div>
-<div class="modal" id="mdl">
-    <h3>選號依據詳解</h3>
-    <div id="mdlBody" class="modal-body"></div>
-    <button class="modal-close" onclick="closeMdl()">我已掌握邏輯</button>
-</div>
+    <div class="card">
+        <h2>版路與走勢圖</h2>
+        <ul>
+            <li>觀察號碼位置與出現頻率</li>
+            <li>識別偏勢號碼</li>
+        </ul>
+    </div>
 
-<script>
-    // 官方真實開獎數據
-    const realHistory = [
-        { id: "115009", nums: [11, 25, 26, 34, 38] }, //
-        { id: "115008", nums: [01, 12, 14, 22, 34] }, //
-        { id: "115007", nums: [03, 08, 10, 21, 30] }, //
-        { id: "115006", nums: [05, 10, 14, 15, 28] }, //
-        { id: "115005", nums: [01, 02, 06, 11, 33] }
-    ];
+    <div class="card">
+        <h2>資金管理</h2>
+        <ul>
+            <li>固定投注預算</li>
+            <li>低風險下注優先</li>
+        </ul>
+    </div>
 
-    const freqMap = {};
-    realHistory.forEach(d => d.nums.forEach(n => freqMap[n] = (freqMap[n] || 0) + 1));
+    <button class="button" onclick="alert('功能待開發: 生成號碼組合')">生成號碼組合</button>
 
-    // 渲染歷史
-    const hContent = document.getElementById('hContent');
-    realHistory.forEach(d => {
-        hContent.innerHTML += `<tr><td>${d.id}</td><td style="text-align:right">${d.nums.map(n => freqMap[n]>=2 ? `<span class="hot-mark">${n.toString().padStart(2,'0')}</span>` : n.toString().padStart(2,'0')).join(' ')}</td></tr>`;
-    });
-
-    function generateSets() {
-        const area = document.getElementById('resultsArea');
-        area.innerHTML = '';
-        const hots = Object.keys(freqMap).filter(k => freqMap[k] >= 2).map(Number);
-        const colds = Array.from({length:39}, (_,i)=>i+1).filter(n => !Object.keys(freqMap).map(Number).includes(n));
-
-        for(let i=0; i<5; i++) {
-            let res = [...hots].sort(() => 0.5 - Math.random()).slice(0, 2);
-            res.push(...[...colds].sort(() => 0.5 - Math.random()).slice(0, 1));
-            while(res.length < 5) { let r = Math.floor(Math.random()*39)+1; if(!res.includes(r)) res.push(r); }
-            res.sort((a,b)=>a-b);
-
-            const conf = (71 + Math.random()*14).toFixed(1);
-            const detail = encodeURIComponent(JSON.stringify({
-                nums: res,
-                h: res.filter(n => hots.includes(n)),
-                c: res.filter(n => colds.includes(n)),
-                o: res.filter(n => n%2!==0).length
-            }));
-
-            area.innerHTML += `
-                <div class="set-card">
-                    <div class="card-top">
-                        <div class="ball-row">${res.map(n => `<div class="ball">${n.toString().padStart(2,'0')}</div>`).join('')}</div>
-                        <div class="conf-text">${conf}%</div>
-                    </div>
-                    <button class="btn-detail" onclick="openMdl('${detail}')">查看選號依據</button>
-                </div>`;
-        }
-    }
-
-    function openMdl(dStr) {
-        const d = JSON.parse(decodeURIComponent(dStr));
-        document.getElementById('mdlBody').innerHTML = `
-            <b>1. 熱趨勢：</b>帶入號碼 [${d.h.join(', ')}]，此為近期高頻熱號，具備連動機率。<br><br>
-            <b>2. 冷補償：</b>含冷號 [${d.c.slice(0,1)}]，防範均值回歸下的補漲開出。<br><br>
-            <b>3. 平衡度：</b>奇偶比 ${d.o}:${5-d.o}，大小數配比均衡，符合 539 歷史分佈最廣的區間。
-        `;
-        document.getElementById('modalBg').style.display = 'block';
-        document.getElementById('mdl').style.display = 'block';
-    }
-
-    function closeMdl() {
-        document.getElementById('modalBg').style.display = 'none';
-        document.getElementById('mdl').style.display = 'none';
-    }
-</script>
 </body>
 </html>
