@@ -3,78 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>邏輯逆向驗證</title>
+    <title>數據驗證與預測</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #F2F2F7; padding: 15px; margin: 0; }
-        .header { background: #007AFF; color: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; text-align: center; }
-        .input-group { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 6px solid #34C759; }
-        .num-label { font-size: 24px; font-weight: bold; color: #1C1C1E; }
-        .logic-desc { font-size: 14px; color: #636366; margin-top: 5px; line-height: 1.4; }
-        .source-tag { display: inline-block; background: #E5E5EA; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-top: 5px; }
-        input[type="file"] { width: 100%; }
+        :root { --ios-blue: #007AFF; --ios-green: #34C759; --ios-bg: #F2F2F7; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); margin: 0; padding: 15px; color: #1C1C1E; }
+        .section { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        h3 { margin-top: 0; font-size: 17px; border-bottom: 1px solid #EEE; padding-bottom: 8px; }
+        
+        /* 按鈕設計 */
+        .btn { background: var(--ios-blue); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: 600; margin-top: 10px; }
+        .btn:active { opacity: 0.7; }
+        .btn-predict { background: var(--ios-green); }
+
+        /* 卡片設計 */
+        .card { background: #F8F8FA; border-radius: 8px; padding: 12px; margin-top: 10px; border-left: 4px solid var(--ios-blue); }
+        .num-badge { display: inline-block; background: var(--ios-blue); color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; margin-right: 5px; }
+        
+        /* 預測顯示區 */
+        #predictionResult { display: flex; justify-content: space-around; margin-top: 15px; }
+        .predict-num { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--ios-green); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--ios-green); background: #EFFFF4; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <strong>1, 33, 16, 35, 2</strong><br>數據來源分析面板
-</div>
+    <div class="section">
+        <h3>1. 數據分析與驗證</h3>
+        <input type="file" id="csvInput" accept=".csv">
+        <div id="verifyPanel"></div>
+    </div>
 
-<div class="input-group">
-    <label>請上傳 CSV 數據檔案：</label><br><br>
-    <input type="file" id="csvInput" accept=".csv">
-</div>
+    <div class="section">
+        <h3>2. 號碼生成面板</h3>
+        <p style="font-size: 13px; color: #666;">依據 CSV 熱門權重計算下一組建議值</p>
+        <button class="btn btn-predict" onclick="generateNumbers()">產生下期建議號碼</button>
+        <div id="predictionResult">
+            </div>
+    </div>
 
-<div id="panel"></div>
+    <script>
+        let globalData = [];
+        const targets = [1, 33, 16, 35, 2];
 
-<script>
-    const targets = [1, 33, 16, 35, 2];
-    document.getElementById('csvInput').addEventListener('change', function(e) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const lines = event.target.result.split('\n').filter(l => l.trim() !== '');
-            const data = lines.map(line => line.split(',').map(val => parseFloat(val.trim())));
-            analyze(data);
-        };
-        reader.readAsText(e.target.files[0]);
-    });
-
-    function analyze(data) {
-        const panel = document.getElementById('panel');
-        panel.innerHTML = '';
-        
-        targets.forEach(target => {
-            let matches = [];
-            
-            // 遍歷所有列與欄進行基礎統計比對
-            for (let col = 0; col < data[0].length; col++) {
-                const columnData = data.map(row => row[col]).filter(v => !isNaN(v));
-                if (columnData.length === 0) continue;
-
-                // 1. 檢查是否為最大值
-                if (Math.max(...columnData) === target) matches.push(`第 ${col+1} 欄的「最大值」`);
-                // 2. 檢查是否為出現頻率最高
-                const counts = columnData.reduce((a, b) => (a[b] = (a[b] || 0) + 1, a), {});
-                const topVal = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-                if (parseFloat(topVal) === target) matches.push(`第 ${col+1} 欄的「最常出現號碼」`);
-                // 3. 檢查最後一筆更新
-                if (columnData[columnData.length - 1] === target) matches.push(`第 ${col+1} 欄的「最新數值」`);
-            }
-
-            const html = `
-                <div class="card">
-                    <div class="num-label">${target}</div>
-                    <div class="logic-desc">
-                        ${matches.length > 0 ? matches.map(m => `• 符合：${m}`).join('<br>') : '未偵測到簡單規律，可能涉及多欄位運算。'}
-                    </div>
-                    <div class="source-tag">邏輯驗證完成</div>
-                </div>
-            `;
-            panel.innerHTML += html;
+        document.getElementById('csvInput').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const lines = event.target.result.split('\n').filter(l => l.trim() !== '');
+                globalData = lines.map(line => line.split(',').map(v => parseFloat(v.trim())));
+                runVerification();
+            };
+            reader.readAsText(e.target.files[0]);
         });
-    }
-</script>
 
+        // 邏輯驗證：找出 1, 33, 16, 35, 2 的來源
+        function runVerification() {
+            const panel = document.getElementById('verifyPanel');
+            panel.innerHTML = '';
+            
+            targets.forEach(t => {
+                let logic = "規律分析中...";
+                for (let col = 0; col < globalData[0].length; col++) {
+                    const colValues = globalData.map(r => r[col]).filter(v => !isNaN(v));
+                    if (Math.max(...colValues) === t) logic = `第 ${col+1} 欄的最大值`;
+                    else if (colValues[colValues.length-1] === t) logic = `第 ${col+1} 欄的最新落球`;
+                }
+                panel.innerHTML += `<div class="card"><span class="num-badge">${t}</span> 邏輯: ${logic}</div>`;
+            });
+        }
+
+        // 下期產出：根據出現頻率最高的號碼推薦
+        function generateNumbers() {
+            if (globalData.length === 0) { alert('請先上傳 CSV 檔案'); return; }
+            
+            const resultDiv = document.getElementById('predictionResult');
+            resultDiv.innerHTML = '';
+
+            // 簡易演算法：計算全表出現頻率
+            const flatData = globalData.flat().filter(v => !isNaN(v));
+            const freq = {};
+            flatData.forEach(v => freq[v] = (freq[v] || 0) + 1);
+            
+            // 排序並取前 5 名
+            const sorted = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, 5);
+
+            sorted.forEach(n => {
+                resultDiv.innerHTML += `<div class="predict-num">${n}</div>`;
+            });
+        }
+    </script>
 </body>
 </html>
