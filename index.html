@@ -3,126 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>數據邏輯驗證面板</title>
+    <title>CSV 邏輯驗證面板</title>
     <style>
-        :root {
-            --ios-blue: #007AFF;
-            --ios-bg: #F2F2F7;
-            --card-bg: #FFFFFF;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--ios-bg);
-            margin: 0;
-            padding: 20px 15px;
-            color: #1C1C1E;
-        }
-        h2 { font-size: 22px; margin-bottom: 20px; text-align: center; }
-        
-        /* 容器與卡片設計 */
-        .container { display: flex; flex-direction: column; gap: 12px; }
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* 數字顯示 */
-        .num-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        .number-circle {
-            background: var(--ios-blue);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        .status-tag {
-            font-size: 12px;
-            background: #E5E5EA;
-            padding: 4px 8px;
-            border-radius: 6px;
-            color: #3A3A3C;
-        }
-
-        /* 邏輯說明區 */
-        .logic-box {
-            background: #F8F8FA;
-            border-left: 3px solid var(--ios-blue);
-            padding: 10px;
-            margin-top: 8px;
-            border-radius: 4px;
-        }
-        .logic-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #8E8E93;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-        .logic-content {
-            font-size: 15px;
-            line-height: 1.4;
-            color: #333;
-        }
-        .source-path {
-            font-family: monospace;
-            background: #EEE;
-            padding: 2px 4px;
-            font-size: 13px;
-        }
+        :root { --ios-blue: #007AFF; --ios-bg: #F2F2F7; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px 15px; color: #1C1C1E; }
+        .upload-section { background: white; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        input[type="file"] { margin-top: 10px; font-size: 14px; width: 100%; }
+        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .num-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .num-circle { background: var(--ios-blue); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .method-box { background: #F8F8FA; border-left: 3px solid var(--ios-blue); padding: 10px; border-radius: 4px; font-size: 14px; }
+        .found { color: #34C759; font-weight: bold; }
+        .not-found { color: #FF3B30; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>驗證結果: 1, 33, 16, 35, 2</h2>
+    <div class="upload-section">
+        <h3>上傳數據進行驗證</h3>
+        <input type="file" id="csvFile" accept=".csv">
+    </div>
 
-    <div class="container" id="panelContainer">
+    <div id="results">
         </div>
 
     <script>
-        // 模擬從 CSV 分析出的邏輯數據
-        const verificationData = [
-            { num: 1,  source: "Row 2, Col A", method: "直接取值", detail: "讀取 CSV 第一筆資料之特定 ID。" },
-            { num: 33, source: "Row 5, Col C", method: "區間加總", detail: "由欄位 'Value_A' 與 'Value_B' 相加得出。" },
-            { num: 16, source: "Row 12, Col B", method: "篩選結果", detail: "符合 'Category=Active' 條件下的計數值。" },
-            { num: 35, source: "Row 8, Col D", method: "最大值提取", detail: "選取該時段內的所有數據最大值。" },
-            { num: 2,  source: "Row 1, Col F", method: "偏移計算", detail: "基準值減去常數項得出。" }
-        ];
+        const targets = [1, 33, 16, 35, 2];
+        const fileInput = document.getElementById('csvFile');
+        const resultsDiv = document.getElementById('results');
 
-        const container = document.getElementById('panelContainer');
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
 
-        verificationData.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <div class="num-row">
-                    <div class="number-circle">${item.num}</div>
-                    <div class="status-tag">驗證通過</div>
-                </div>
-                <div class="logic-box">
-                    <div class="logic-title">數據來源</div>
-                    <div class="logic-content">位置: <span class="source-path">${item.source}</span></div>
-                </div>
-                <div class="logic-box">
-                    <div class="logic-title">獲取方式 (${item.method})</div>
-                    <div class="logic-content">${item.detail}</div>
+            reader.onload = function(event) {
+                const text = event.target.result;
+                processData(text);
+            };
+            reader.readAsText(file);
+        });
+
+        function processData(csvText) {
+            const rows = csvText.split('\n').map(row => row.split(','));
+            resultsDiv.innerHTML = '<h2>驗證結果</h2>';
+
+            targets.forEach(target => {
+                let foundLocation = null;
+                
+                // 遍歷搜尋邏輯
+                for (let r = 0; r < rows.length; r++) {
+                    for (let c = 0; c < rows[r].length; c++) {
+                        if (parseFloat(rows[r][c]) === target) {
+                            foundLocation = { row: r + 1, col: c + 1 };
+                            break;
+                        }
+                    }
+                    if (foundLocation) break;
+                }
+
+                renderCard(target, foundLocation);
+            });
+        }
+
+        function renderCard(target, loc) {
+            const statusClass = loc ? 'found' : 'not-found';
+            const statusText = loc ? '已驗證成功' : '未在檔案中找到';
+            const methodContent = loc 
+                ? `於 CSV 第 <span style="text-decoration:underline">${loc.row}</span> 列，第 <span style="text-decoration:underline">${loc.col}</span> 欄匹配成功。` 
+                : '請檢查原始檔案是否包含此數值。';
+
+            resultsDiv.innerHTML += `
+                <div class="card">
+                    <div class="num-header">
+                        <div class="num-circle">${target}</div>
+                        <span class="${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="method-box">
+                        <strong>取得方式：</strong><br>
+                        ${methodContent}
+                    </div>
                 </div>
             `;
-            container.appendChild(card);
-        });
+        }
     </script>
 </body>
 </html>
