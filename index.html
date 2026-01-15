@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>必中 v2 - 智能預測系統</title>
+<title>必中 v3 - 智能預測系統</title>
 <style>
 :root {
   --primary: #00ff99;
   --secondary: #274c77;
   --danger: #ff6666;
   --warning: #ffcc00;
+  --info: #4fc3f7;
   --bg-0: #050b15;
   --bg-1: #0f1f38;
   --bg-2: #142b4d;
@@ -17,383 +18,347 @@
   --bg-4: #203f6e;
   --text-light: #e0f7ff;
 }
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+  background: linear-gradient(135deg,#0b1626,#051122); 
+  color: var(--text-light); 
+  line-height:1.6; 
+  min-height:100vh;
 }
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #0b1626, #051122);
-  color: var(--text-light);
-  line-height: 1.6;
-  min-height: 100vh;
+.container { 
+  max-width:900px; 
+  margin:0 auto; 
+  padding:20px;
 }
-
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+.header { 
+  text-align:center; 
+  padding:30px 0; 
+  background:linear-gradient(90deg,var(--bg-0),var(--bg-1)); 
+  border-radius:20px; 
+  margin-bottom:20px; 
+  position:relative; 
+  overflow:hidden;
 }
-
-/* Header */
-.header {
-  text-align: center;
-  padding: 30px 0;
-  background: linear-gradient(90deg, var(--bg-0), var(--bg-1));
-  border-radius: 20px;
-  margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
+.header::before { 
+  content:''; 
+  position:absolute; 
+  top:0; 
+  left:0; 
+  right:0; 
+  height:4px; 
+  background:linear-gradient(90deg,var(--primary),var(--warning)); 
 }
-
-.header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--warning));
+.header h1 { 
+  font-size:2.5rem; 
+  color:var(--primary); 
+  margin-bottom:10px; 
+  text-shadow:0 0 20px rgba(0,255,153,0.3);
 }
-
-.header h1 {
-  font-size: 2.5rem;
-  color: var(--primary);
-  margin-bottom: 10px;
-  text-shadow: 0 0 20px rgba(0, 255, 153, 0.3);
+.subtitle { 
+  color:#8da1b9; 
+  font-size:1.1rem;
 }
-
-.subtitle {
-  color: #8da1b9;
-  font-size: 1.1rem;
+.panel { 
+  border-radius:16px; 
+  padding:24px; 
+  margin-bottom:20px; 
+  border:1px solid rgba(255,255,255,0.05); 
+  transition: transform 0.3s ease, box-shadow 0.3s ease; 
+  position:relative;
 }
-
-/* Panels */
-.panel {
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  position: relative;
+.panel:hover { 
+  transform:translateY(-5px); 
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
 }
-
-.panel:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
 .panel-0 { background: var(--bg-0); }
 .panel-1 { background: var(--bg-1); }
 .panel-2 { background: var(--bg-2); }
 .panel-3 { background: var(--bg-3); }
 .panel-4 { background: var(--bg-4); }
-
-.panel h2 {
-  font-size: 1.4rem;
-  color: var(--primary);
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.panel h2 { 
+  font-size:1.4rem; 
+  color: var(--primary); 
+  margin-bottom:20px; 
+  display:flex; 
+  align-items:center; 
+  gap:10px;
 }
-
-.panel h2::before {
-  content: '';
-  width: 6px;
-  height: 24px;
-  background: var(--primary);
-  border-radius: 3px;
+.panel h2::before { 
+  content:''; 
+  width:6px; 
+  height:24px; 
+  background:var(--primary); 
+  border-radius:3px; 
 }
-
-/* Form Elements */
-.file-input {
-  width: 100%;
-  padding: 16px;
-  border: 2px dashed rgba(0, 255, 153, 0.3);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
+.file-input, .text-input, .select-input { 
+  width:100%; 
+  padding:16px; 
+  border-radius:12px; 
+  font-size:16px; 
+  margin-bottom:15px;
+}
+.file-input { 
+  border:2px dashed rgba(0,255,153,0.3); 
+  background:rgba(0,0,0,0.2); 
+  color:white; 
+  cursor:pointer; 
   transition: all 0.3s ease;
-  margin-bottom: 15px;
 }
-
-.file-input:hover {
-  border-color: var(--primary);
-  background: rgba(0, 255, 153, 0.05);
+.file-input:hover { 
+  border-color: var(--primary); 
+  background: rgba(0,255,153,0.05);
 }
-
-.file-input::file-selector-button {
-  background: var(--primary);
-  color: var(--bg-0);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-right: 15px;
+.file-input::file-selector-button { 
+  background: var(--primary); 
+  color: var(--bg-0); 
+  border:none; 
+  padding:10px 20px; 
+  border-radius:8px; 
+  font-weight:bold; 
+  cursor:pointer; 
+  margin-right:15px;
 }
-
-.text-input {
-  width: 100%;
-  padding: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  color: white;
-  font-size: 16px;
+.text-input { 
+  border:2px solid rgba(255,255,255,0.1); 
+  background: rgba(0,0,0,0.2); 
+  color:white; 
   transition: all 0.3s ease;
-  margin-bottom: 15px;
 }
-
-.text-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 255, 153, 0.1);
+.text-input:focus { 
+  outline:none; 
+  border-color:var(--primary); 
+  box-shadow:0 0 0 3px rgba(0,255,153,0.1);
 }
-
-.btn {
-  width: 100%;
-  padding: 16px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--secondary), #1a3a5f);
+.select-input {
+  border:2px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.2);
   color: white;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 20px;
+  padding-right: 50px;
 }
-
-.btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
+.btn { 
+  width:100%; 
+  padding:16px; 
+  border:none; 
+  border-radius:12px; 
+  background:linear-gradient(135deg,var(--secondary),#1a3a5f); 
+  color:white; 
+  font-size:16px; 
+  font-weight:600; 
+  cursor:pointer; 
+  transition: all 0.3s ease; 
+  position:relative; 
+  overflow:hidden; 
+  margin-bottom: 10px;
 }
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(39, 76, 119, 0.3);
+.btn::after { 
+  content:''; 
+  position:absolute; 
+  top:0; 
+  left:-100%; 
+  width:100%; 
+  height:100%; 
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); 
+  transition:left 0.5s ease; 
 }
-
-.btn:hover::after {
-  left: 100%;
+.btn:hover { 
+  transform:translateY(-2px); 
+  box-shadow:0 8px 20px rgba(39,76,119,0.3); 
 }
-
-.btn:active {
-  transform: translateY(0);
+.btn:hover::after { 
+  left:100%; 
 }
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), #00cc7a);
+.btn:active { 
+  transform:translateY(0);
 }
-
-/* Boxes */
-.box {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.btn-primary { 
+  background:linear-gradient(135deg,var(--primary),#00cc7a);
 }
-
-.box-title {
-  color: var(--primary);
-  font-size: 1.1rem;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.btn-secondary { 
+  background:linear-gradient(135deg,var(--info),#0288d1);
 }
-
-/* Numbers Display */
-.numbers-grid {
+.btn-group {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin: 15px 0;
+  margin-bottom: 15px;
 }
-
-.number-ball {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  font-weight: bold;
-  background: linear-gradient(135deg, var(--secondary), #1a3a5f);
-  color: white;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+.box { 
+  background:rgba(0,0,0,0.3); 
+  border-radius:12px; 
+  padding:20px; 
+  margin-top:20px; 
+  border:1px solid rgba(255,255,255,0.05);
 }
-
-.number-ball.hot {
+.box-title { 
+  color:var(--primary); 
+  font-size:1.1rem; 
+  margin-bottom:12px; 
+  display:flex; 
+  align-items:center; 
+  gap:8px;
+}
+.numbers-grid { 
+  display:grid; 
+  grid-template-columns:repeat(auto-fill,minmax(60px,1fr)); 
+  gap:10px; 
+  margin:15px 0;
+}
+.number-ball { 
+  width:60px; 
+  height:60px; 
+  border-radius:50%; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  font-size:1.4rem; 
+  font-weight:bold; 
+  background:linear-gradient(135deg,var(--secondary),#1a3a5f); 
+  color:white; 
+  transition: all 0.3s ease; 
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
+.number-ball.hot { 
   background: linear-gradient(135deg, #ff6666, #cc0000);
 }
-
-.number-ball.cold {
+.number-ball.cold { 
   background: linear-gradient(135deg, #4fc3f7, #0288d1);
 }
-
-.number-ball:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+.number-ball.missed { 
+  background: linear-gradient(135deg, var(--warning), #ff9800);
 }
-
-/* Stats */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin: 15px 0;
+.number-ball:hover { 
+  transform: scale(1.1) rotate(5deg); 
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
-
-.stat-item {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 15px;
-  border-radius: 10px;
-  text-align: center;
+.stats-row { 
+  display:grid; 
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); 
+  gap:15px; 
+  margin:15px 0;
 }
-
-.stat-label {
-  color: #8da1b9;
-  font-size: 0.9rem;
-  margin-bottom: 5px;
+.stat-item { 
+  background: rgba(255,255,255,0.05); 
+  padding:15px; 
+  border-radius:10px; 
+  text-align:center;
 }
-
-.stat-value {
-  color: var(--primary);
-  font-size: 1.3rem;
-  font-weight: bold;
+.stat-label { 
+  color:#8da1b9; 
+  font-size:0.9rem; 
+  margin-bottom:5px;
 }
-
-/* Status Messages */
-.status {
-  padding: 12px;
-  border-radius: 8px;
-  margin: 10px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
+.stat-value { 
+  color:var(--primary); 
+  font-size:1.3rem; 
+  font-weight:bold;
 }
-
-.status.success {
-  background: rgba(0, 255, 153, 0.1);
-  border: 1px solid rgba(0, 255, 153, 0.3);
+.status { 
+  padding:12px; 
+  border-radius:8px; 
+  margin:10px 0; 
+  display:flex; 
+  align-items:center; 
+  gap:10px; 
+  font-size:0.9rem;
+}
+.status.success { 
+  background: rgba(0,255,153,0.1); 
+  border:1px solid rgba(0,255,153,0.3); 
   color: var(--primary);
 }
-
-.status.warning {
-  background: rgba(255, 204, 0, 0.1);
-  border: 1px solid rgba(255, 204, 0, 0.3);
+.status.warning { 
+  background: rgba(255,204,0,0.1); 
+  border:1px solid rgba(255,204,0,0.3); 
   color: var(--warning);
 }
-
-.status.error {
-  background: rgba(255, 102, 102, 0.1);
-  border: 1px solid rgba(255, 102, 102, 0.3);
+.status.error { 
+  background: rgba(255,102,102,0.1); 
+  border:1px solid rgba(255,102,102,0.3); 
   color: var(--danger);
 }
-
-/* Loading Animation */
-.loading {
-  display: none;
+.status.info { 
+  background: rgba(79,195,247,0.1); 
+  border:1px solid rgba(79,195,247,0.3); 
+  color: var(--info);
+}
+.loading { 
+  display:none; 
+  text-align:center; 
+  padding:20px;
+}
+.spinner { 
+  width:40px; 
+  height:40px; 
+  border:4px solid rgba(0,255,153,0.1); 
+  border-top:4px solid var(--primary); 
+  border-radius:50%; 
+  animation:spin 1s linear infinite; 
+  margin:0 auto 15px;
+}
+@keyframes spin { 
+  0% { transform:rotate(0deg); } 
+  100% { transform:rotate(360deg); }
+}
+.footer { 
+  text-align:center; 
+  padding:20px; 
+  color:#8da1b9; 
+  font-size:0.9rem; 
+  margin-top:40px; 
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+.footer a { 
+  color: var(--primary); 
+  text-decoration:none;
+}
+.footer a:hover { 
+  text-decoration:underline;
+}
+.predictions-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+.prediction-card {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid rgba(0,255,153,0.2);
+}
+.prediction-title {
+  color: var(--info);
+  font-size: 1rem;
+  margin-bottom: 10px;
   text-align: center;
-  padding: 20px;
 }
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(0, 255, 153, 0.1);
-  border-top: 4px solid var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+@media(max-width:768px){
+  .container{padding:15px;}
+  .header h1{font-size:2rem;}
+  .panel{padding:20px;}
+  .numbers-grid{grid-template-columns:repeat(auto-fill,minmax(50px,1fr));}
+  .number-ball{width:50px;height:50px;font-size:1.2rem;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .predictions-container{grid-template-columns:1fr;}
+  .btn-group{grid-template-columns:1fr;}
 }
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Footer */
-.footer {
-  text-align: center;
-  padding: 20px;
-  color: #8da1b9;
-  font-size: 0.9rem;
-  margin-top: 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.footer a {
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .container {
-    padding: 15px;
-  }
-  
-  .header h1 {
-    font-size: 2rem;
-  }
-  
-  .panel {
-    padding: 20px;
-  }
-  
-  .numbers-grid {
-    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-  }
-  
-  .number-ball {
-    width: 50px;
-    height: 50px;
-    font-size: 1.2rem;
-  }
-  
-  .stats-row {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-row {
-    grid-template-columns: 1fr;
-  }
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr;}
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Header -->
   <div class="header">
-    <h1>必中 v2</h1>
-    <div class="subtitle">智能預測分析系統 | 基於歷史數據的多維度分析</div>
+    <h1>必中 v3</h1>
+    <div class="subtitle">智能預測分析系統 | 多策略全車號碼預測</div>
   </div>
 
   <!-- Panel 1：數據導入 -->
@@ -408,15 +373,8 @@ body {
   <div class="panel panel-2">
     <h2>🔍 智能分析層</h2>
     <button class="btn btn-primary" onclick="runAnalysis()">執行深度分析</button>
-    
-    <div class="loading" id="loadingA">
-      <div class="spinner"></div>
-      <div>正在分析數據...</div>
-    </div>
-    
-    <div id="panelA" style="display: none;">
-      <!-- 分析結果將動態插入 -->
-    </div>
+    <div class="loading" id="loadingA"><div class="spinner"></div><div>正在分析數據...</div></div>
+    <div id="panelA" style="display: none;"></div>
   </div>
 
   <!-- Panel B：組合驗證 -->
@@ -424,28 +382,38 @@ body {
     <h2>✅ 組合驗證層</h2>
     <input type="text" id="verifyInput" class="text-input" placeholder="輸入驗證組合，例如：1 2 16 33 35">
     <button class="btn" onclick="runVerify()">分析組合</button>
-    
-    <div id="panelB" style="display: none;">
-      <!-- 驗證結果將動態插入 -->
-    </div>
+    <div id="panelB" style="display: none;"></div>
   </div>
 
   <!-- Panel C：預測生成 -->
   <div class="panel panel-4">
     <h2>🎯 預測生成層</h2>
-    <button class="btn btn-primary" onclick="generatePrediction()">生成預測組合</button>
-    
-    <div class="loading" id="loadingC">
-      <div class="spinner"></div>
-      <div>正在生成預測...</div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="generateStandardPrediction()">標準預測</button>
+      <button class="btn btn-secondary" onclick="generateAdvancedPrediction()">進階預測</button>
     </div>
-    
-    <div id="panelC" style="display: none;">
-      <!-- 預測結果將動態插入 -->
-    </div>
+    <select class="select-input" id="strategySelect">
+      <option value="balanced">均衡策略</option>
+      <option value="hot">熱門策略</option>
+      <option value="cold">冷門策略</option>
+      <option value="pattern">模式策略</option>
+    </select>
+    <div class="loading" id="loadingC"><div class="spinner"></div><div>正在生成預測...</div></div>
+    <div id="panelC" style="display: none;"></div>
   </div>
 
-  <!-- Footer -->
+  <!-- Panel D：全車號碼預測 -->
+  <div class="panel panel-0">
+    <h2>🚗 全車號碼預測層</h2>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="generateFullCarByFrequency()">按頻率排序</button>
+      <button class="btn btn-secondary" onclick="generateFullCarByMissed()">按遺漏排序</button>
+    </div>
+    <button class="btn" onclick="generateMultiplePredictions()">多策略預測組合</button>
+    <div class="loading" id="loadingD"><div class="spinner"></div><div>正在生成全車號碼...</div></div>
+    <div id="panelD" style="display: none;"></div>
+  </div>
+
   <div class="footer">
     <p>⚠️ 免責聲明：本系統僅供娛樂參考，不具任何預測保證功能</p>
     <p>彩票開獎為隨機事件，請理性參與，量力而行</p>
@@ -453,236 +421,179 @@ body {
 </div>
 
 <script>
-// 全局數據存儲
+// ==================== 全局資料 ====================
 let data = [];
 let analysisCache = null;
+let numberStats = {};
 
-// 文件加載
-document.getElementById("csvInput").addEventListener("change", function(e) {
+// ==================== CSV 載入 ====================
+document.getElementById("csvInput").addEventListener("change", function(e){
   const file = e.target.files[0];
-  if (!file) return;
+  if(!file) return;
   
   const reader = new FileReader();
-  reader.onload = function(event) {
-    try {
-      const content = event.target.result.trim();
-      const lines = content.split(/\r?\n/);
+  reader.onload = function(evt){
+    const content = evt.target.result.trim();
+    const lines = content.split(/\r?\n/);
+    data = [];
+    numberStats = {};
+    
+    // 初始化號碼統計
+    for(let i = 1; i <= 39; i++) {
+      numberStats[i] = {
+        count: 0,
+        lastSeen: 0,
+        gaps: [],
+        consecutivePairs: 0
+      };
+    }
+    
+    // 解析每一行
+    lines.forEach((line, i) => {
+      if(i === 0) return; // 跳過標題行
       
-      data = [];
-      lines.forEach((line, index) => {
-        if (index === 0) return; // 跳過標題行
+      const parts = line.split(",");
+      if(parts.length >= 6) {
+        const date = parts[0].trim();
+        const numbers = parts.slice(1, 6).map(n => parseInt(n.trim()));
         
-        const parts = line.split(",");
-        if (parts.length >= 6) {
-          const date = parts[0].trim();
-          const numbers = parts.slice(1, 6).map(num => parseInt(num.trim()));
+        if(numbers.every(n => !isNaN(n) && n >= 1 && n <= 39)) {
+          data.push({date, numbers});
           
-          if (numbers.every(n => !isNaN(n) && n >= 1 && n <= 39)) {
-            data.push({
-              date: date,
-              numbers: numbers
-            });
+          // 更新號碼統計
+          numbers.forEach(n => {
+            numberStats[n].count++;
+            numberStats[n].lastSeen = 0;
+          });
+          
+          // 更新所有號碼的遺漏期數
+          for(let i = 1; i <= 39; i++) {
+            if(!numbers.includes(i)) {
+              numberStats[i].lastSeen++;
+            } else {
+              numberStats[i].lastSeen = 0;
+            }
+          }
+          
+          // 更新連號統計
+          const sorted = [...numbers].sort((a,b) => a-b);
+          for(let i = 0; i < sorted.length - 1; i++) {
+            if(sorted[i+1] - sorted[i] === 1) {
+              numberStats[sorted[i]].consecutivePairs++;
+              numberStats[sorted[i+1]].consecutivePairs++;
+            }
           }
         }
-      });
-      
-      if (data.length === 0) {
-        showStatus("csvInfo", "未找到有效數據，請檢查CSV格式", "error");
-        return;
       }
-      
-      // 顯示數據信息
-      const info = `已載入 ${data.length} 期數據 | 時間範圍：${data[0].date} ~ ${data[data.length-1].date}`;
-      showStatus("csvInfo", info, "success");
-      
-      // 顯示基本統計
-      showBasicStats();
-      
-    } catch (error) {
-      showStatus("csvInfo", "文件解析錯誤：" + error.message, "error");
+    });
+    
+    if(data.length === 0) {
+      showStatus("csvInfo", "未找到有效數據，請檢查CSV格式", "error");
+      return;
     }
-  };
-  
-  reader.onerror = function() {
-    showStatus("csvInfo", "文件讀取失敗", "error");
+    
+    showStatus("csvInfo", `✅ 已載入 ${data.length} 期數據 | 時間範圍：${data[0].date} ~ ${data[data.length-1].date}`, "success");
+    showBasicStats();
   };
   
   reader.readAsText(file);
 });
 
-// 顯示基本統計
+// ==================== 基本統計顯示 ====================
 function showBasicStats() {
-  const stats = calculateBasicStats();
   const container = document.getElementById("basicStats");
+  const totalDraws = data.length;
+  
+  // 計算熱門和冷門號碼
+  const sortedByCount = Object.entries(numberStats)
+    .sort(([,a], [,b]) => b.count - a.count)
+    .map(([num]) => parseInt(num));
+  
+  const hotNumbers = sortedByCount.slice(0, 5);
+  const coldNumbers = sortedByCount.slice(-5).reverse();
+  
+  // 計算遺漏最多的號碼
+  const sortedByMiss = Object.entries(numberStats)
+    .sort(([,a], [,b]) => b.lastSeen - a.lastSeen)
+    .slice(0, 3)
+    .map(([num]) => parseInt(num));
   
   container.style.display = "grid";
   container.innerHTML = `
     <div class="stat-item">
       <div class="stat-label">總期數</div>
-      <div class="stat-value">${stats.totalDraws}</div>
+      <div class="stat-value">${totalDraws}</div>
     </div>
     <div class="stat-item">
       <div class="stat-label">熱門號碼</div>
-      <div class="stat-value">${stats.hotNumbers.slice(0, 3).join(", ")}</div>
+      <div class="stat-value">${hotNumbers.join(", ")}</div>
     </div>
     <div class="stat-item">
       <div class="stat-label">冷門號碼</div>
-      <div class="stat-value">${stats.coldNumbers.slice(0, 3).join(", ")}</div>
+      <div class="stat-value">${coldNumbers.join(", ")}</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">平均和值</div>
-      <div class="stat-value">${stats.avgSum}</div>
+      <div class="stat-label">長期遺漏</div>
+      <div class="stat-value">${sortedByMiss.join(", ")}</div>
     </div>
   `;
 }
 
-// 計算基本統計
-function calculateBasicStats() {
-  const frequency = {};
-  const sums = [];
-  
-  // 計算頻率
-  data.forEach(draw => {
-    draw.numbers.forEach(num => {
-      frequency[num] = (frequency[num] || 0) + 1;
-    });
-    sums.push(draw.numbers.reduce((a, b) => a + b, 0));
-  });
-  
-  // 排序號碼
-  const allNumbers = Array.from({length: 39}, (_, i) => i + 1);
-  const sortedNumbers = allNumbers.sort((a, b) => {
-    const freqA = frequency[a] || 0;
-    const freqB = frequency[b] || 0;
-    return freqB - freqA;
-  });
-  
-  const hotNumbers = sortedNumbers.slice(0, 10);
-  const coldNumbers = sortedNumbers.slice(-10).reverse();
-  const avgSum = Math.round(sums.reduce((a, b) => a + b, 0) / sums.length);
-  
-  return {
-    totalDraws: data.length,
-    hotNumbers,
-    coldNumbers,
-    avgSum
-  };
-}
-
-// 執行分析
+// ==================== 智能分析層 ====================
 function runAnalysis() {
-  if (data.length === 0) {
+  if(data.length === 0) {
     alert("請先上載數據文件");
     return;
   }
   
   showLoading("loadingA", true);
   
-  // 模擬分析過程
   setTimeout(() => {
-    const stats = calculateAdvancedStats();
-    displayAnalysisResults(stats);
+    analysisCache = calculateAdvancedStats();
+    displayAnalysisResults(analysisCache);
     showLoading("loadingA", false);
-  }, 1000);
+  }, 800);
 }
 
-// 計算進階統計
 function calculateAdvancedStats() {
-  const frequency = {};
-  const lastSeen = {};
-  const sumStats = {
-    sums: [],
-    min: Infinity,
-    max: -Infinity
-  };
-  
-  // 收集數據
-  data.forEach((draw, index) => {
-    // 頻率和最後出現位置
-    draw.numbers.forEach(num => {
-      frequency[num] = (frequency[num] || 0) + 1;
-      lastSeen[num] = index;
-    });
-    
-    // 和值統計
-    const sum = draw.numbers.reduce((a, b) => a + b, 0);
-    sumStats.sums.push(sum);
-    sumStats.min = Math.min(sumStats.min, sum);
-    sumStats.max = Math.max(sumStats.max, sum);
-  });
-  
-  // 計算平均和值
-  sumStats.avg = Math.round(sumStats.sums.reduce((a, b) => a + b, 0) / sumStats.sums.length);
-  
-  // 計算標準差
-  const variance = sumStats.sums.reduce((acc, sum) => acc + Math.pow(sum - sumStats.avg, 2), 0) / sumStats.sums.length;
-  sumStats.stdDev = Math.round(Math.sqrt(variance));
-  
-  // 計算奇偶比歷史
-  const oddRatios = data.map(draw => {
-    const oddCount = draw.numbers.filter(n => n % 2 === 1).length;
-    return { odd: oddCount, even: 5 - oddCount };
-  });
-  
-  const avgOdd = Math.round(oddRatios.reduce((acc, r) => acc + r.odd, 0) / oddRatios.length);
-  
-  // 識別潛在號碼池
-  const T = data.length;
-  const potentialNumbers = [];
-  
-  for (let num = 1; num <= 39; num++) {
-    const freq = frequency[num] || 0;
-    const freqRatio = freq / T;
-    const daysSince = T - (lastSeen[num] || 0);
-    
-    // 篩選條件：出現頻率適中，最近出現過但不是太近
-    if (freqRatio > 0.03 && freqRatio < 0.15 && daysSince > 5 && daysSince < 30) {
-      potentialNumbers.push({
-        num,
-        freq: freqRatio.toFixed(3),
-        daysSince
-      });
-    }
-  }
-  
-  // 按天數排序
-  potentialNumbers.sort((a, b) => a.daysSince - b.daysSince);
+  const totalDraws = data.length;
+  const sums = data.map(d => d.numbers.reduce((a,b) => a+b, 0));
+  const oddCounts = data.map(d => d.numbers.filter(n => n%2===1).length);
   
   return {
-    frequency,
-    lastSeen,
-    sumStats,
-    potentialNumbers,
-    avgOdd,
-    totalDraws: T
+    totalDraws,
+    avgSum: Math.round(sums.reduce((a,b) => a+b, 0) / sums.length),
+    minSum: Math.min(...sums),
+    maxSum: Math.max(...sums),
+    avgOdd: Math.round(oddCounts.reduce((a,b) => a+b, 0) / oddCounts.length),
+    numberStats
   };
 }
 
-// 顯示分析結果
 function displayAnalysisResults(stats) {
   const container = document.getElementById("panelA");
   container.style.display = "block";
-  analysisCache = stats;
   
   // 熱門號碼
-  const hotNumbers = Object.entries(stats.frequency)
-    .sort(([,a], [,b]) => b - a)
+  const hotNumbers = Object.entries(numberStats)
+    .sort(([,a], [,b]) => b.count - a.count)
     .slice(0, 10)
     .map(([num]) => parseInt(num));
   
   // 冷門號碼
-  const coldNumbers = Object.entries(stats.frequency)
-    .sort(([,a], [,b]) => a - b)
+  const coldNumbers = Object.entries(numberStats)
+    .sort(([,a], [,b]) => a.count - b.count)
     .slice(0, 10)
     .map(([num]) => parseInt(num));
   
-  // 遺漏號碼
-  const missedNumbers = Array.from({length: 39}, (_, i) => i + 1)
-    .filter(num => stats.lastSeen[num] === undefined || 
-                   (data.length - stats.lastSeen[num]) > 20)
-    .slice(0, 10);
+  // 長期遺漏號碼
+  const missedNumbers = Object.entries(numberStats)
+    .filter(([,stat]) => stat.lastSeen > 20)
+    .sort(([,a], [,b]) => b.lastSeen - a.lastSeen)
+    .slice(0, 10)
+    .map(([num]) => parseInt(num));
   
-  let html = `
+  container.innerHTML = `
     <div class="box">
       <div class="box-title">🔥 熱門號碼（出現頻率最高）</div>
       <div class="numbers-grid">
@@ -698,144 +609,121 @@ function displayAnalysisResults(stats) {
     </div>
     
     <div class="box">
-      <div class="box-title">⏳ 長期遺漏號碼</div>
-      <div class="numbers-grid">
-        ${missedNumbers.map(num => `<div class="number-ball">${num}</div>`).join('')}
-      </div>
-      <div class="status warning">這些號碼已超過20期未出現</div>
+      <div class="box-title">⏳ 長期遺漏號碼（>20期）</div>
+      ${missedNumbers.length > 0 ? `
+        <div class="numbers-grid">
+          ${missedNumbers.map(num => `<div class="number-ball missed">${num}</div>`).join('')}
+        </div>
+        <div class="status warning">這些號碼已超過20期未出現</div>
+      ` : `
+        <div class="status success">目前沒有號碼遺漏超過20期</div>
+      `}
     </div>
     
     <div class="box">
-      <div class="box-title">📈 和值統計分析</div>
+      <div class="box-title">📊 統計摘要</div>
       <div class="stats-row">
         <div class="stat-item">
+          <div class="stat-label">總期數</div>
+          <div class="stat-value">${stats.totalDraws}</div>
+        </div>
+        <div class="stat-item">
           <div class="stat-label">平均和值</div>
-          <div class="stat-value">${stats.sumStats.avg}</div>
+          <div class="stat-value">${stats.avgSum}</div>
         </div>
         <div class="stat-item">
-          <div class="stat-label">最小和值</div>
-          <div class="stat-value">${stats.sumStats.min}</div>
+          <div class="stat-label">和值範圍</div>
+          <div class="stat-value">${stats.minSum}-${stats.maxSum}</div>
         </div>
         <div class="stat-item">
-          <div class="stat-label">最大和值</div>
-          <div class="stat-value">${stats.sumStats.max}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">標準差</div>
-          <div class="stat-value">${stats.sumStats.stdDev}</div>
+          <div class="stat-label">平均奇數</div>
+          <div class="stat-value">${stats.avgOdd}</div>
         </div>
       </div>
-      <div class="status info">建議和值範圍：${stats.sumStats.avg - 15} ~ ${stats.sumStats.avg + 15}</div>
-    </div>
-    
-    <div class="box">
-      <div class="box-title">🎯 潛在號碼池（${stats.potentialNumbers.length}個）</div>
-      <div class="numbers-grid">
-        ${stats.potentialNumbers.slice(0, 20).map(item => 
-          `<div class="number-ball" title="頻率: ${item.freq} | 遺漏: ${item.daysSince}期">${item.num}</div>`
-        ).join('')}
-      </div>
-      ${stats.potentialNumbers.length > 20 ? 
-        `<div class="status">... 還有 ${stats.potentialNumbers.length - 20} 個號碼</div>` : ''}
     </div>
   `;
-  
-  container.innerHTML = html;
 }
 
-// 組合驗證
+// ==================== 組合驗證層 ====================
 function runVerify() {
   const input = document.getElementById("verifyInput").value.trim();
-  if (!input) {
+  if(!input) {
     alert("請輸入要驗證的號碼組合");
     return;
   }
   
-  const numbers = input.split(/\s+/).map(num => parseInt(num.trim()));
-  
-  if (numbers.length !== 5 || numbers.some(n => isNaN(n) || n < 1 || n > 39)) {
+  const numbers = input.split(/\s+/).map(n => parseInt(n.trim()));
+  if(numbers.length !== 5 || numbers.some(n => isNaN(n) || n < 1 || n > 39)) {
     alert("請輸入5個有效的號碼（1-39之間）");
     return;
   }
   
-  if (new Set(numbers).size !== 5) {
+  if(new Set(numbers).size !== 5) {
     alert("號碼不能重複");
     return;
   }
   
+  const stats = analysisCache || calculateAdvancedStats();
+  displayVerificationResults(numbers, stats);
+}
+
+function displayVerificationResults(numbers, stats) {
   const container = document.getElementById("panelB");
   container.style.display = "block";
   
-  if (!analysisCache) {
-    analysisCache = calculateAdvancedStats();
+  const sorted = [...numbers].sort((a,b) => a-b);
+  const oddCount = numbers.filter(n => n%2===1).length;
+  const sum = numbers.reduce((a,b) => a+b, 0);
+  const span = Math.max(...numbers) - Math.min(...numbers);
+  
+  let overallStatus = "success";
+  let message = "這是一個合理的組合";
+  
+  // 評估條件
+  if(Math.abs(oddCount - stats.avgOdd) > 2) {
+    overallStatus = "warning";
+    message = "奇偶比例與歷史趨勢差異較大";
   }
   
-  const stats = analysisCache;
-  const sortedNumbers = [...numbers].sort((a, b) => a - b);
+  if(sum < stats.minSum || sum > stats.maxSum) {
+    overallStatus = "warning";
+    message = "和值超出歷史範圍";
+  }
   
-  // 計算組合特性
-  const oddCount = numbers.filter(n => n % 2 === 1).length;
-  const sum = numbers.reduce((a, b) => a + b, 0);
-  const span = Math.max(...numbers) - Math.min(...numbers);
-  const avgOdd = stats.avgOdd;
+  if(span < 15) {
+    overallStatus = "warning";
+    message = "號碼跨度偏小";
+  }
   
-  // 評估每個號碼
-  const numberAssessments = numbers.map(num => {
-    const freq = stats.frequency[num] || 0;
-    const freqRatio = (freq / stats.totalDraws).toFixed(3);
-    const daysSince = stats.totalDraws - (stats.lastSeen[num] || 0);
+  // 個別號碼分析
+  const numberAnalysis = numbers.map(num => {
+    const stat = numberStats[num];
+    let status = "normal";
+    let desc = "一般";
     
-    let status = "neutral";
-    let statusText = "一般";
-    
-    if (freqRatio > 0.12) {
+    if(stat.count/stats.totalDraws > 0.12) {
       status = "hot";
-      statusText = "熱門";
-    } else if (freqRatio < 0.05) {
+      desc = "熱門";
+    } else if(stat.count/stats.totalDraws < 0.05) {
       status = "cold";
-      statusText = "冷門";
+      desc = "冷門";
     }
     
-    if (daysSince > 20) {
+    if(stat.lastSeen > 20) {
       status = "missed";
-      statusText = "長期遺漏";
+      desc = "長期遺漏";
     }
     
-    return { num, freqRatio, daysSince, status, statusText };
+    return {num, freq: (stat.count/stats.totalDraws).toFixed(3), missed: stat.lastSeen, status, desc};
   });
   
-  // 整體評估
-  let overallStatus = "success";
-  let overallMessage = "這是一個合理的組合";
-  
-  // 檢查奇偶比
-  if (Math.abs(oddCount - avgOdd) > 2) {
-    overallStatus = "warning";
-    overallMessage = "奇偶比例與歷史趨勢差異較大";
-  }
-  
-  // 檢查和值
-  if (sum < stats.sumStats.min || sum > stats.sumStats.max) {
-    overallStatus = "warning";
-    overallMessage = "和值超出歷史範圍";
-  }
-  
-  // 檢查跨度
-  if (span < 15) {
-    overallStatus = "warning";
-    overallMessage = "號碼跨度偏小";
-  }
-  
-  let html = `
+  container.innerHTML = `
     <div class="box">
-      <div class="box-title">📋 組合驗證結果</div>
-      
+      <div class="box-title">✅ 組合驗證結果</div>
       <div class="numbers-grid">
-        ${sortedNumbers.map(num => `<div class="number-ball">${num}</div>`).join('')}
+        ${sorted.map(num => `<div class="number-ball">${num}</div>`).join('')}
       </div>
-      
-      <div class="status ${overallStatus}">${overallMessage}</div>
-      
+      <div class="status ${overallStatus}">${message}</div>
       <div class="stats-row">
         <div class="stat-item">
           <div class="stat-label">奇偶比例</div>
@@ -850,33 +738,38 @@ function runVerify() {
           <div class="stat-value">${span}</div>
         </div>
         <div class="stat-item">
-          <div class="stat-label">平均奇數</div>
-          <div class="stat-value">${avgOdd}</div>
+          <div class="stat-label">歷史平均</div>
+          <div class="stat-value">${stats.avgOdd}奇</div>
         </div>
       </div>
     </div>
     
     <div class="box">
       <div class="box-title">🔍 個別號碼分析</div>
-      ${numberAssessments.map(item => `
+      ${numberAnalysis.map(item => `
         <div class="stat-item" style="text-align: left; margin-bottom: 10px;">
           <div><strong>號碼 ${item.num}</strong></div>
           <div style="font-size: 0.9rem; color: #8da1b9;">
-            出現頻率：${item.freqRatio} | 
-            遺漏期數：${item.daysSince} | 
-            狀態：<span style="color: ${getStatusColor(item.status)}">${item.statusText}</span>
+            頻率: ${item.freq} | 遺漏: ${item.missed}期 | 
+            狀態: <span style="color: ${getStatusColor(item.status)}">${item.desc}</span>
           </div>
         </div>
       `).join('')}
     </div>
   `;
-  
-  container.innerHTML = html;
 }
 
-// 生成預測
-function generatePrediction() {
-  if (data.length === 0) {
+// ==================== 預測生成層 ====================
+function generateStandardPrediction() {
+  generatePrediction('standard');
+}
+
+function generateAdvancedPrediction() {
+  generatePrediction('advanced');
+}
+
+function generatePrediction(type = 'standard') {
+  if(data.length === 0) {
     alert("請先上載數據文件");
     return;
   }
@@ -884,124 +777,109 @@ function generatePrediction() {
   showLoading("loadingC", true);
   
   setTimeout(() => {
-    if (!analysisCache) {
-      analysisCache = calculateAdvancedStats();
-    }
-    
-    const prediction = generatePredictionNumbers(analysisCache);
-    displayPrediction(prediction);
+    const strategy = document.getElementById("strategySelect").value;
+    const prediction = generatePredictionNumbers(strategy, type);
+    displayPredictionResults(prediction, strategy, type);
     showLoading("loadingC", false);
-  }, 800);
+  }, 600);
 }
 
-// 生成預測號碼
-function generatePredictionNumbers(stats) {
-  const { frequency, lastSeen, totalDraws, sumStats, avgOdd } = stats;
-  
-  // 第一步：選擇潛在號碼池
+function generatePredictionNumbers(strategy, type = 'standard') {
+  const stats = analysisCache || calculateAdvancedStats();
   let candidates = [];
   
-  for (let num = 1; num <= 39; num++) {
-    const freq = frequency[num] || 0;
-    const freqRatio = freq / totalDraws;
-    const daysSince = totalDraws - (lastSeen[num] || 0);
-    
-    // 綜合評分公式
+  for(let num = 1; num <= 39; num++) {
+    const stat = numberStats[num];
+    const freqRatio = stat.count / stats.totalDraws;
     let score = 0;
     
-    // 頻率因素：中等頻率較好
-    if (freqRatio > 0.05 && freqRatio < 0.12) score += 30;
-    else if (freqRatio >= 0.12) score += 20;
-    else score += 10;
+    // 根據策略計算分數
+    switch(strategy) {
+      case 'hot':
+        score = freqRatio * 100 + (stat.lastSeen > 10 ? 10 : 0);
+        break;
+      case 'cold':
+        score = (1 - freqRatio) * 100 + stat.lastSeen * 2;
+        break;
+      case 'pattern':
+        score = 50 + (freqRatio * 50) + (stat.lastSeen > 15 ? 20 : 0);
+        break;
+      default: // balanced
+        score = freqRatio * 60 + Math.min(stat.lastSeen, 20) * 2;
+    }
     
-    // 遺漏因素：適度遺漏較好
-    if (daysSince > 10 && daysSince < 25) score += 40;
-    else if (daysSince >= 25) score += 50; // 長期遺漏加分
-    else if (daysSince <= 5) score += 10; // 最近剛出減分
+    // 進階模式考慮更多因素
+    if(type === 'advanced') {
+      score += stat.consecutivePairs * 5;
+    }
     
-    // 奇偶平衡考慮
-    if (num % 2 === 1) score += 5; // 稍微偏好奇數
-    
-    candidates.push({ num, score, freqRatio, daysSince });
+    candidates.push({num, score});
   }
   
   // 按分數排序
-  candidates.sort((a, b) => b.score - a.score);
+  candidates.sort((a,b) => b.score - a.score);
   
-  // 第二步：從高分中選擇，確保多樣性
+  // 選擇5個號碼，確保多樣性
   const selected = [];
-  const usedNumbers = new Set();
-  
-  // 確保奇偶平衡
   let oddCount = 0;
-  const targetOddCount = avgOdd;
+  const targetOdd = Math.floor(Math.random() * 3) + 2; // 2-4個奇數
   
-  for (let candidate of candidates) {
-    if (selected.length >= 5) break;
+  for(let candidate of candidates) {
+    if(selected.length >= 5) break;
     
-    // 跳過已選號碼
-    if (usedNumbers.has(candidate.num)) continue;
-    
-    // 檢查奇偶平衡
     const isOdd = candidate.num % 2 === 1;
-    if (isOdd && oddCount >= targetOddCount) continue;
-    if (!isOdd && (5 - selected.length - oddCount) < (5 - targetOddCount)) continue;
+    if(isOdd && oddCount >= targetOdd) continue;
     
-    // 檢查跨度（避免太集中）
-    if (selected.length >= 2) {
-      const temp = [...selected, candidate.num].sort((a, b) => a - b);
-      const span = temp[temp.length-1] - temp[0];
-      if (span < 10 && selected.length < 4) continue;
+    // 檢查是否太接近已選號碼
+    let tooClose = false;
+    for(let selectedNum of selected) {
+      if(Math.abs(candidate.num - selectedNum) < 5) {
+        tooClose = true;
+        break;
+      }
     }
     
-    // 檢查和值範圍
-    const tempSum = [...selected, candidate.num].reduce((a, b) => a + b, 0);
-    if (selected.length === 4) {
-      const expectedSum = Math.round(sumStats.avg);
-      if (Math.abs(tempSum - expectedSum) > 30) continue;
+    if(!tooClose) {
+      selected.push(candidate.num);
+      if(isOdd) oddCount++;
     }
-    
-    // 通過所有檢查，加入選擇
-    selected.push(candidate.num);
-    usedNumbers.add(candidate.num);
-    if (isOdd) oddCount++;
   }
   
   // 如果不夠5個，補齊
-  while (selected.length < 5) {
-    for (let i = 1; i <= 39; i++) {
-      if (!usedNumbers.has(i)) {
+  while(selected.length < 5) {
+    for(let i = 1; i <= 39; i++) {
+      if(!selected.includes(i)) {
         selected.push(i);
-        usedNumbers.add(i);
         break;
       }
     }
   }
   
-  // 排序最終結果
-  return selected.sort((a, b) => a - b);
+  return selected.sort((a,b) => a-b);
 }
 
-// 顯示預測結果
-function displayPrediction(numbers) {
+function displayPredictionResults(numbers, strategy, type) {
   const container = document.getElementById("panelC");
   container.style.display = "block";
   
-  const oddCount = numbers.filter(n => n % 2 === 1).length;
-  const sum = numbers.reduce((a, b) => a + b, 0);
+  const oddCount = numbers.filter(n => n%2===1).length;
+  const sum = numbers.reduce((a,b) => a+b, 0);
   const span = Math.max(...numbers) - Math.min(...numbers);
-  const avg = sum / 5;
   
-  let html = `
+  const strategyNames = {
+    'balanced': '均衡策略',
+    'hot': '熱門策略',
+    'cold': '冷門策略',
+    'pattern': '模式策略'
+  };
+  
+  container.innerHTML = `
     <div class="box">
-      <div class="box-title">🎯 智能預測組合</div>
-      
+      <div class="box-title">🎯 ${type === 'advanced' ? '進階' : '標準'}預測結果</div>
       <div class="numbers-grid">
         ${numbers.map(num => `<div class="number-ball" style="background: linear-gradient(135deg, #00ff99, #00cc7a);">${num}</div>`).join('')}
       </div>
-      
-      <div class="status success">✅ 基於歷史數據的智能預測組合</div>
-      
+      <div class="status success">✅ 使用策略：${strategyNames[strategy]} | 類型：${type === 'advanced' ? '進階模式' : '標準模式'}</div>
       <div class="stats-row">
         <div class="stat-item">
           <div class="stat-label">奇偶比例</div>
@@ -1012,60 +890,162 @@ function displayPrediction(numbers) {
           <div class="stat-value">${sum}</div>
         </div>
         <div class="stat-item">
-          <div class="stat-label">平均號碼</div>
-          <div class="stat-value">${avg.toFixed(1)}</div>
-        </div>
-        <div class="stat-item">
           <div class="stat-label">號碼跨度</div>
           <div class="stat-value">${span}</div>
         </div>
-      </div>
-    </div>
-    
-    <div class="box">
-      <div class="box-title">📊 組合特性分析</div>
-      
-      <div style="margin: 15px 0;">
-        <div style="margin-bottom: 10px;">
-          <strong>奇偶平衡：</strong>
-          <span style="color: ${Math.abs(oddCount - 2) <= 1 ? '#00ff99' : '#ffcc00'}">
-            ${oddCount === 2 || oddCount === 3 ? '良好' : '尚可'}
-          </span>
+        <div class="stat-item">
+          <div class="stat-label">策略類型</div>
+          <div class="stat-value">${strategyNames[strategy]}</div>
         </div>
-        
-        <div style="margin-bottom: 10px;">
-          <strong>號碼分佈：</strong>
-          <span style="color: ${span >= 20 ? '#00ff99' : '#ffcc00'}">
-            ${span >= 20 ? '分散良好' : '較為集中'}
-          </span>
-        </div>
-        
-        <div style="margin-bottom: 10px;">
-          <strong>和值合理性：</strong>
-          <span style="color: ${sum >= 80 && sum <= 150 ? '#00ff99' : '#ffcc00'}">
-            ${sum >= 80 && sum <= 150 ? '合理範圍' : '偏離常規'}
-          </span>
-        </div>
-      </div>
-      
-      <div class="status warning">
-        💡 提示：建議將此組合與其他策略結果結合參考
       </div>
     </div>
   `;
+}
+
+// ==================== 全車號碼預測層 ====================
+function generateFullCarByFrequency() {
+  generateFullCarNumbers('frequency');
+}
+
+function generateFullCarByMissed() {
+  generateFullCarNumbers('missed');
+}
+
+function generateFullCarNumbers(mode = 'frequency') {
+  if(data.length === 0) {
+    alert("請先上載數據文件");
+    return;
+  }
   
-  container.innerHTML = html;
+  showLoading("loadingD", true);
+  
+  setTimeout(() => {
+    const allNumbers = Array.from({length: 39}, (_, i) => i + 1);
+    let sortedNumbers;
+    
+    if(mode === 'missed') {
+      // 按遺漏期數排序（遺漏最久的優先）
+      sortedNumbers = [...allNumbers].sort((a,b) => 
+        numberStats[b].lastSeen - numberStats[a].lastSeen
+      );
+    } else {
+      // 按出現頻率排序（頻率最高的優先）
+      sortedNumbers = [...allNumbers].sort((a,b) => 
+        numberStats[b].count - numberStats[a].count
+      );
+    }
+    
+    displayFullCarNumbers(sortedNumbers, mode);
+    showLoading("loadingD", false);
+  }, 500);
 }
 
-// 工具函數
-function showStatus(elementId, message, type = "info") {
-  const element = document.getElementById(elementId);
-  element.innerHTML = `<div class="status ${type}">${message}</div>`;
+function displayFullCarNumbers(numbers, mode) {
+  const container = document.getElementById("panelD");
+  container.style.display = "block";
+  
+  const modeNames = {
+    'frequency': '按出現頻率排序',
+    'missed': '按遺漏期數排序'
+  };
+  
+  // 分組顯示（每行10個號碼）
+  const groups = [];
+  for(let i = 0; i < numbers.length; i += 10) {
+    groups.push(numbers.slice(i, i + 10));
+  }
+  
+  container.innerHTML = `
+    <div class="box">
+      <div class="box-title">🚗 全車號碼預測 - ${modeNames[mode]}</div>
+      ${groups.map((group, idx) => `
+        <div style="margin: 15px 0;">
+          <div style="color: var(--info); margin-bottom: 8px;">第${idx*10+1}-${Math.min((idx+1)*10, 39)}號：</div>
+          <div class="numbers-grid">
+            ${group.map(num => `
+              <div class="number-ball" title="出現:${numberStats[num].count}次 遺漏:${numberStats[num].lastSeen}期">
+                ${num}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <div class="status info">
+        💡 提示：${mode === 'frequency' ? 
+          '號碼按歷史出現頻率排序，越前面的號碼在歷史上出現次數越多' : 
+          '號碼按遺漏期數排序，越前面的號碼已經越久沒有開出'}
+      </div>
+    </div>
+  `;
 }
 
-function showLoading(loadingId, show) {
-  const element = document.getElementById(loadingId);
-  element.style.display = show ? "block" : "none";
+function generateMultiplePredictions() {
+  if(data.length === 0) {
+    alert("請先上載數據文件");
+    return;
+  }
+  
+  showLoading("loadingD", true);
+  
+  setTimeout(() => {
+    const strategies = ['balanced', 'hot', 'cold', 'pattern'];
+    const predictions = [];
+    
+    // 生成4種策略的預測
+    strategies.forEach(strategy => {
+      predictions.push({
+        strategy,
+        numbers: generatePredictionNumbers(strategy, 'advanced')
+      });
+    });
+    
+    displayMultiplePredictions(predictions);
+    showLoading("loadingD", false);
+  }, 800);
+}
+
+function displayMultiplePredictions(predictions) {
+  const container = document.getElementById("panelD");
+  container.style.display = "block";
+  
+  const strategyNames = {
+    'balanced': '均衡策略',
+    'hot': '熱門策略',
+    'cold': '冷門策略',
+    'pattern': '模式策略'
+  };
+  
+  container.innerHTML = `
+    <div class="box">
+      <div class="box-title">🎲 多策略預測組合</div>
+      <div class="predictions-container">
+        ${predictions.map(pred => `
+          <div class="prediction-card">
+            <div class="prediction-title">${strategyNames[pred.strategy]}</div>
+            <div class="numbers-grid" style="grid-template-columns: repeat(5, 1fr);">
+              ${pred.numbers.map(num => `<div class="number-ball">${num}</div>`).join('')}
+            </div>
+            <div style="font-size: 0.8rem; color: #8da1b9; margin-top: 8px; text-align: center;">
+              奇偶: ${pred.numbers.filter(n => n%2===1).length}奇 | 
+              和值: ${pred.numbers.reduce((a,b) => a+b, 0)}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="status info">
+        💡 提示：結合多種策略的預測結果進行參考，可以提高分析的全面性
+      </div>
+    </div>
+  `;
+}
+
+// ==================== 工具函數 ====================
+function showStatus(id, msg, type = "info") {
+  document.getElementById(id).innerHTML = `<div class="status ${type}">${msg}</div>`;
+}
+
+function showLoading(id, show) {
+  document.getElementById(id).style.display = show ? "block" : "none";
 }
 
 function getStatusColor(status) {
@@ -1076,33 +1056,6 @@ function getStatusColor(status) {
     default: return "#8da1b9";
   }
 }
-
-// 初始化頁面
-document.addEventListener('DOMContentLoaded', function() {
-  // 添加文件拖放支持
-  const fileInput = document.getElementById('csvInput');
-  const panel1 = document.querySelector('.panel-1');
-  
-  panel1.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    panel1.style.borderColor = '#00ff99';
-  });
-  
-  panel1.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    panel1.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-  });
-  
-  panel1.addEventListener('drop', function(e) {
-    e.preventDefault();
-    panel1.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-    
-    if (e.dataTransfer.files.length) {
-      fileInput.files = e.dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change'));
-    }
-  });
-});
 </script>
 </body>
 </html>
