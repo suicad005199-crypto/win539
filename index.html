@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>彩票历史数据分析系统（非预测工具）</title>
+    <title>539彩票历史数据分析系统（非预测工具）</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
@@ -87,6 +87,49 @@
             border-radius: 10px;
         }
         
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .upload-area:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+            border-color: #2980b9;
+        }
+        
+        .upload-area.dragover {
+            background-color: rgba(52, 152, 219, 0.2);
+            border-color: #1c6699;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .file-info.show {
+            display: block;
+        }
+        
         textarea {
             width: 100%;
             height: 150px;
@@ -122,6 +165,22 @@
         
         button.secondary:hover {
             background-color: #6c7b7d;
+        }
+        
+        button.success {
+            background-color: #2ecc71;
+        }
+        
+        button.success:hover {
+            background-color: #27ae60;
+        }
+        
+        button.warning {
+            background-color: #e74c3c;
+        }
+        
+        button.warning:hover {
+            background-color: #c0392b;
         }
         
         .stats-grid {
@@ -239,6 +298,45 @@
             padding: 10px;
         }
         
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 1024px) {
             .container {
                 grid-template-columns: 1fr;
@@ -262,20 +360,39 @@
     
     <div class="container">
         <!-- 数据输入区域 -->
-        <div class="card data-input">
+        <div class="card data-input full-width">
             <h2>1. 数据导入</h2>
-            <p>请粘贴CSV格式的历史开奖数据（格式：開獎日期,獎號1,獎號2,獎號3,獎號4,獎號5）：</p>
-            <textarea id="csvData" placeholder="例如:
-開獎日期,獎號1,獎號2,獎號3,獎號4,獎號5
-2023/01/02,6,8,10,12,25
-2023/01/03,12,14,25,30,34
-2023/01/04,8,18,29,31,36
-..."></textarea>
-            <div>
-                <button onclick="loadData()">分析数据</button>
+            
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📁</div>
+                <h3>点击或拖拽CSV文件到此区域</h3>
+                <p>支持格式：開獎日期,獎號1,獎號2,獎號3,獎號4,獎號5</p>
+                <p style="font-size: 12px; color: #7f8c8d; margin-top: 10px;">
+                    文件大小限制：10MB | 仅支持.csv和.txt文件
+                </p>
+            </div>
+            
+            <input type="file" id="fileInput" class="file-input" accept=".csv,.txt" onchange="handleFileSelect(event)">
+            
+            <div class="file-info" id="fileInfo">
+                <strong>已选择文件：</strong><span id="fileName"></span>
+                <span id="fileSize" style="float: right;"></span>
+            </div>
+            
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="loading" id="loadingIndicator">
+                <div class="loading-spinner"></div>
+                <p>正在分析数据...</p>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="analyzeData()" id="analyzeBtn">分析数据</button>
                 <button class="secondary" onclick="loadSampleData()">载入示例数据</button>
-                <button class="secondary" onclick="clearData()">清除数据</button>
-                <button class="secondary" onclick="exportAnalysis()">导出分析报告</button>
+                <button class="warning" onclick="clearData()">清除数据</button>
+                <button class="success" onclick="exportAnalysis()" id="exportBtn" disabled>导出分析报告</button>
             </div>
             
             <div id="dataInfo" style="margin-top: 20px; display: none;">
@@ -379,6 +496,7 @@
         // 全局变量
         let rawData = [];
         let numberStats = {};
+        let currentFileName = '';
         const allNumbers = Array.from({length: 39}, (_, i) => i + 1); // 1-39号码
         
         // 初始化统计对象
@@ -394,34 +512,117 @@
             });
         }
         
-        // 加载数据
-        function loadData() {
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 显示文件信息
+            currentFileName = file.name;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileInfo').classList.add('show');
+            
+            // 显示进度条
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('progressFill').style.width = '0%';
+            
+            // 启用分析按钮
+            document.getElementById('analyzeBtn').disabled = false;
+            
+            // 读取文件内容
+            const reader = new FileReader();
+            
+            reader.onloadstart = function() {
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('progressFill').style.width = '30%';
+            };
+            
+            reader.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    document.getElementById('progressFill').style.width = percent + '%';
+                }
+            };
+            
+            reader.onload = function(e) {
+                document.getElementById('progressFill').style.width = '100%';
+                
+                // 将文件内容放入textarea（可选）
+                document.getElementById('csvData').value = e.target.result;
+                
+                setTimeout(() => {
+                    document.getElementById('progressBar').style.display = 'none';
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    alert(`文件 "${file.name}" 加载成功！请点击"分析数据"按钮`);
+                }, 500);
+            };
+            
+            reader.onerror = function() {
+                alert('读取文件时发生错误');
+                document.getElementById('progressBar').style.display = 'none';
+                document.getElementById('loadingIndicator').style.display = 'none';
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 分析数据
+        function analyzeData() {
             const csvText = document.getElementById('csvData').value.trim();
             if (!csvText) {
-                alert('请输入CSV数据');
+                alert('请先选择或载入CSV文件');
                 return;
             }
             
-            try {
-                const results = Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: true
-                });
-                
-                // 反转数据，让最新的在最后（根据您的说明）
-                rawData = results.data.reverse();
-                
-                if (rawData.length === 0) {
-                    alert('未找到有效数据');
-                    return;
+            // 显示加载指示器
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // 使用setTimeout避免阻塞UI
+            setTimeout(() => {
+                try {
+                    const results = Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        dynamicTyping: true
+                    });
+                    
+                    if (results.errors.length > 0) {
+                        console.warn('CSV解析警告:', results.errors);
+                    }
+                    
+                    // 反转数据，让最新的在最后
+                    rawData = results.data.reverse();
+                    
+                    if (rawData.length === 0) {
+                        alert('未找到有效数据');
+                        document.getElementById('loadingIndicator').style.display = 'none';
+                        return;
+                    }
+                    
+                    processData();
+                    updateUI();
+                    
+                    // 启用导出按钮
+                    document.getElementById('exportBtn').disabled = false;
+                    
+                    // 隐藏加载指示器
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    
+                } catch (error) {
+                    alert('解析CSV数据时出错: ' + error.message);
+                    document.getElementById('loadingIndicator').style.display = 'none';
                 }
-                
-                processData();
-                updateUI();
-                
-            } catch (error) {
-                alert('解析CSV数据时出错: ' + error.message);
-            }
+            }, 100);
         }
         
         // 处理数据
@@ -435,12 +636,14 @@
                 // 更新每个号码的统计
                 for (let i = 1; i <= 5; i++) {
                     const numKey = `獎號${i}`;
-                    if (row[numKey]) {
-                        const num = parseInt(row[numKey]);
-                        if (num >= 1 && num <= 39) {
-                            numberStats[num].count++;
-                            numberStats[num].lastSeen = 0; // 重置为0（本期出现）
-                            numberStats[num].lastDrawDate = drawDate;
+                    const num = row[numKey];
+                    
+                    if (num !== undefined && num !== null && num !== '') {
+                        const numInt = parseInt(num);
+                        if (!isNaN(numInt) && numInt >= 1 && numInt <= 39) {
+                            numberStats[numInt].count++;
+                            numberStats[numInt].lastSeen = 0; // 重置为0（本期出现）
+                            numberStats[numInt].lastDrawDate = drawDate;
                         }
                     }
                 }
@@ -450,9 +653,12 @@
                     let found = false;
                     for (let i = 1; i <= 5; i++) {
                         const numKey = `獎號${i}`;
-                        if (parseInt(row[numKey]) === num) {
-                            found = true;
-                            break;
+                        const rowNum = row[numKey];
+                        if (rowNum !== undefined && rowNum !== null && rowNum !== '') {
+                            if (parseInt(rowNum) === num) {
+                                found = true;
+                                break;
+                            }
                         }
                     }
                     
@@ -472,13 +678,13 @@
         // 更新UI
         function updateUI() {
             // 更新基本信息
-            document.getElementById('totalDraws').textContent = rawData.length;
+            document.getElementById('totalDraws').textContent = rawData.length.toLocaleString();
             document.getElementById('dataInfo').style.display = 'block';
             
             // 计算日期范围
             if (rawData.length > 0) {
-                const firstDate = rawData[0]['開獎日期'];
-                const lastDate = rawData[rawData.length - 1]['開獎日期'];
+                const firstDate = rawData[0]['開獎日期'] || '未知';
+                const lastDate = rawData[rawData.length - 1]['開獎日期'] || '未知';
                 document.getElementById('dateRange').textContent = `${firstDate} ~ ${lastDate}`;
                 document.getElementById('lastDate').textContent = lastDate;
             }
@@ -527,10 +733,10 @@
                     latest['獎號3'],
                     latest['獎號4'],
                     latest['獎號5']
-                ].filter(n => n).map(n => parseInt(n));
+                ].filter(n => n !== undefined && n !== null && n !== '').map(n => parseInt(n));
                 
                 section.innerHTML = `
-                    <h3>${latest['開獎日期']}</h3>
+                    <h3>${latest['開獎日期'] || '未知日期'}</h3>
                     <div class="number-display">
                         ${numbers.map(num => `
                             <div class="number-ball" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
@@ -656,7 +862,9 @@
                 const numbers = [];
                 for (let i = 1; i <= 5; i++) {
                     const numKey = `獎號${i}`;
-                    if (row[numKey]) numbers.push(parseInt(row[numKey]));
+                    if (row[numKey] !== undefined && row[numKey] !== null && row[numKey] !== '') {
+                        numbers.push(parseInt(row[numKey]));
+                    }
                 }
                 
                 const oddCount = numbers.filter(n => n % 2 === 1).length;
@@ -800,14 +1008,15 @@
         // 导出分析报告
         function exportAnalysis() {
             if (rawData.length === 0) {
-                alert('请先导入数据');
+                alert('请先导入数据并进行分析');
                 return;
             }
             
             let report = "=== 539彩票历史数据分析报告 ===\n\n";
             report += `分析时间：${new Date().toLocaleString('zh-TW')}\n`;
+            report += `数据来源：${currentFileName || '未知文件'}\n`;
             report += `数据期数：${rawData.length}期\n`;
-            report += `数据期间：${rawData[0]['開獎日期']} ~ ${rawData[rawData.length - 1]['開獎日期']}\n\n`;
+            report += `数据期间：${rawData[0]['開獎日期'] || '未知'} ~ ${rawData[rawData.length - 1]['開獎日期'] || '未知'}\n\n`;
             
             // 热号冷号
             const sortedNumbers = allNumbers
@@ -834,12 +1043,31 @@
                 report += `${index + 1}. 号码 ${item.num}: 遗漏 ${item.miss}期\n`;
             });
             
+            report += "\n★ 尾数分布分析：\n";
+            const tailStats = {};
+            for (let i = 0; i <= 9; i++) tailStats[i] = 0;
+            allNumbers.forEach(num => {
+                tailStats[num % 10] += numberStats[num].count;
+            });
+            
+            Object.entries(tailStats)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([tail, count]) => {
+                    const percentage = (count / (rawData.length * 5) * 100).toFixed(1);
+                    report += `尾数 ${tail}: ${count}次 (${percentage}%)\n`;
+                });
+            
+            report += "\n=== 免责声明 ===\n";
+            report += "本报告仅为历史数据分析，不具任何预测功能。\n";
+            report += "彩票开奖为随机事件，请理性购彩，量力而行。\n";
+            
             // 创建下载链接
             const blob = new Blob([report], {type: 'text/plain;charset=utf-8'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `539分析报告_${new Date().toISOString().slice(0,10)}.txt`;
+            const timestamp = new Date().toISOString().slice(0,19).replace(/[:]/g, '-');
+            a.download = `539分析报告_${timestamp}.txt`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -865,40 +1093,98 @@
 2023/01/17,7,13,24,31,37
 2023/01/18,2,9,16,26,39
 2023/01/19,1,14,21,32,35
-2023/01/20,5,12,19,30,34`;
+2023/01/20,5,12,19,30,34
+2023/01/23,8,15,22,29,36
+2023/01/24,3,11,18,27,38
+2023/01/25,6,14,21,30,39`;
             
             document.getElementById('csvData').value = sampleData;
+            currentFileName = '示例数据.csv';
+            document.getElementById('fileName').textContent = '示例数据.csv';
+            document.getElementById('fileSize').textContent = '约1KB';
+            document.getElementById('fileInfo').classList.add('show');
+            document.getElementById('analyzeBtn').disabled = false;
+            
             alert('示例数据已加载，请点击"分析数据"按钮');
         }
         
         // 清除数据
         function clearData() {
-            document.getElementById('csvData').value = '';
-            rawData = [];
-            initStats();
-            
-            // 重置UI
-            document.getElementById('dataInfo').style.display = 'none';
-            document.getElementById('latestDrawSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看最新开奖</p>';
-            document.getElementById('hotColdSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
-            document.getElementById('dataPreview').innerHTML = '<p style="color: #7f8c8d; text-align: center;">数据将在此显示</p>';
-            document.getElementById('paritySizeSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
-            document.getElementById('missAnalysisSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
-            document.getElementById('tailNumberSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
-            
-            // 清除图表
-            const chartCanvas = document.getElementById('frequencyChart');
-            if (chartCanvas) {
-                const chart = Chart.getChart(chartCanvas);
-                if (chart) {
-                    chart.destroy();
+            if (confirm('确定要清除所有数据吗？')) {
+                document.getElementById('csvData').value = '';
+                document.getElementById('fileInput').value = '';
+                document.getElementById('fileInfo').classList.remove('show');
+                document.getElementById('progressBar').style.display = 'none';
+                document.getElementById('loadingIndicator').style.display = 'none';
+                
+                rawData = [];
+                currentFileName = '';
+                initStats();
+                
+                // 重置UI
+                document.getElementById('dataInfo').style.display = 'none';
+                document.getElementById('latestDrawSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看最新开奖</p>';
+                document.getElementById('hotColdSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+                document.getElementById('dataPreview').innerHTML = '<p style="color: #7f8c8d; text-align: center;">数据将在此显示</p>';
+                document.getElementById('paritySizeSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+                document.getElementById('missAnalysisSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+                document.getElementById('tailNumberSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+                
+                // 清除图表
+                const chartCanvas = document.getElementById('frequencyChart');
+                if (chartCanvas) {
+                    const chart = Chart.getChart(chartCanvas);
+                    if (chart) {
+                        chart.destroy();
+                    }
                 }
+                
+                // 禁用按钮
+                document.getElementById('analyzeBtn').disabled = true;
+                document.getElementById('exportBtn').disabled = true;
+                
+                alert('数据已清除');
             }
+        }
+        
+        // 初始化拖放功能
+        function initDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            // 拖放事件处理
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleFileSelect({target: {files: files}});
+                }
+            });
         }
         
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
             initStats();
+            initDragAndDrop();
+            
+            // 初始禁用分析按钮
+            document.getElementById('analyzeBtn').disabled = true;
         });
     </script>
 </body>
