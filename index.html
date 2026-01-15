@@ -3,87 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CSV 邏輯驗證面板</title>
+    <title>CSV 邏輯驗證專家</title>
     <style>
         :root { --ios-blue: #007AFF; --ios-bg: #F2F2F7; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px 15px; color: #1C1C1E; }
-        .upload-section { background: white; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        input[type="file"] { margin-top: 10px; font-size: 14px; width: 100%; }
-        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .num-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .num-circle { background: var(--ios-blue); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .method-box { background: #F8F8FA; border-left: 3px solid var(--ios-blue); padding: 10px; border-radius: 4px; font-size: 14px; }
-        .found { color: #34C759; font-weight: bold; }
-        .not-found { color: #FF3B30; font-weight: bold; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; color: #1C1C1E; }
+        .upload-card { background: white; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--ios-blue); }
+        .num-title { font-size: 24px; font-weight: 800; color: var(--ios-blue); margin-bottom: 10px; }
+        .logic-item { background: #F8F8FA; padding: 10px; border-radius: 8px; font-size: 14px; margin-top: 8px; line-height: 1.5; }
+        .highlight { color: #D70015; font-weight: bold; }
+        input[type="file"] { margin-top: 15px; width: 100%; }
     </style>
 </head>
 <body>
 
-    <div class="upload-section">
-        <h3>上傳數據進行驗證</h3>
+    <div class="upload-card">
+        <h3>分析數據產生邏輯</h3>
+        <p style="font-size: 13px; color: #666;">請上傳 CSV，系統將比對 1, 33, 16, 35, 2 的運算來源</p>
         <input type="file" id="csvFile" accept=".csv">
     </div>
 
-    <div id="results">
-        </div>
+    <div id="results"></div>
 
     <script>
         const targets = [1, 33, 16, 35, 2];
         const fileInput = document.getElementById('csvFile');
-        const resultsDiv = document.getElementById('results');
 
         fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
             const reader = new FileReader();
-
             reader.onload = function(event) {
-                const text = event.target.result;
-                processData(text);
+                const rows = event.target.result.split('\n').map(r => r.split(',').map(v => parseFloat(v.trim())));
+                analyzeLogic(rows);
             };
-            reader.readAsText(file);
+            reader.readAsText(e.target.files[0]);
         });
 
-        function processData(csvText) {
-            const rows = csvText.split('\n').map(row => row.split(','));
-            resultsDiv.innerHTML = '<h2>驗證結果</h2>';
+        function analyzeLogic(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
 
-            targets.forEach(target => {
-                let foundLocation = null;
-                
-                // 遍歷搜尋邏輯
-                for (let r = 0; r < rows.length; r++) {
-                    for (let c = 0; c < rows[r].length; c++) {
-                        if (parseFloat(rows[r][c]) === target) {
-                            foundLocation = { row: r + 1, col: c + 1 };
-                            break;
-                        }
-                    }
-                    if (foundLocation) break;
-                }
+            targets.forEach(num => {
+                let logicFound = [];
 
-                renderCard(target, foundLocation);
+                // 邏輯 1: 欄位統計
+                data[0].forEach((_, colIndex) => {
+                    const colData = data.map(r => r[colIndex]).filter(v => !isNaN(v));
+                    if (Math.max(...colData) === num) logicFound.push(`該號碼是第 ${colIndex+1} 欄的 <b class="highlight">最大值</b>`);
+                    if (Math.min(...colData) === num) logicFound.push(`該號碼是第 ${colIndex+1} 欄的 <b class="highlight">最小值</b>`);
+                    
+                    // 邏輯 2: 出現次數（熱門號碼）
+                    const counts = {};
+                    colData.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                    const mostFrequent = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                    if (parseFloat(mostFrequent) === num) logicFound.push(`該號碼是第 ${colIndex+1} 欄出現次數最多的 <b class="highlight">熱門值</b>`);
+                });
+
+                // 邏輯 3: 行內運算 (例如最後一列的各項)
+                const lastRow = data[data.length - 1];
+                if (lastRow.includes(num)) logicFound.push(`該號碼直接出現在 <b class="highlight">最新一筆數據</b> 中`);
+
+                renderResult(num, logicFound);
             });
         }
 
-        function renderCard(target, loc) {
-            const statusClass = loc ? 'found' : 'not-found';
-            const statusText = loc ? '已驗證成功' : '未在檔案中找到';
-            const methodContent = loc 
-                ? `於 CSV 第 <span style="text-decoration:underline">${loc.row}</span> 列，第 <span style="text-decoration:underline">${loc.col}</span> 欄匹配成功。` 
-                : '請檢查原始檔案是否包含此數值。';
-
-            resultsDiv.innerHTML += `
+        function renderResult(num, logics) {
+            const html = `
                 <div class="card">
-                    <div class="num-header">
-                        <div class="num-circle">${target}</div>
-                        <span class="${statusClass}">${statusText}</span>
-                    </div>
-                    <div class="method-box">
-                        <strong>取得方式：</strong><br>
-                        ${methodContent}
+                    <div class="num-title">${num}</div>
+                    <div class="logic-item">
+                        <strong>分析報告：</strong><br>
+                        ${logics.length > 0 ? logics.join('<br>') : '未發現規律，可能為隨機值或複雜組合公式。'}
                     </div>
                 </div>
             `;
+            document.getElementById('results').innerHTML += html;
         }
     </script>
 </body>
