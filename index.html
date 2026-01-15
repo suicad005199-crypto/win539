@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>539 30策略回測與最強預測</title>
+<title>539 策略回測與最強預測</title>
 <style>
 :root{
     --ios-blue: #007AFF;
@@ -100,7 +100,7 @@ input.num-box{
 </div>
 
 <div class="section">
-    <button class="btn" onclick="findStrongestStrategy()">自動選最強策略 & 預測今天號碼</button>
+    <button class="btn" onclick="findStrongestStrategy()">預測今天號碼（策略 29）</button>
     <div id="strongestPanel" class="prediction-panel" style="margin-top:10px;"></div>
 </div>
 
@@ -110,18 +110,16 @@ input.num-box{
 let globalData=[];
 let strategyResults={};
 
-// 生成30個策略 panel
-for(let i=1;i<=30;i++){
-    const div=document.createElement('div');
-    div.className='section';
-    div.innerHTML=`
-        <h3>策略 ${i}</h3>
-        <button class="btn" onclick="generateNumbers(${i})">產生號碼</button>
-        <div id="result-${i}" class="prediction-panel"></div>
-        <div id="hit-${i}" style="margin-top:5px;font-size:13px;color:#555"></div>
-    `;
-    document.getElementById('strategyPanels').appendChild(div);
-}
+// 生成單一策略 panel（策略29）
+const div=document.createElement('div');
+div.className='section';
+div.innerHTML=`
+    <h3>策略 29</h3>
+    <button class="btn" onclick="generateNumbers(29)">產生號碼</button>
+    <div id="result-29" class="prediction-panel"></div>
+    <div id="hit-29" style="margin-top:5px;font-size:13px;color:#555"></div>
+`;
+document.getElementById('strategyPanels').appendChild(div);
 
 // CSV 上傳
 document.getElementById('csvInput').addEventListener('change',function(e){
@@ -147,50 +145,14 @@ function getTargetNumbers(){
     return nums;
 }
 
-// 策略邏輯函數
+// 生成策略29號碼
 function generateNumbers(strategy){
     if(globalData.length===0) return alert('請先上傳 CSV');
     const targetNumbers=getTargetNumbers();
     if(targetNumbers.length!==5) return alert('請輸入完整昨日開獎號碼');
 
-    const allNumbers=globalData.flat().filter(isLotteryNumber);
-    let result=[];
     const pool=Array.from({length:39},(_,i)=>i+1);
-
-    switch(strategy){
-        case 2: result=getTopNumbers(allNumbers,5,false); break;
-        case 6: result=getConsecutiveNumbers(allNumbers,5); break;
-        case 10: result=getOddEvenNumbers(allNumbers,[2,3]); break;
-        case 15: result=getLongestAbsentNumbers(allNumbers,5); break;
-        case 22: result=getRecentRepeatNumbers(2,5); break; // 暫保留
-        case 23: result=getConsecutiveBiasNumbers(allNumbers,5); break;
-
-        // 新策略（其他全部替換）
-        case 1: result=getRandomWeightedByTail(pool,5); break;
-        case 3: result=getAlternatingOddEven(pool,5); break;
-        case 4: result=getFrontSectionHighFreq(allNumbers,5); break;
-        case 5: result=getBackSectionLowFreq(allNumbers,5); break;
-        case 7: result=getSumRangeBalanced(allNumbers,5); break;
-        case 8: result=getLastDigitBias(allNumbers,5); break;
-        case 9: result=getMirrorNumbers(pool,5); break;
-        case 11: result=getClusterSpread(allNumbers,5); break;
-        case 12: result=getRandomExcludeRecent(allNumbers,5); break;
-        case 13: result=getHotTailNumbers(allNumbers,5); break;
-        case 14: result=getColdTailNumbers(allNumbers,5); break;
-        case 16: result=getEvenOddBalance(allNumbers,5); break;
-        case 17: result=getHighLowMix(allNumbers,5); break;
-        case 18: result=getRandomFromTopFreq(allNumbers,5); break;
-        case 19: result=getCrossOddEvenMix(allNumbers,5); break;
-        case 20: result=getFrontBackOddMix(allNumbers,5); break;
-        case 21: result=getAdjacentSpread(allNumbers,5); break;
-        case 24: result=getRepeatingPattern(allNumbers,5); break;
-        case 25: result=getTailFrequencyMix(allNumbers,5); break;
-        case 26: result=getOddCluster(allNumbers,5); break;
-        case 27: result=getEvenCluster(allNumbers,5); break;
-        case 28: result=getHighLowOddMix(allNumbers,5); break;
-        case 29: result=getMirrorTailMix(allNumbers,5); break;
-        case 30: result=getRandom(pool,5); break;
-    }
+    let result=getMirrorTailMix(pool,5); // 策略29
 
     const hitNumbers=result.filter(n=>targetNumbers.includes(n));
     const hitCount=hitNumbers.length;
@@ -205,51 +167,22 @@ function generateNumbers(strategy){
     strategyResults[strategy]={result,hitCount};
 }
 
+// 預測今天號碼
 function findStrongestStrategy(){
-    const maxHit=Math.max(...Object.values(strategyResults).map(s=>s.hitCount||0));
-    const strongest=Object.keys(strategyResults).find(k=>strategyResults[k].hitCount===maxHit);
-    if(!strongest) return alert('請先生成所有策略');
-
-    const todayNumbers=strategyResults[strongest].result;
+    if(!strategyResults[29]) return alert('請先生成策略 29 的號碼');
+    const todayNumbers=strategyResults[29].result;
     const panel=document.getElementById('strongestPanel');
-    panel.innerHTML=`最強策略：策略 ${strongest}（昨日命中 ${maxHit}）`+
+    panel.innerHTML=`策略 29 預測今天號碼：`+
                     todayNumbers.map(n=>`<div class="predict-num">${n}</div>`).join('');
-    alert(`最強策略是策略 ${strongest}，已生成今天號碼建議`);
 }
 
-/* ===== 各策略輔助函數 ===== */
-function getTopNumbers(arr,count,isHot=true){ const freq={}; arr.forEach(n=>freq[n]=(freq[n]||0)+1); let sorted=Object.keys(freq).sort((a,b)=>isHot?freq[b]-freq[a]:freq[a]-freq[b]); return sorted.slice(0,count).map(Number);}
-function getRandom(pool,count){ const copy=[...pool]; const res=[]; while(res.length<count){ const idx=Math.floor(Math.random()*copy.length); res.push(copy[idx]); copy.splice(idx,1);} return res;}
-function getConsecutiveNumbers(arr,count){ const sorted=[...new Set(arr)].sort((a,b)=>a-b); for(let i=0;i<sorted.length-count+1;i++){ return sorted.slice(i,i+count);} return sorted.slice(0,count);}
-function getOddEvenNumbers(arr,[oddCount,evenCount]){ const odd=arr.filter(n=>n%2===1); const even=arr.filter(n=>n%2===0); return getRandom(odd,oddCount).concat(getRandom(even,evenCount));}
-function getLongestAbsentNumbers(arr,count){return getTopNumbers(arr,count,false);}
-function getConsecutiveBiasNumbers(arr,count){return getConsecutiveNumbers(arr,count);}
-function getRecentRepeatNumbers(period,count){return getRandom(arr,5);}
-
-// ===== 新策略範例函數 =====
-function getRandomWeightedByTail(pool,count){ return getRandom(pool,count); }
-function getAlternatingOddEven(pool,count){ return [1,2,3,4,5]; }
-function getFrontSectionHighFreq(arr,count){ return getRandom(arr,count); }
-function getBackSectionLowFreq(arr,count){ return getRandom(arr,count); }
-function getSumRangeBalanced(arr,count){ return getRandom(arr,count); }
-function getLastDigitBias(arr,count){ return getRandom(arr,count); }
-function getMirrorNumbers(pool,count){ return getRandom(pool,count); }
-function getClusterSpread(arr,count){ return getRandom(arr,count); }
-function getRandomExcludeRecent(arr,count){ return getRandom(arr,count); }
-function getHotTailNumbers(arr,count){ return getRandom(arr,count); }
-function getColdTailNumbers(arr,count){ return getRandom(arr,count); }
-function getEvenOddBalance(arr,count){ return getRandom(arr,count); }
-function getHighLowMix(arr,count){ return getRandom(arr,count); }
-function getRandomFromTopFreq(arr,count){ return getRandom(arr,count); }
-function getCrossOddEvenMix(arr,count){ return getRandom(arr,count); }
-function getFrontBackOddMix(arr,count){ return getRandom(arr,count); }
-function getAdjacentSpread(arr,count){ return getRandom(arr,count); }
-function getRepeatingPattern(arr,count){ return getRandom(arr,count); }
-function getTailFrequencyMix(arr,count){ return getRandom(arr,count); }
-function getOddCluster(arr,count){ return getRandom(arr,count); }
-function getEvenCluster(arr,count){ return getRandom(arr,count); }
-function getHighLowOddMix(arr,count){ return getRandom(arr,count); }
-function getMirrorTailMix(arr,count){ return getRandom(arr,count); }
+/* ===== 策略29輔助函數 ===== */
+function getMirrorTailMix(pool,count){
+    // 簡單範例：隨機選號（可自行替換真實邏輯）
+    const copy=[...pool]; const res=[];
+    while(res.length<count){const idx=Math.floor(Math.random()*copy.length); res.push(copy[idx]); copy.splice(idx,1);}
+    return res;
+}
 </script>
 
 </body>
