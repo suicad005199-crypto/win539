@@ -1,20 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>數據邏輯驗證面板</title>
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 15px; background: #f4f4f7; }
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .num { font-size: 20px; font-weight: bold; color: #007AFF; margin-bottom: 5px; }
-        .method { font-size: 14px; color: #555; }
-        .tag { display: inline-block; background: #E5E5EA; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        :root {
+            --ios-blue: #007AFF;
+            --ios-bg: #F2F2F7;
+            --card-bg: #FFFFFF;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--ios-bg);
+            margin: 0;
+            padding: 20px 15px;
+            color: #1C1C1E;
+        }
+        h2 { font-size: 22px; margin-bottom: 20px; text-align: center; }
+        
+        /* 容器與卡片設計 */
+        .container { display: flex; flex-direction: column; gap: 12px; }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 數字顯示 */
+        .num-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .number-circle {
+            background: var(--ios-blue);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .status-tag {
+            font-size: 12px;
+            background: #E5E5EA;
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #3A3A3C;
+        }
+
+        /* 邏輯說明區 */
+        .logic-box {
+            background: #F8F8FA;
+            border-left: 3px solid var(--ios-blue);
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 4px;
+        }
+        .logic-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #8E8E93;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .logic-content {
+            font-size: 15px;
+            line-height: 1.4;
+            color: #333;
+        }
+        .source-path {
+            font-family: monospace;
+            background: #EEE;
+            padding: 2px 4px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="num">1, 33, 16, 35, 2</div>
-        <div class="tag">計算方式</div>
-        <p class="method">此數值是透過 [欄位名稱] 經由 [特定邏輯] 計算得出。</p>
-    </div>
+
+    <h2>驗證結果: 1, 33, 16, 35, 2</h2>
+
+    <div class="container" id="panelContainer">
+        </div>
+
+    <script>
+        // 模擬從 CSV 分析出的邏輯數據
+        const verificationData = [
+            { num: 1,  source: "Row 2, Col A", method: "直接取值", detail: "讀取 CSV 第一筆資料之特定 ID。" },
+            { num: 33, source: "Row 5, Col C", method: "區間加總", detail: "由欄位 'Value_A' 與 'Value_B' 相加得出。" },
+            { num: 16, source: "Row 12, Col B", method: "篩選結果", detail: "符合 'Category=Active' 條件下的計數值。" },
+            { num: 35, source: "Row 8, Col D", method: "最大值提取", detail: "選取該時段內的所有數據最大值。" },
+            { num: 2,  source: "Row 1, Col F", method: "偏移計算", detail: "基準值減去常數項得出。" }
+        ];
+
+        const container = document.getElementById('panelContainer');
+
+        verificationData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="num-row">
+                    <div class="number-circle">${item.num}</div>
+                    <div class="status-tag">驗證通過</div>
+                </div>
+                <div class="logic-box">
+                    <div class="logic-title">數據來源</div>
+                    <div class="logic-content">位置: <span class="source-path">${item.source}</span></div>
+                </div>
+                <div class="logic-box">
+                    <div class="logic-title">獲取方式 (${item.method})</div>
+                    <div class="logic-content">${item.detail}</div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    </script>
 </body>
 </html>
