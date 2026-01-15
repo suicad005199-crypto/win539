@@ -492,7 +492,7 @@ document.getElementById("csvInput").addEventListener("change", function(e) {
       }
       
       // 顯示數據信息
-      const info = 已載入 ${data.length} 期數據 | 時間範圍：${data[0].date} ~ ${data[data.length-1].date};
+      const info = `已載入 ${data.length} 期數據 | 時間範圍：${data[0].date} ~ ${data[data.length-1].date}`;
       showStatus("csvInfo", info, "success");
       
       // 顯示基本統計
@@ -686,21 +686,21 @@ function displayAnalysisResults(stats) {
     <div class="box">
       <div class="box-title">🔥 熱門號碼（出現頻率最高）</div>
       <div class="numbers-grid">
-        ${hotNumbers.map(num => <div class="number-ball hot">${num}</div>).join('')}
+        ${hotNumbers.map(num => `<div class="number-ball hot">${num}</div>`).join('')}
       </div>
     </div>
     
     <div class="box">
       <div class="box-title">❄️ 冷門號碼（出現頻率最低）</div>
       <div class="numbers-grid">
-        ${coldNumbers.map(num => <div class="number-ball cold">${num}</div>).join('')}
+        ${coldNumbers.map(num => `<div class="number-ball cold">${num}</div>`).join('')}
       </div>
     </div>
     
     <div class="box">
       <div class="box-title">⏳ 長期遺漏號碼</div>
       <div class="numbers-grid">
-        ${missedNumbers.map(num => <div class="number-ball">${num}</div>).join('')}
+        ${missedNumbers.map(num => `<div class="number-ball">${num}</div>`).join('')}
       </div>
       <div class="status warning">這些號碼已超過20期未出現</div>
     </div>
@@ -732,11 +732,11 @@ function displayAnalysisResults(stats) {
       <div class="box-title">🎯 潛在號碼池（${stats.potentialNumbers.length}個）</div>
       <div class="numbers-grid">
         ${stats.potentialNumbers.slice(0, 20).map(item => 
-          <div class="number-ball" title="頻率: ${item.freq} | 遺漏: ${item.daysSince}期">${item.num}</div>
+          `<div class="number-ball" title="頻率: ${item.freq} | 遺漏: ${item.daysSince}期">${item.num}</div>`
         ).join('')}
       </div>
       ${stats.potentialNumbers.length > 20 ? 
-        <div class="status">... 還有 ${stats.potentialNumbers.length - 20} 個號碼</div> : ''}
+        `<div class="status">... 還有 ${stats.potentialNumbers.length - 20} 個號碼</div>` : ''}
     </div>
   `;
   
@@ -831,7 +831,7 @@ function runVerify() {
       <div class="box-title">📋 組合驗證結果</div>
       
       <div class="numbers-grid">
-        ${sortedNumbers.map(num => <div class="number-ball">${num}</div>).join('')}
+        ${sortedNumbers.map(num => `<div class="number-ball">${num}</div>`).join('')}
       </div>
       
       <div class="status ${overallStatus}">${overallMessage}</div>
@@ -997,7 +997,7 @@ function displayPrediction(numbers) {
       <div class="box-title">🎯 智能預測組合</div>
       
       <div class="numbers-grid">
-        ${numbers.map(num => <div class="number-ball" style="background: linear-gradient(135deg, #00ff99, #00cc7a);">${num}</div>).join('')}
+        ${numbers.map(num => `<div class="number-ball" style="background: linear-gradient(135deg, #00ff99, #00cc7a);">${num}</div>`).join('')}
       </div>
       
       <div class="status success">✅ 基於歷史數據的智能預測組合</div>
@@ -1060,7 +1060,7 @@ function displayPrediction(numbers) {
 // 工具函數
 function showStatus(elementId, message, type = "info") {
   const element = document.getElementById(elementId);
-  element.innerHTML = <div class="status ${type}">${message}</div>;
+  element.innerHTML = `<div class="status ${type}">${message}</div>`;
 }
 
 function showLoading(loadingId, show) {
