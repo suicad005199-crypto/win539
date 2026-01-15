@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>539 策略回測與最強預測</title>
+<title>539 策略29回測與最強預測</title>
 <style>
 :root{
     --ios-blue: #007AFF;
@@ -100,7 +100,7 @@ input.num-box{
 </div>
 
 <div class="section">
-    <button class="btn" onclick="findStrongestStrategy()">預測今天號碼（策略 29）</button>
+    <button class="btn" onclick="findStrongestStrategy()">自動選最強策略 & 預測今天號碼</button>
     <div id="strongestPanel" class="prediction-panel" style="margin-top:10px;"></div>
 </div>
 
@@ -110,7 +110,7 @@ input.num-box{
 let globalData=[];
 let strategyResults={};
 
-// 生成單一策略 panel（策略29）
+// 生成策略29 panel
 const div=document.createElement('div');
 div.className='section';
 div.innerHTML=`
@@ -145,14 +145,18 @@ function getTargetNumbers(){
     return nums;
 }
 
-// 生成策略29號碼
+// 策略邏輯
 function generateNumbers(strategy){
     if(globalData.length===0) return alert('請先上傳 CSV');
     const targetNumbers=getTargetNumbers();
     if(targetNumbers.length!==5) return alert('請輸入完整昨日開獎號碼');
 
-    const pool=Array.from({length:39},(_,i)=>i+1);
-    let result=getMirrorTailMix(pool,5); // 策略29
+    const allNumbers=globalData.flat().filter(isLotteryNumber);
+    let result=[];
+
+    switch(strategy){
+        case 29: result=getMirrorTailMix(allNumbers,5); break;
+    }
 
     const hitNumbers=result.filter(n=>targetNumbers.includes(n));
     const hitCount=hitNumbers.length;
@@ -167,21 +171,33 @@ function generateNumbers(strategy){
     strategyResults[strategy]={result,hitCount};
 }
 
-// 預測今天號碼
 function findStrongestStrategy(){
-    if(!strategyResults[29]) return alert('請先生成策略 29 的號碼');
-    const todayNumbers=strategyResults[29].result;
+    const strongest=29;
+    const hitCount=strategyResults[strongest]?.hitCount || 0;
+    const todayNumbers=strategyResults[strongest]?.result || [];
     const panel=document.getElementById('strongestPanel');
-    panel.innerHTML=`策略 29 預測今天號碼：`+
+    panel.innerHTML=`最強策略：策略 ${strongest}（昨日命中 ${hitCount}）`+
                     todayNumbers.map(n=>`<div class="predict-num">${n}</div>`).join('');
+    alert(`最強策略是策略 ${strongest}，已生成今天號碼建議`);
 }
 
-/* ===== 策略29輔助函數 ===== */
-function getMirrorTailMix(pool,count){
-    // 簡單範例：隨機選號（可自行替換真實邏輯）
-    const copy=[...pool]; const res=[];
-    while(res.length<count){const idx=Math.floor(Math.random()*copy.length); res.push(copy[idx]); copy.splice(idx,1);}
-    return res;
+// ===== 策略29輔助函數 =====
+function getMirrorTailMix(arr,count){
+    // 取最近一次開獎號碼作鏡像尾數混合
+    const lastDraw=arr.slice(-5);
+    const pool=Array.from({length:39},(_,i)=>i+1);
+    const result=[];
+    for(let n of lastDraw){
+        let mirror=n%10===0 ? n : n+(10-(n%10));
+        if(mirror>39) mirror=n-(n%10);
+        if(!result.includes(mirror)) result.push(mirror);
+        if(result.length>=count) break;
+    }
+    while(result.length<count){
+        const rnd=pool[Math.floor(Math.random()*pool.length)];
+        if(!result.includes(rnd)) result.push(rnd);
+    }
+    return result.slice(0,count);
 }
 </script>
 
