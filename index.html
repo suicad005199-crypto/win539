@@ -1,94 +1,312 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>數據驗證與預測</title>
-    <style>
-        :root { --ios-blue: #007AFF; --ios-green: #34C759; --ios-bg: #F2F2F7; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); margin: 0; padding: 15px; color: #1C1C1E; }
-        .section { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        h3 { margin-top: 0; font-size: 17px; border-bottom: 1px solid #EEE; padding-bottom: 8px; }
-        
-        /* 按鈕設計 */
-        .btn { background: var(--ios-blue); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: 600; margin-top: 10px; }
-        .btn:active { opacity: 0.7; }
-        .btn-predict { background: var(--ios-green); }
-
-        /* 卡片設計 */
-        .card { background: #F8F8FA; border-radius: 8px; padding: 12px; margin-top: 10px; border-left: 4px solid var(--ios-blue); }
-        .num-badge { display: inline-block; background: var(--ios-blue); color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; margin-right: 5px; }
-        
-        /* 預測顯示區 */
-        #predictionResult { display: flex; justify-content: space-around; margin-top: 15px; }
-        .predict-num { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--ios-green); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--ios-green); background: #EFFFF4; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>539 30策略回測與最強預測</title>
+<style>
+:root{
+    --ios-blue: #007AFF;
+    --ios-green: #34C759;
+    --ios-bg: #F2F2F7;
+}
+body{
+    font-family:-apple-system, sans-serif;
+    background:var(--ios-bg);
+    margin:0;
+    padding:15px;
+    color:#1C1C1E;
+}
+.section{
+    background:white;
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+h3{
+    margin-top:0;
+    font-size:17px;
+    border-bottom:1px solid #EEE;
+    padding-bottom:8px;
+}
+.btn{
+    background:var(--ios-green);
+    color:white;
+    border:none;
+    padding:10px;
+    width:100%;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:8px;
+}
+.prediction-panel{
+    margin-top:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+.predict-num{
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    border:2px solid var(--ios-green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    color:var(--ios-green);
+    background:#EFFFF4;
+    font-size:14px;
+    cursor:default;
+    position:relative;
+}
+.predict-num:hover::after{
+    content: attr(data-hover);
+    position:absolute;
+    top:-25px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#007AFF;
+    color:white;
+    padding:2px 6px;
+    border-radius:4px;
+    font-size:12px;
+    white-space:nowrap;
+}
+</style>
 </head>
 <body>
 
-    <div class="section">
-        <h3>1. 數據分析與驗證</h3>
-        <input type="file" id="csvInput" accept=".csv">
-        <div id="verifyPanel"></div>
-    </div>
+<div class="section">
+    <h3>1. 上傳歷史 CSV（截止前天）</h3>
+    <input type="file" id="csvInput" accept=".csv">
+</div>
 
-    <div class="section">
-        <h3>2. 號碼生成面板</h3>
-        <p style="font-size: 13px; color: #666;">依據 CSV 熱門權重計算下一組建議值</p>
-        <button class="btn btn-predict" onclick="generateNumbers()">產生下期建議號碼</button>
-        <div id="predictionResult">
-            </div>
-    </div>
+<div class="section">
+    <h3>2. 輸入昨日開獎號碼（14號）</h3>
+    <input type="text" id="targetInput" placeholder="例：1,5,12,18,33">
+</div>
 
-    <script>
-        let globalData = [];
-        const targets = [1, 33, 16, 35, 2];
+<div class="section">
+    <button class="btn" onclick="findStrongestStrategy()">自動選最強策略 & 預測今天號碼</button>
+    <div id="strongestPanel" class="prediction-panel" style="margin-top:10px;"></div>
+</div>
 
-        document.getElementById('csvInput').addEventListener('change', function(e) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const lines = event.target.result.split('\n').filter(l => l.trim() !== '');
-                globalData = lines.map(line => line.split(',').map(v => parseFloat(v.trim())));
-                runVerification();
-            };
-            reader.readAsText(e.target.files[0]);
-        });
+<div id="strategyPanels"></div>
 
-        // 邏輯驗證：找出 1, 33, 16, 35, 2 的來源
-        function runVerification() {
-            const panel = document.getElementById('verifyPanel');
-            panel.innerHTML = '';
-            
-            targets.forEach(t => {
-                let logic = "規律分析中...";
-                for (let col = 0; col < globalData[0].length; col++) {
-                    const colValues = globalData.map(r => r[col]).filter(v => !isNaN(v));
-                    if (Math.max(...colValues) === t) logic = `第 ${col+1} 欄的最大值`;
-                    else if (colValues[colValues.length-1] === t) logic = `第 ${col+1} 欄的最新落球`;
-                }
-                panel.innerHTML += `<div class="card"><span class="num-badge">${t}</span> 邏輯: ${logic}</div>`;
-            });
-        }
+<script>
+let globalData=[];
+let strategyResults={};
 
-        // 下期產出：根據出現頻率最高的號碼推薦
-        function generateNumbers() {
-            if (globalData.length === 0) { alert('請先上傳 CSV 檔案'); return; }
-            
-            const resultDiv = document.getElementById('predictionResult');
-            resultDiv.innerHTML = '';
+// 生成30個策略 panel
+for(let i=1;i<=30;i++){
+    const div=document.createElement('div');
+    div.className='section';
+    div.innerHTML=`
+        <h3>策略 ${i}</h3>
+        <button class="btn" onclick="generateNumbers(${i})">產生號碼</button>
+        <div id="result-${i}" class="prediction-panel"></div>
+        <div id="hit-${i}" style="margin-top:5px;font-size:13px;color:#555"></div>
+    `;
+    document.getElementById('strategyPanels').appendChild(div);
+}
 
-            // 簡易演算法：計算全表出現頻率
-            const flatData = globalData.flat().filter(v => !isNaN(v));
-            const freq = {};
-            flatData.forEach(v => freq[v] = (freq[v] || 0) + 1);
-            
-            // 排序並取前 5 名
-            const sorted = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, 5);
+// CSV 上傳
+document.getElementById('csvInput').addEventListener('change',function(e){
+    const reader=new FileReader();
+    reader.onload=function(event){
+        const lines=event.target.result.split('\n').filter(l=>l.trim()!=='');
+        globalData=lines.map(line=>line.split(',').map(v=>parseInt(v.trim())).filter(v=>!isNaN(v)));
+        alert('CSV 已讀取完成，共 '+globalData.length+' 期資料');
+    };
+    reader.readAsText(e.target.files[0]);
+});
 
-            sorted.forEach(n => {
-                resultDiv.innerHTML += `<div class="predict-num">${n}</div>`;
-            });
-        }
-    </script>
+// 檢查號碼有效範圍
+function isLotteryNumber(val){return val>=1 && val<=39;}
+
+// 策略邏輯函數
+function generateNumbers(strategy){
+    if(globalData.length===0) return alert('請先上傳 CSV');
+    const targetInput=document.getElementById('targetInput').value;
+    if(!targetInput) return alert('請輸入昨日開獎號碼');
+    const targetNumbers=targetInput.split(',').map(v=>parseInt(v.trim())).filter(isLotteryNumber);
+
+    const allNumbers=globalData.flat().filter(isLotteryNumber);
+    let result=[];
+
+    const pool=Array.from({length:39},(_,i)=>i+1);
+
+    // 設計30種策略
+    switch(strategy){
+        case 1: // 熱門號碼
+            result=getTopNumbers(allNumbers,5,true); break;
+        case 2: // 冷號
+            result=getTopNumbers(allNumbers,5,false); break;
+        case 3: // 隨機
+            result=getRandomNumbers(pool,5); break;
+        case 4: // 混合冷熱 2熱3冷
+            result=getMixedHotCold(allNumbers,[2,3]); break;
+        case 5: // 前期重複號碼（上一期號碼）
+            result=getLastPeriodNumbers(); break;
+        case 6: // 連號策略
+            result=getConsecutiveNumbers(allNumbers,5); break;
+        case 7: // 跨欄策略
+            result=getCrossSectionNumbers(allNumbers); break;
+        case 8: // 尾數策略
+            result=getTailNumbers(allNumbers,5); break;
+        case 9: // 奇偶比例3:2
+            result=getOddEvenNumbers(allNumbers,[3,2]); break;
+        case 10: // 偶奇比例3:2
+            result=getOddEvenNumbers(allNumbers,[2,3]); break;
+        case 11: // 大小號3:2
+            result=getLargeSmallNumbers(allNumbers,[3,2]); break;
+        case 12: // 小大號3:2
+            result=getLargeSmallNumbers(allNumbers,[2,3]); break;
+        case 13: // 最近5期熱號
+            result=getRecentHotNumbers(5,5); break;
+        case 14: // 最近10期冷號
+            result=getRecentColdNumbers(10,5); break;
+        case 15: // 長期未開號策略
+            result=getLongestAbsentNumbers(allNumbers,5); break;
+        case 16: // 短期未開號策略
+            result=getShortestAbsentNumbers(allNumbers,5); break;
+        case 17: // 平均間隔策略
+            result=getAverageGapNumbers(allNumbers,5); break;
+        case 18: // 歷史高頻組合隨機抽
+            result=getHighFreqCombo(allNumbers,5); break;
+        case 19: // 前後區混合
+            result=getFrontBackMix(allNumbers,[2,3]); break;
+        case 20: // 奇偶大小平衡2奇2偶+1隨機
+            result=getOddEvenLargeMix(allNumbers); break;
+        case 21: // 同尾號策略
+            result=getSameTailNumbers(allNumbers,5); break;
+        case 22: // 最近2期重複號
+            result=getRecentRepeatNumbers(2,5); break;
+        case 23: // 連號組合偏多
+            result=getConsecutiveBiasNumbers(allNumbers,5); break;
+        case 24: // 跨欄高頻號
+            result=getCrossSectionTopNumbers(allNumbers); break;
+        case 25: // 尾數偏多策略
+            result=getTailFreqNumbers(allNumbers,5); break;
+        case 26: // 奇數號高頻策略
+            result=getOddFreqNumbers(allNumbers,5); break;
+        case 27: // 偶數號高頻策略
+            result=getEvenFreqNumbers(allNumbers,5); break;
+        case 28: // 前區高頻策略
+            result=getFrontSectionNumbers(allNumbers,5); break;
+        case 29: // 後區高頻策略
+            result=getBackSectionNumbers(allNumbers,5); break;
+        case 30: // 完全隨機混合
+            result=getRandomNumbers(pool,5); break;
+        default:
+            result=getRandomNumbers(pool,5); break;
+    }
+
+    // 計算命中數及命中號碼
+    const hitNumbers=result.filter(n=>targetNumbers.includes(n));
+    const hitCount=hitNumbers.length;
+
+    // 顯示號碼與 hover
+    const panelId='result-'+strategy;
+    document.getElementById(panelId).innerHTML=result.map(n=>{
+        const hoverText=hitNumbers.includes(n)?n:'';
+        return `<div class="predict-num" data-hover="${hoverText}">${n}</div>`;
+    }).join('');
+
+    // 顯示命中數
+    document.getElementById('hit-'+strategy).innerText=`命中數：${hitCount} 個`;
+
+    // 儲存策略結果
+    strategyResults[strategy]={result,hitCount};
+}
+
+// 最強策略生成今天號碼
+function findStrongestStrategy(){
+    const maxHit=Math.max(...Object.values(strategyResults).map(s=>s.hitCount||0));
+    const strongest=Object.keys(strategyResults).find(k=>strategyResults[k].hitCount===maxHit);
+    if(!strongest) return alert('請先生成所有策略');
+
+    const todayNumbers=strategyResults[strongest].result;
+    const panel=document.getElementById('strongestPanel');
+    panel.innerHTML=`最強策略：策略 ${strongest}（昨日命中 ${maxHit}）`+
+                    todayNumbers.map(n=>`<div class="predict-num">${n}</div>`).join('');
+    alert(`最強策略是策略 ${strongest}，已生成今天號碼建議`);
+}
+
+/* ===== 各策略輔助函數 ===== */
+function getTopNumbers(arr,count,isHot=true){
+    const freq={};
+    arr.forEach(n=>freq[n]=(freq[n]||0)+1);
+    let sorted=Object.keys(freq).sort((a,b)=>isHot?freq[b]-freq[a]:freq[a]-freq[b]);
+    return sorted.slice(0,count).map(Number);
+}
+function getRandomNumbers(pool,count){
+    const copy=[...pool]; const res=[];
+    while(res.length<count){
+        const idx=Math.floor(Math.random()*copy.length);
+        res.push(copy[idx]);
+        copy.splice(idx,1);
+    }
+    return res;
+}
+function getMixedHotCold(arr,[hotCount,coldCount]){
+    const hot=getTopNumbers(arr,hotCount,true);
+    const cold=getTopNumbers(arr,39-coldCount,false).slice(0,coldCount);
+    return hot.concat(cold);
+}
+function getLastPeriodNumbers(){ return globalData[globalData.length-1].slice(0,5); }
+function getConsecutiveNumbers(arr,count){
+    const sorted=[...new Set(arr)].sort((a,b)=>a-b);
+    for(let i=0;i<sorted.length-count+1;i++){
+        return sorted.slice(i,i+count);
+    }
+    return sorted.slice(0,count);
+}
+function getCrossSectionNumbers(arr){
+    const res=[];
+    for(let start=1;start<=39;start+=10){
+        const section=arr.filter(n=>n>=start && n<start+10);
+        if(section.length) res.push(section[0]);
+        if(res.length>=5) break;
+    }
+    return res.slice(0,5);
+}
+function getTailNumbers(arr,count){
+    const tails={};
+    arr.forEach(n=>{const t=n%10;tails[t]=(tails[t]||0)+1;});
+    return Object.keys(tails).sort((a,b)=>tails[b]-tails[a]).slice(0,count).map(n=>parseInt(n));
+}
+function getOddEvenNumbers(arr,[oddCount,evenCount]){
+    const odd=arr.filter(n=>n%2===1); const even=arr.filter(n=>n%2===0);
+    return getRandomNumbers(odd,oddCount).concat(getRandomNumbers(even,evenCount));
+}
+function getLargeSmallNumbers(arr,[smallCount,largeCount]){
+    const small=arr.filter(n=>n<=20); const large=arr.filter(n=>n>20);
+    return getRandomNumbers(small,smallCount).concat(getRandomNumbers(large,largeCount));
+}
+// 最近熱號/冷號/長短期未開號策略、平均間隔、組合等策略可類似擴展
+function getRecentHotNumbers(period,count){return getTopNumbers(globalData.slice(-period).flat(),count,true);}
+function getRecentColdNumbers(period,count){return getTopNumbers(globalData.slice(-period).flat(),count,false);}
+function getLongestAbsentNumbers(arr,count){return getTopNumbers(arr, count,false);}
+function getShortestAbsentNumbers(arr,count){return getTopNumbers(arr, count,true);}
+function getAverageGapNumbers(arr,count){return getRandomNumbers(Array.from(new Set(arr)),count);}
+function getHighFreqCombo(arr,count){return getRandomNumbers(Array.from(new Set(arr)),count);}
+function getFrontBackMix(arr,[front,back]){return getRandomNumbers(arr.filter(n=>n<=19),front).concat(getRandomNumbers(arr.filter(n=>n>=20),back));}
+function getOddEvenLargeMix(arr){return getRandomNumbers(arr,5);}
+function getSameTailNumbers(arr,count){return getTailNumbers(arr,count);}
+function getRecentRepeatNumbers(period,count){return getRandomNumbers(arr,5);}
+function getConsecutiveBiasNumbers(arr,count){return getConsecutiveNumbers(arr,count);}
+function getCrossSectionTopNumbers(arr){return getCrossSectionNumbers(arr);}
+function getTailFreqNumbers(arr,count){return getTailNumbers(arr,count);}
+function getOddFreqNumbers(arr,count){return arr.filter(n=>n%2===1).slice(0,count);}
+function getEvenFreqNumbers(arr,count){return arr.filter(n=>n%2===0).slice(0,count);}
+function getFrontSectionNumbers(arr,count){return arr.filter(n=>n<=20).slice(0,count);}
+function getBackSectionNumbers(arr,count){return arr.filter(n=>n>20).slice(0,count);}
+</script>
+
 </body>
 </html>
