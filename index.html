@@ -76,6 +76,11 @@ h3{
     font-size:12px;
     white-space:nowrap;
 }
+input.num-box{
+    width:40px;
+    text-align:center;
+    margin-right:5px;
+}
 </style>
 </head>
 <body>
@@ -87,7 +92,11 @@ h3{
 
 <div class="section">
     <h3>2. 輸入昨日開獎號碼（14號）</h3>
-    <input type="text" id="targetInput" placeholder="例：1,5,12,18,33">
+    <input type="number" min="1" max="39" class="num-box" id="num1">
+    <input type="number" min="1" max="39" class="num-box" id="num2">
+    <input type="number" min="1" max="39" class="num-box" id="num3">
+    <input type="number" min="1" max="39" class="num-box" id="num4">
+    <input type="number" min="1" max="39" class="num-box" id="num5">
 </div>
 
 <div class="section">
@@ -128,12 +137,21 @@ document.getElementById('csvInput').addEventListener('change',function(e){
 // 檢查號碼有效範圍
 function isLotteryNumber(val){return val>=1 && val<=39;}
 
+// 取得昨日號碼陣列
+function getTargetNumbers(){
+    const nums=[];
+    for(let i=1;i<=5;i++){
+        const val=parseInt(document.getElementById('num'+i).value);
+        if(isLotteryNumber(val)) nums.push(val);
+    }
+    return nums;
+}
+
 // 策略邏輯函數
 function generateNumbers(strategy){
     if(globalData.length===0) return alert('請先上傳 CSV');
-    const targetInput=document.getElementById('targetInput').value;
-    if(!targetInput) return alert('請輸入昨日開獎號碼');
-    const targetNumbers=targetInput.split(',').map(v=>parseInt(v.trim())).filter(isLotteryNumber);
+    const targetNumbers=getTargetNumbers();
+    if(targetNumbers.length!==5) return alert('請輸入完整昨日開獎號碼');
 
     const allNumbers=globalData.flat().filter(isLotteryNumber);
     let result=[];
@@ -142,89 +160,52 @@ function generateNumbers(strategy){
 
     // 設計30種策略
     switch(strategy){
-        case 1: // 熱門號碼
-            result=getTopNumbers(allNumbers,5,true); break;
-        case 2: // 冷號
-            result=getTopNumbers(allNumbers,5,false); break;
-        case 3: // 隨機
-            result=getRandomNumbers(pool,5); break;
-        case 4: // 混合冷熱 2熱3冷
-            result=getMixedHotCold(allNumbers,[2,3]); break;
-        case 5: // 前期重複號碼（上一期號碼）
-            result=getLastPeriodNumbers(); break;
-        case 6: // 連號策略
-            result=getConsecutiveNumbers(allNumbers,5); break;
-        case 7: // 跨欄策略
-            result=getCrossSectionNumbers(allNumbers); break;
-        case 8: // 尾數策略
-            result=getTailNumbers(allNumbers,5); break;
-        case 9: // 奇偶比例3:2
-            result=getOddEvenNumbers(allNumbers,[3,2]); break;
-        case 10: // 偶奇比例3:2
-            result=getOddEvenNumbers(allNumbers,[2,3]); break;
-        case 11: // 大小號3:2
-            result=getLargeSmallNumbers(allNumbers,[3,2]); break;
-        case 12: // 小大號3:2
-            result=getLargeSmallNumbers(allNumbers,[2,3]); break;
-        case 13: // 最近5期熱號
-            result=getRecentHotNumbers(5,5); break;
-        case 14: // 最近10期冷號
-            result=getRecentColdNumbers(10,5); break;
-        case 15: // 長期未開號策略
-            result=getLongestAbsentNumbers(allNumbers,5); break;
-        case 16: // 短期未開號策略
-            result=getShortestAbsentNumbers(allNumbers,5); break;
-        case 17: // 平均間隔策略
-            result=getAverageGapNumbers(allNumbers,5); break;
-        case 18: // 歷史高頻組合隨機抽
-            result=getHighFreqCombo(allNumbers,5); break;
-        case 19: // 前後區混合
-            result=getFrontBackMix(allNumbers,[2,3]); break;
-        case 20: // 奇偶大小平衡2奇2偶+1隨機
-            result=getOddEvenLargeMix(allNumbers); break;
-        case 21: // 同尾號策略
-            result=getSameTailNumbers(allNumbers,5); break;
-        case 22: // 最近2期重複號
-            result=getRecentRepeatNumbers(2,5); break;
-        case 23: // 連號組合偏多
-            result=getConsecutiveBiasNumbers(allNumbers,5); break;
-        case 24: // 跨欄高頻號
-            result=getCrossSectionTopNumbers(allNumbers); break;
-        case 25: // 尾數偏多策略
-            result=getTailFreqNumbers(allNumbers,5); break;
-        case 26: // 奇數號高頻策略
-            result=getOddFreqNumbers(allNumbers,5); break;
-        case 27: // 偶數號高頻策略
-            result=getEvenFreqNumbers(allNumbers,5); break;
-        case 28: // 前區高頻策略
-            result=getFrontSectionNumbers(allNumbers,5); break;
-        case 29: // 後區高頻策略
-            result=getBackSectionNumbers(allNumbers,5); break;
-        case 30: // 完全隨機混合
-            result=getRandomNumbers(pool,5); break;
-        default:
-            result=getRandomNumbers(pool,5); break;
+        case 1: result=getTopNumbers(allNumbers,5,true); break;
+        case 2: result=getTopNumbers(allNumbers,5,false); break;
+        case 3: result=getRandomNumbers(pool,5); break;
+        case 4: result=getMixedHotCold(allNumbers,[2,3]); break;
+        case 5: result=getLastPeriodNumbers(); break;
+        case 6: result=getConsecutiveNumbers(allNumbers,5); break;
+        case 7: result=getCrossSectionNumbers(allNumbers); break;
+        case 8: result=getTailNumbers(allNumbers,5); break;
+        case 9: result=getOddEvenNumbers(allNumbers,[3,2]); break;
+        case 10: result=getOddEvenNumbers(allNumbers,[2,3]); break;
+        case 11: result=getLargeSmallNumbers(allNumbers,[3,2]); break;
+        case 12: result=getLargeSmallNumbers(allNumbers,[2,3]); break;
+        case 13: result=getRecentHotNumbers(5,5); break;
+        case 14: result=getRecentColdNumbers(10,5); break;
+        case 15: result=getLongestAbsentNumbers(allNumbers,5); break;
+        case 16: result=getShortestAbsentNumbers(allNumbers,5); break;
+        case 17: result=getAverageGapNumbers(allNumbers,5); break;
+        case 18: result=getHighFreqCombo(allNumbers,5); break;
+        case 19: result=getFrontBackMix(allNumbers,[2,3]); break;
+        case 20: result=getOddEvenLargeMix(allNumbers); break;
+        case 21: result=getSameTailNumbers(allNumbers,5); break;
+        case 22: result=getRecentRepeatNumbers(2,5); break;
+        case 23: result=getConsecutiveBiasNumbers(allNumbers,5); break;
+        case 24: result=getCrossSectionTopNumbers(allNumbers); break;
+        case 25: result=getTailFreqNumbers(allNumbers,5); break;
+        case 26: result=getOddFreqNumbers(allNumbers,5); break;
+        case 27: result=getEvenFreqNumbers(allNumbers,5); break;
+        case 28: result=getFrontSectionNumbers(allNumbers,5); break;
+        case 29: result=getBackSectionNumbers(allNumbers,5); break;
+        case 30: result=getRandomNumbers(pool,5); break;
+        default: result=getRandomNumbers(pool,5); break;
     }
 
-    // 計算命中數及命中號碼
     const hitNumbers=result.filter(n=>targetNumbers.includes(n));
     const hitCount=hitNumbers.length;
 
-    // 顯示號碼與 hover
     const panelId='result-'+strategy;
     document.getElementById(panelId).innerHTML=result.map(n=>{
         const hoverText=hitNumbers.includes(n)?n:'';
         return `<div class="predict-num" data-hover="${hoverText}">${n}</div>`;
     }).join('');
 
-    // 顯示命中數
     document.getElementById('hit-'+strategy).innerText=`命中數：${hitCount} 個`;
-
-    // 儲存策略結果
     strategyResults[strategy]={result,hitCount};
 }
 
-// 最強策略生成今天號碼
 function findStrongestStrategy(){
     const maxHit=Math.max(...Object.values(strategyResults).map(s=>s.hitCount||0));
     const strongest=Object.keys(strategyResults).find(k=>strategyResults[k].hitCount===maxHit);
@@ -238,57 +219,15 @@ function findStrongestStrategy(){
 }
 
 /* ===== 各策略輔助函數 ===== */
-function getTopNumbers(arr,count,isHot=true){
-    const freq={};
-    arr.forEach(n=>freq[n]=(freq[n]||0)+1);
-    let sorted=Object.keys(freq).sort((a,b)=>isHot?freq[b]-freq[a]:freq[a]-freq[b]);
-    return sorted.slice(0,count).map(Number);
-}
-function getRandomNumbers(pool,count){
-    const copy=[...pool]; const res=[];
-    while(res.length<count){
-        const idx=Math.floor(Math.random()*copy.length);
-        res.push(copy[idx]);
-        copy.splice(idx,1);
-    }
-    return res;
-}
-function getMixedHotCold(arr,[hotCount,coldCount]){
-    const hot=getTopNumbers(arr,hotCount,true);
-    const cold=getTopNumbers(arr,39-coldCount,false).slice(0,coldCount);
-    return hot.concat(cold);
-}
+function getTopNumbers(arr,count,isHot=true){ const freq={}; arr.forEach(n=>freq[n]=(freq[n]||0)+1); let sorted=Object.keys(freq).sort((a,b)=>isHot?freq[b]-freq[a]:freq[a]-freq[b]); return sorted.slice(0,count).map(Number);}
+function getRandomNumbers(pool,count){ const copy=[...pool]; const res=[]; while(res.length<count){const idx=Math.floor(Math.random()*copy.length); res.push(copy[idx]); copy.splice(idx,1);} return res;}
+function getMixedHotCold(arr,[hotCount,coldCount]){ const hot=getTopNumbers(arr,hotCount,true); const cold=getTopNumbers(arr,39-coldCount,false).slice(0,coldCount); return hot.concat(cold);}
 function getLastPeriodNumbers(){ return globalData[globalData.length-1].slice(0,5); }
-function getConsecutiveNumbers(arr,count){
-    const sorted=[...new Set(arr)].sort((a,b)=>a-b);
-    for(let i=0;i<sorted.length-count+1;i++){
-        return sorted.slice(i,i+count);
-    }
-    return sorted.slice(0,count);
-}
-function getCrossSectionNumbers(arr){
-    const res=[];
-    for(let start=1;start<=39;start+=10){
-        const section=arr.filter(n=>n>=start && n<start+10);
-        if(section.length) res.push(section[0]);
-        if(res.length>=5) break;
-    }
-    return res.slice(0,5);
-}
-function getTailNumbers(arr,count){
-    const tails={};
-    arr.forEach(n=>{const t=n%10;tails[t]=(tails[t]||0)+1;});
-    return Object.keys(tails).sort((a,b)=>tails[b]-tails[a]).slice(0,count).map(n=>parseInt(n));
-}
-function getOddEvenNumbers(arr,[oddCount,evenCount]){
-    const odd=arr.filter(n=>n%2===1); const even=arr.filter(n=>n%2===0);
-    return getRandomNumbers(odd,oddCount).concat(getRandomNumbers(even,evenCount));
-}
-function getLargeSmallNumbers(arr,[smallCount,largeCount]){
-    const small=arr.filter(n=>n<=20); const large=arr.filter(n=>n>20);
-    return getRandomNumbers(small,smallCount).concat(getRandomNumbers(large,largeCount));
-}
-// 最近熱號/冷號/長短期未開號策略、平均間隔、組合等策略可類似擴展
+function getConsecutiveNumbers(arr,count){ const sorted=[...new Set(arr)].sort((a,b)=>a-b); for(let i=0;i<sorted.length-count+1;i++){ return sorted.slice(i,i+count);} return sorted.slice(0,count);}
+function getCrossSectionNumbers(arr){ const res=[]; for(let start=1;start<=39;start+=10){ const section=arr.filter(n=>n>=start && n<start+10); if(section.length) res.push(section[0]); if(res.length>=5) break;} return res.slice(0,5);}
+function getTailNumbers(arr,count){ const tails={}; arr.forEach(n=>{const t=n%10;tails[t]=(tails[t]||0)+1;}); return Object.keys(tails).sort((a,b)=>tails[b]-tails[a]).slice(0,count).map(n=>parseInt(n));}
+function getOddEvenNumbers(arr,[oddCount,evenCount]){ const odd=arr.filter(n=>n%2===1); const even=arr.filter(n=>n%2===0); return getRandomNumbers(odd,oddCount).concat(getRandomNumbers(even,evenCount));}
+function getLargeSmallNumbers(arr,[smallCount,largeCount]){ const small=arr.filter(n=>n<=20); const large=arr.filter(n=>n>20); return getRandomNumbers(small,smallCount).concat(getRandomNumbers(large,largeCount));}
 function getRecentHotNumbers(period,count){return getTopNumbers(globalData.slice(-period).flat(),count,true);}
 function getRecentColdNumbers(period,count){return getTopNumbers(globalData.slice(-period).flat(),count,false);}
 function getLongestAbsentNumbers(arr,count){return getTopNumbers(arr, count,false);}
