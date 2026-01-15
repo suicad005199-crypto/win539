@@ -1,205 +1,905 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>539 策略29回測與最強預測</title>
-<style>
-:root{
-    --ios-blue: #007AFF;
-    --ios-green: #34C759;
-    --ios-bg: #F2F2F7;
-}
-body{
-    font-family:-apple-system, sans-serif;
-    background:var(--ios-bg);
-    margin:0;
-    padding:15px;
-    color:#1C1C1E;
-}
-.section{
-    background:white;
-    border-radius:12px;
-    padding:16px;
-    margin-bottom:15px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-h3{
-    margin-top:0;
-    font-size:17px;
-    border-bottom:1px solid #EEE;
-    padding-bottom:8px;
-}
-.btn{
-    background:var(--ios-green);
-    color:white;
-    border:none;
-    padding:10px;
-    width:100%;
-    border-radius:10px;
-    font-size:14px;
-    font-weight:600;
-    cursor:pointer;
-    margin-top:8px;
-}
-.prediction-panel{
-    margin-top:10px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:5px;
-}
-.predict-num{
-    width:35px;
-    height:35px;
-    border-radius:50%;
-    border:2px solid var(--ios-green);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    color:var(--ios-green);
-    background:#EFFFF4;
-    font-size:14px;
-    cursor:default;
-    position:relative;
-}
-.predict-num:hover::after{
-    content: attr(data-hover);
-    position:absolute;
-    top:-25px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#007AFF;
-    color:white;
-    padding:2px 6px;
-    border-radius:4px;
-    font-size:12px;
-    white-space:nowrap;
-}
-input.num-box{
-    width:40px;
-    text-align:center;
-    margin-right:5px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彩票历史数据分析系统（非预测工具）</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft JhengHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .warning-banner {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .warning-banner h2 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .warning-banner ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        h2 {
+            color: #3498db;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #2c3e50;
+            margin: 15px 0;
+        }
+        
+        .data-input {
+            background-color: #e8f4fc;
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button.secondary {
+            background-color: #7f8c8d;
+        }
+        
+        button.secondary:hover {
+            background-color: #6c7b7d;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .number-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .number-ball {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+        }
+        
+        .hot {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .cold {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .frequency-bar {
+            height: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .frequency-fill {
+            height: 100%;
+            background-color: #2ecc71;
+            border-radius: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f6fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .disclaimer {
+            font-size: 12px;
+            color: #e74c3c;
+            font-style: italic;
+            margin-top: 20px;
+            text-align: center;
+            padding: 10px;
+            background-color: #fff5f5;
+            border-radius: 5px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .data-preview {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="warning-banner">
+        <h2>⚠️ 重要聲明與警告</h2>
+        <p>本系統僅用於歷史數據統計與可視化分析，不具備任何預測功能：</p>
+        <ul>
+            <li>彩票開獎為隨機事件，歷史數據不影響未來結果</li>
+            <li>所有"規律"僅反映歷史隨機分布，非可預測模式</li>
+            <li>數據分析僅供參考，請勿作為投注依據</li>
+        </ul>
+    </div>
+    
+    <h1>539彩票历史数据分析系统</h1>
+    <p style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">仅用于历史数据统计与可视化展示 (1-39号码)</p>
+    
+    <div class="container">
+        <!-- 数据输入区域 -->
+        <div class="card data-input">
+            <h2>1. 数据导入</h2>
+            <p>请粘贴CSV格式的历史开奖数据（格式：開獎日期,獎號1,獎號2,獎號3,獎號4,獎號5）：</p>
+            <textarea id="csvData" placeholder="例如:
+開獎日期,獎號1,獎號2,獎號3,獎號4,獎號5
+2023/01/02,6,8,10,12,25
+2023/01/03,12,14,25,30,34
+2023/01/04,8,18,29,31,36
+..."></textarea>
+            <div>
+                <button onclick="loadData()">分析数据</button>
+                <button class="secondary" onclick="loadSampleData()">载入示例数据</button>
+                <button class="secondary" onclick="clearData()">清除数据</button>
+                <button class="secondary" onclick="exportAnalysis()">导出分析报告</button>
+            </div>
+            
+            <div id="dataInfo" style="margin-top: 20px; display: none;">
+                <h3>数据概览</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number" id="totalDraws">0</div>
+                        <div class="stat-label">总期数</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="dateRange">-</div>
+                        <div class="stat-label">数据期间</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="avgNum">0</div>
+                        <div class="stat-label">平均号码</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="lastDate">-</div>
+                        <div class="stat-label">最新一期</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最新开奖信息 -->
+        <div class="card">
+            <h2>2. 最新开奖信息</h2>
+            <div id="latestDrawSection">
+                <p style="color: #7f8c8d;">请先导入数据以查看最新开奖</p>
+            </div>
+        </div>
+        
+        <!-- 热号冷号分析 -->
+        <div class="card">
+            <h2>3. 热号与冷号分析</h2>
+            <div id="hotColdSection">
+                <p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>
+            </div>
+            <div class="disclaimer">
+                注：热号/冷号仅为历史统计，不表示未来更可能/更不可能出现
+            </div>
+        </div>
+        
+        <!-- 频率分布图 -->
+        <div class="card full-width">
+            <h2>4. 号码出现频率分布</h2>
+            <div class="chart-container">
+                <canvas id="frequencyChart"></canvas>
+            </div>
+            <div class="disclaimer">
+                频率分布仅展示历史随机分布情况，每个号码理论出现概率应相同
+            </div>
+        </div>
+        
+        <!-- 历史数据预览 -->
+        <div class="card">
+            <h2>5. 历史数据预览 (最新10期)</h2>
+            <div class="data-preview" id="dataPreview">
+                <p style="color: #7f8c8d; text-align: center;">数据将在此显示</p>
+            </div>
+        </div>
+        
+        <!-- 奇偶大小分析 -->
+        <div class="card">
+            <h2>6. 奇偶/大小分析</h2>
+            <div id="paritySizeSection">
+                <p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>
+            </div>
+        </div>
+        
+        <!-- 遗漏分析 -->
+        <div class="card">
+            <h2>7. 遗漏期数分析</h2>
+            <div id="missAnalysisSection">
+                <p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>
+            </div>
+            <div class="disclaimer">
+                遗漏分析仅反映历史随机性，不具预测价值
+            </div>
+        </div>
+        
+        <!-- 尾数分析 -->
+        <div class="card">
+            <h2>8. 尾数分布分析</h2>
+            <div id="tailNumberSection">
+                <p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card full-width" style="margin-top: 30px;">
+        <h2>⚠️ 理性购彩提醒</h2>
+        <p>1. 彩票是随机游戏，所有号码出现概率理论上相同</p>
+        <p>2. 历史数据不提供任何未来开奖的预测信息</p>
+        <p>3. 请仅将购彩视为娱乐，投入金额不应影响正常生活</p>
+        <p>4. 如需帮助，请拨打安心专线：1925</p>
+    </div>
 
-<div class="section">
-    <h3>1. 上傳歷史 CSV（截止前天）</h3>
-    <input type="file" id="csvInput" accept=".csv">
-</div>
-
-<div class="section">
-    <h3>2. 輸入昨日開獎號碼（14號）</h3>
-    <input type="number" min="1" max="39" class="num-box" id="num1">
-    <input type="number" min="1" max="39" class="num-box" id="num2">
-    <input type="number" min="1" max="39" class="num-box" id="num3">
-    <input type="number" min="1" max="39" class="num-box" id="num4">
-    <input type="number" min="1" max="39" class="num-box" id="num5">
-</div>
-
-<div class="section">
-    <button class="btn" onclick="findStrongestStrategy()">自動選最強策略 & 預測今天號碼</button>
-    <div id="strongestPanel" class="prediction-panel" style="margin-top:10px;"></div>
-</div>
-
-<div id="strategyPanels"></div>
-
-<script>
-let globalData=[];
-let strategyResults={};
-
-// 生成策略29 panel
-const div=document.createElement('div');
-div.className='section';
-div.innerHTML=`
-    <h3>策略 29</h3>
-    <button class="btn" onclick="generateNumbers(29)">產生號碼</button>
-    <div id="result-29" class="prediction-panel"></div>
-    <div id="hit-29" style="margin-top:5px;font-size:13px;color:#555"></div>
-`;
-document.getElementById('strategyPanels').appendChild(div);
-
-// CSV 上傳
-document.getElementById('csvInput').addEventListener('change',function(e){
-    const reader=new FileReader();
-    reader.onload=function(event){
-        const lines=event.target.result.split('\n').filter(l=>l.trim()!=='');
-        globalData=lines.map(line=>line.split(',').map(v=>parseInt(v.trim())).filter(v=>!isNaN(v)));
-        alert('CSV 已讀取完成，共 '+globalData.length+' 期資料');
-    };
-    reader.readAsText(e.target.files[0]);
-});
-
-// 檢查號碼有效範圍
-function isLotteryNumber(val){return val>=1 && val<=39;}
-
-// 取得昨日號碼陣列
-function getTargetNumbers(){
-    const nums=[];
-    for(let i=1;i<=5;i++){
-        const val=parseInt(document.getElementById('num'+i).value);
-        if(isLotteryNumber(val)) nums.push(val);
-    }
-    return nums;
-}
-
-// 策略邏輯
-function generateNumbers(strategy){
-    if(globalData.length===0) return alert('請先上傳 CSV');
-    const targetNumbers=getTargetNumbers();
-    if(targetNumbers.length!==5) return alert('請輸入完整昨日開獎號碼');
-
-    const allNumbers=globalData.flat().filter(isLotteryNumber);
-    let result=[];
-
-    switch(strategy){
-        case 29: result=getMirrorTailMix(allNumbers,5); break;
-    }
-
-    const hitNumbers=result.filter(n=>targetNumbers.includes(n));
-    const hitCount=hitNumbers.length;
-
-    const panelId='result-'+strategy;
-    document.getElementById(panelId).innerHTML=result.map(n=>{
-        const hoverText=hitNumbers.includes(n)?n:'';
-        return `<div class="predict-num" data-hover="${hoverText}">${n}</div>`;
-    }).join('');
-
-    document.getElementById('hit-'+strategy).innerText=`命中數：${hitCount} 個`;
-    strategyResults[strategy]={result,hitCount};
-}
-
-function findStrongestStrategy(){
-    const strongest=29;
-    const hitCount=strategyResults[strongest]?.hitCount || 0;
-    const todayNumbers=strategyResults[strongest]?.result || [];
-    const panel=document.getElementById('strongestPanel');
-    panel.innerHTML=`最強策略：策略 ${strongest}（昨日命中 ${hitCount}）`+
-                    todayNumbers.map(n=>`<div class="predict-num">${n}</div>`).join('');
-    alert(`最強策略是策略 ${strongest}，已生成今天號碼建議`);
-}
-
-// ===== 策略29輔助函數 =====
-function getMirrorTailMix(arr,count){
-    // 取最近一次開獎號碼作鏡像尾數混合
-    const lastDraw=arr.slice(-5);
-    const pool=Array.from({length:39},(_,i)=>i+1);
-    const result=[];
-    for(let n of lastDraw){
-        let mirror=n%10===0 ? n : n+(10-(n%10));
-        if(mirror>39) mirror=n-(n%10);
-        if(!result.includes(mirror)) result.push(mirror);
-        if(result.length>=count) break;
-    }
-    while(result.length<count){
-        const rnd=pool[Math.floor(Math.random()*pool.length)];
-        if(!result.includes(rnd)) result.push(rnd);
-    }
-    return result.slice(0,count);
-}
-</script>
-
+    <script>
+        // 全局变量
+        let rawData = [];
+        let numberStats = {};
+        const allNumbers = Array.from({length: 39}, (_, i) => i + 1); // 1-39号码
+        
+        // 初始化统计对象
+        function initStats() {
+            numberStats = {};
+            allNumbers.forEach(num => {
+                numberStats[num] = {
+                    count: 0,
+                    lastSeen: 0, // 遗漏期数
+                    lastDrawDate: null,
+                    gaps: []
+                };
+            });
+        }
+        
+        // 加载数据
+        function loadData() {
+            const csvText = document.getElementById('csvData').value.trim();
+            if (!csvText) {
+                alert('请输入CSV数据');
+                return;
+            }
+            
+            try {
+                const results = Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true
+                });
+                
+                // 反转数据，让最新的在最后（根据您的说明）
+                rawData = results.data.reverse();
+                
+                if (rawData.length === 0) {
+                    alert('未找到有效数据');
+                    return;
+                }
+                
+                processData();
+                updateUI();
+                
+            } catch (error) {
+                alert('解析CSV数据时出错: ' + error.message);
+            }
+        }
+        
+        // 处理数据
+        function processData() {
+            initStats();
+            
+            // 更新号码统计
+            rawData.forEach((row, index) => {
+                const drawDate = row['開獎日期'];
+                
+                // 更新每个号码的统计
+                for (let i = 1; i <= 5; i++) {
+                    const numKey = `獎號${i}`;
+                    if (row[numKey]) {
+                        const num = parseInt(row[numKey]);
+                        if (num >= 1 && num <= 39) {
+                            numberStats[num].count++;
+                            numberStats[num].lastSeen = 0; // 重置为0（本期出现）
+                            numberStats[num].lastDrawDate = drawDate;
+                        }
+                    }
+                }
+                
+                // 更新所有号码的遗漏期数
+                allNumbers.forEach(num => {
+                    let found = false;
+                    for (let i = 1; i <= 5; i++) {
+                        const numKey = `獎號${i}`;
+                        if (parseInt(row[numKey]) === num) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!found) {
+                        numberStats[num].lastSeen++;
+                    } else {
+                        // 如果找到了，记录间隔
+                        if (numberStats[num].gaps.length > 0 || numberStats[num].count > 1) {
+                            numberStats[num].gaps.push(numberStats[num].lastSeen + 1);
+                        }
+                        numberStats[num].lastSeen = 0;
+                    }
+                });
+            });
+        }
+        
+        // 更新UI
+        function updateUI() {
+            // 更新基本信息
+            document.getElementById('totalDraws').textContent = rawData.length;
+            document.getElementById('dataInfo').style.display = 'block';
+            
+            // 计算日期范围
+            if (rawData.length > 0) {
+                const firstDate = rawData[0]['開獎日期'];
+                const lastDate = rawData[rawData.length - 1]['開獎日期'];
+                document.getElementById('dateRange').textContent = `${firstDate} ~ ${lastDate}`;
+                document.getElementById('lastDate').textContent = lastDate;
+            }
+            
+            // 计算平均号码
+            let total = 0;
+            let count = 0;
+            allNumbers.forEach(num => {
+                total += num * numberStats[num].count;
+                count += numberStats[num].count;
+            });
+            const avg = count > 0 ? (total / count).toFixed(2) : "0";
+            document.getElementById('avgNum').textContent = avg;
+            
+            // 显示最新开奖
+            displayLatestDraw();
+            
+            // 显示热号冷号
+            displayHotCold();
+            
+            // 显示频率图表
+            displayFrequencyChart();
+            
+            // 显示数据预览
+            displayDataPreview();
+            
+            // 显示奇偶大小分析
+            displayParitySize();
+            
+            // 显示遗漏分析
+            displayMissAnalysis();
+            
+            // 显示尾数分析
+            displayTailNumberAnalysis();
+        }
+        
+        // 显示最新开奖
+        function displayLatestDraw() {
+            const section = document.getElementById('latestDrawSection');
+            
+            if (rawData.length > 0) {
+                const latest = rawData[rawData.length - 1];
+                const numbers = [
+                    latest['獎號1'],
+                    latest['獎號2'],
+                    latest['獎號3'],
+                    latest['獎號4'],
+                    latest['獎號5']
+                ].filter(n => n).map(n => parseInt(n));
+                
+                section.innerHTML = `
+                    <h3>${latest['開獎日期']}</h3>
+                    <div class="number-display">
+                        ${numbers.map(num => `
+                            <div class="number-ball" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                                ${num}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <p style="margin-top: 15px;">
+                        <strong>奇偶比：</strong>${numbers.filter(n => n % 2 === 1).length}奇${numbers.filter(n => n % 2 === 0).length}偶<br>
+                        <strong>大小比：</strong>${numbers.filter(n => n <= 19).length}小${numbers.filter(n => n >= 20).length}大
+                    </p>
+                `;
+            }
+        }
+        
+        // 显示热号冷号
+        function displayHotCold() {
+            const section = document.getElementById('hotColdSection');
+            
+            // 按出现次数排序
+            const sortedNumbers = allNumbers
+                .map(num => ({num, count: numberStats[num].count}))
+                .sort((a, b) => b.count - a.count);
+            
+            const hotNumbers = sortedNumbers.slice(0, 10);
+            const coldNumbers = sortedNumbers.slice(-10).reverse();
+            
+            section.innerHTML = `
+                <h3>最热号码（出现次数最多）</h3>
+                <div class="number-display">
+                    ${hotNumbers.map(item => `
+                        <div class="number-ball hot" title="出现 ${item.count} 次">
+                            ${item.num}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <h3 style="margin-top: 30px;">最冷号码（出现次数最少）</h3>
+                <div class="number-display">
+                    ${coldNumbers.map(item => `
+                        <div class="number-ball cold" title="出现 ${item.count} 次">
+                            ${item.num}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // 显示频率图表
+        function displayFrequencyChart() {
+            const ctx = document.getElementById('frequencyChart').getContext('2d');
+            
+            // 销毁旧图表
+            const oldChart = Chart.getChart(ctx);
+            if (oldChart) {
+                oldChart.destroy();
+            }
+            
+            const labels = allNumbers.map(n => n.toString());
+            const data = allNumbers.map(n => numberStats[n].count);
+            
+            // 理论平均次数
+            const totalNumbers = rawData.length * 5;
+            const theoreticalAvg = totalNumbers / 39;
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '实际出现次数',
+                        data: data,
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: '理论平均次数',
+                        data: Array(39).fill(theoreticalAvg),
+                        type: 'line',
+                        borderColor: 'rgba(231, 76, 60, 0.8)',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '出现次数'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '号码'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 显示数据预览
+        function displayDataPreview() {
+            const preview = document.getElementById('dataPreview');
+            
+            // 显示最新的10期数据
+            const displayData = rawData.slice(-10).reverse();
+            
+            let html = `<table>
+                <tr>
+                    <th>开奖日期</th>
+                    <th>奖号</th>
+                    <th>奇偶比</th>
+                </tr>`;
+            
+            displayData.forEach(row => {
+                const numbers = [];
+                for (let i = 1; i <= 5; i++) {
+                    const numKey = `獎號${i}`;
+                    if (row[numKey]) numbers.push(parseInt(row[numKey]));
+                }
+                
+                const oddCount = numbers.filter(n => n % 2 === 1).length;
+                const evenCount = numbers.filter(n => n % 2 === 0).length;
+                
+                html += `<tr>
+                    <td>${row['開獎日期'] || '-'}</td>
+                    <td><strong>${numbers.join(', ')}</strong></td>
+                    <td>${oddCount}奇${evenCount}偶</td>
+                </tr>`;
+            });
+            
+            html += `</table>`;
+            
+            preview.innerHTML = html;
+        }
+        
+        // 显示奇偶大小分析
+        function displayParitySize() {
+            const section = document.getElementById('paritySizeSection');
+            
+            let oddCount = 0, evenCount = 0;
+            let smallCount = 0, largeCount = 0;
+            let totalCount = 0;
+            
+            allNumbers.forEach(num => {
+                const count = numberStats[num].count;
+                totalCount += count;
+                
+                // 奇偶统计
+                if (num % 2 === 1) oddCount += count;
+                else evenCount += count;
+                
+                // 大小统计（1-19为小，20-39为大）
+                if (num <= 19) smallCount += count;
+                else largeCount += count;
+            });
+            
+            const oddPercent = totalCount > 0 ? ((oddCount / totalCount) * 100).toFixed(1) : 0;
+            const evenPercent = totalCount > 0 ? ((evenCount / totalCount) * 100).toFixed(1) : 0;
+            const smallPercent = totalCount > 0 ? ((smallCount / totalCount) * 100).toFixed(1) : 0;
+            const largePercent = totalCount > 0 ? ((largeCount / totalCount) * 100).toFixed(1) : 0;
+            
+            section.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">${oddPercent}%</div>
+                        <div class="stat-label">奇数号码 (${oddCount}次)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">${evenPercent}%</div>
+                        <div class="stat-label">偶数号码 (${evenCount}次)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">${smallPercent}%</div>
+                        <div class="stat-label">小号1-19 (${smallCount}次)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">${largePercent}%</div>
+                        <div class="stat-label">大号20-39 (${largeCount}次)</div>
+                    </div>
+                </div>
+                <p style="margin-top: 15px; font-size: 14px; color: #7f8c8d;">
+                    理论比例：奇数50%，偶数50%，小号48.7%，大号51.3%
+                </p>
+            `;
+        }
+        
+        // 显示遗漏分析
+        function displayMissAnalysis() {
+            const section = document.getElementById('missAnalysisSection');
+            
+            // 按遗漏期数排序（从高到低）
+            const sortedByMiss = allNumbers
+                .map(num => ({
+                    num, 
+                    miss: numberStats[num].lastSeen,
+                    lastDate: numberStats[num].lastDrawDate
+                }))
+                .sort((a, b) => b.miss - a.miss);
+            
+            const topMiss = sortedByMiss.slice(0, 5);
+            
+            section.innerHTML = `
+                <h3>当前遗漏期数最长</h3>
+                ${topMiss.map(item => `
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                        <strong>号码 ${item.num}</strong>：已遗漏 <span style="color: #e74c3c; font-weight: bold;">${item.miss}</span> 期
+                        ${item.lastDate ? `<br><span style="font-size: 12px; color: #7f8c8d;">上次开奖：${item.lastDate}</span>` : ''}
+                    </div>
+                `).join('')}
+                
+                <div class="disclaimer" style="margin-top: 15px;">
+                    注意：随机事件中，长期遗漏是正常现象，不表示即将开出
+                </div>
+            `;
+        }
+        
+        // 显示尾数分析
+        function displayTailNumberAnalysis() {
+            const section = document.getElementById('tailNumberSection');
+            
+            // 统计尾数0-9的出现次数
+            const tailStats = {};
+            for (let i = 0; i <= 9; i++) {
+                tailStats[i] = {count: 0, numbers: []};
+            }
+            
+            allNumbers.forEach(num => {
+                const tail = num % 10;
+                tailStats[tail].count += numberStats[num].count;
+                tailStats[tail].numbers.push(num);
+            });
+            
+            // 按出现次数排序
+            const sortedTails = Object.entries(tailStats)
+                .map(([tail, data]) => ({
+                    tail: parseInt(tail),
+                    count: data.count,
+                    numbers: data.numbers
+                }))
+                .sort((a, b) => b.count - a.count);
+            
+            let html = '<h3>尾数出现频率排名</h3>';
+            
+            sortedTails.forEach(item => {
+                const percentage = (item.count / (rawData.length * 5) * 100).toFixed(1);
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                        <strong>尾数 ${item.tail}</strong>：出现 ${item.count} 次 (${percentage}%)<br>
+                        <span style="font-size: 12px; color: #7f8c8d;">
+                            包含号码：${item.numbers.join(', ')}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            section.innerHTML = html;
+        }
+        
+        // 导出分析报告
+        function exportAnalysis() {
+            if (rawData.length === 0) {
+                alert('请先导入数据');
+                return;
+            }
+            
+            let report = "=== 539彩票历史数据分析报告 ===\n\n";
+            report += `分析时间：${new Date().toLocaleString('zh-TW')}\n`;
+            report += `数据期数：${rawData.length}期\n`;
+            report += `数据期间：${rawData[0]['開獎日期']} ~ ${rawData[rawData.length - 1]['開獎日期']}\n\n`;
+            
+            // 热号冷号
+            const sortedNumbers = allNumbers
+                .map(num => ({num, count: numberStats[num].count}))
+                .sort((a, b) => b.count - a.count);
+            
+            report += "★ 热门号码（前10名）：\n";
+            sortedNumbers.slice(0, 10).forEach((item, index) => {
+                report += `${index + 1}. 号码 ${item.num}: ${item.count}次\n`;
+            });
+            
+            report += "\n★ 冷门号码（后10名）：\n";
+            sortedNumbers.slice(-10).reverse().forEach((item, index) => {
+                report += `${index + 1}. 号码 ${item.num}: ${item.count}次\n`;
+            });
+            
+            report += "\n★ 当前遗漏期数最长（前5名）：\n";
+            const sortedByMiss = allNumbers
+                .map(num => ({num, miss: numberStats[num].lastSeen}))
+                .sort((a, b) => b.miss - a.miss)
+                .slice(0, 5);
+            
+            sortedByMiss.forEach((item, index) => {
+                report += `${index + 1}. 号码 ${item.num}: 遗漏 ${item.miss}期\n`;
+            });
+            
+            // 创建下载链接
+            const blob = new Blob([report], {type: 'text/plain;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `539分析报告_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 加载示例数据
+        function loadSampleData() {
+            const sampleData = `開獎日期,獎號1,獎號2,獎號3,獎號4,獎號5
+2023/01/02,6,8,10,12,25
+2023/01/03,12,14,25,30,34
+2023/01/04,8,18,29,31,36
+2023/01/05,3,15,22,27,38
+2023/01/06,7,11,19,24,33
+2023/01/07,2,9,16,28,35
+2023/01/09,4,13,20,26,39
+2023/01/10,1,17,21,32,37
+2023/01/11,5,14,23,30,34
+2023/01/12,8,12,19,25,36
+2023/01/13,3,10,18,27,35
+2023/01/14,6,15,22,29,38
+2023/01/16,4,11,20,28,33
+2023/01/17,7,13,24,31,37
+2023/01/18,2,9,16,26,39
+2023/01/19,1,14,21,32,35
+2023/01/20,5,12,19,30,34`;
+            
+            document.getElementById('csvData').value = sampleData;
+            alert('示例数据已加载，请点击"分析数据"按钮');
+        }
+        
+        // 清除数据
+        function clearData() {
+            document.getElementById('csvData').value = '';
+            rawData = [];
+            initStats();
+            
+            // 重置UI
+            document.getElementById('dataInfo').style.display = 'none';
+            document.getElementById('latestDrawSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看最新开奖</p>';
+            document.getElementById('hotColdSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+            document.getElementById('dataPreview').innerHTML = '<p style="color: #7f8c8d; text-align: center;">数据将在此显示</p>';
+            document.getElementById('paritySizeSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+            document.getElementById('missAnalysisSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+            document.getElementById('tailNumberSection').innerHTML = '<p style="color: #7f8c8d;">请先导入数据以查看分析结果</p>';
+            
+            // 清除图表
+            const chartCanvas = document.getElementById('frequencyChart');
+            if (chartCanvas) {
+                const chart = Chart.getChart(chartCanvas);
+                if (chart) {
+                    chart.destroy();
+                }
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initStats();
+        });
+    </script>
 </body>
 </html>
