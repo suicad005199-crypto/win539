@@ -3,81 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CSV 邏輯驗證專家</title>
+    <title>邏輯逆向驗證</title>
     <style>
-        :root { --ios-blue: #007AFF; --ios-bg: #F2F2F7; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; color: #1C1C1E; }
-        .upload-card { background: white; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--ios-blue); }
-        .num-title { font-size: 24px; font-weight: 800; color: var(--ios-blue); margin-bottom: 10px; }
-        .logic-item { background: #F8F8FA; padding: 10px; border-radius: 8px; font-size: 14px; margin-top: 8px; line-height: 1.5; }
-        .highlight { color: #D70015; font-weight: bold; }
-        input[type="file"] { margin-top: 15px; width: 100%; }
+        body { font-family: -apple-system, sans-serif; background: #F2F2F7; padding: 15px; margin: 0; }
+        .header { background: #007AFF; color: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; text-align: center; }
+        .input-group { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 6px solid #34C759; }
+        .num-label { font-size: 24px; font-weight: bold; color: #1C1C1E; }
+        .logic-desc { font-size: 14px; color: #636366; margin-top: 5px; line-height: 1.4; }
+        .source-tag { display: inline-block; background: #E5E5EA; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-top: 5px; }
+        input[type="file"] { width: 100%; }
     </style>
 </head>
 <body>
 
-    <div class="upload-card">
-        <h3>分析數據產生邏輯</h3>
-        <p style="font-size: 13px; color: #666;">請上傳 CSV，系統將比對 1, 33, 16, 35, 2 的運算來源</p>
-        <input type="file" id="csvFile" accept=".csv">
-    </div>
+<div class="header">
+    <strong>1, 33, 16, 35, 2</strong><br>數據來源分析面板
+</div>
 
-    <div id="results"></div>
+<div class="input-group">
+    <label>請上傳 CSV 數據檔案：</label><br><br>
+    <input type="file" id="csvInput" accept=".csv">
+</div>
 
-    <script>
-        const targets = [1, 33, 16, 35, 2];
-        const fileInput = document.getElementById('csvFile');
+<div id="panel"></div>
 
-        fileInput.addEventListener('change', function(e) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const rows = event.target.result.split('\n').map(r => r.split(',').map(v => parseFloat(v.trim())));
-                analyzeLogic(rows);
-            };
-            reader.readAsText(e.target.files[0]);
-        });
+<script>
+    const targets = [1, 33, 16, 35, 2];
+    document.getElementById('csvInput').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const lines = event.target.result.split('\n').filter(l => l.trim() !== '');
+            const data = lines.map(line => line.split(',').map(val => parseFloat(val.trim())));
+            analyze(data);
+        };
+        reader.readAsText(e.target.files[0]);
+    });
 
-        function analyzeLogic(data) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
+    function analyze(data) {
+        const panel = document.getElementById('panel');
+        panel.innerHTML = '';
+        
+        targets.forEach(target => {
+            let matches = [];
+            
+            // 遍歷所有列與欄進行基礎統計比對
+            for (let col = 0; col < data[0].length; col++) {
+                const columnData = data.map(row => row[col]).filter(v => !isNaN(v));
+                if (columnData.length === 0) continue;
 
-            targets.forEach(num => {
-                let logicFound = [];
+                // 1. 檢查是否為最大值
+                if (Math.max(...columnData) === target) matches.push(`第 ${col+1} 欄的「最大值」`);
+                // 2. 檢查是否為出現頻率最高
+                const counts = columnData.reduce((a, b) => (a[b] = (a[b] || 0) + 1, a), {});
+                const topVal = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                if (parseFloat(topVal) === target) matches.push(`第 ${col+1} 欄的「最常出現號碼」`);
+                // 3. 檢查最後一筆更新
+                if (columnData[columnData.length - 1] === target) matches.push(`第 ${col+1} 欄的「最新數值」`);
+            }
 
-                // 邏輯 1: 欄位統計
-                data[0].forEach((_, colIndex) => {
-                    const colData = data.map(r => r[colIndex]).filter(v => !isNaN(v));
-                    if (Math.max(...colData) === num) logicFound.push(`該號碼是第 ${colIndex+1} 欄的 <b class="highlight">最大值</b>`);
-                    if (Math.min(...colData) === num) logicFound.push(`該號碼是第 ${colIndex+1} 欄的 <b class="highlight">最小值</b>`);
-                    
-                    // 邏輯 2: 出現次數（熱門號碼）
-                    const counts = {};
-                    colData.forEach(v => counts[v] = (counts[v] || 0) + 1);
-                    const mostFrequent = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-                    if (parseFloat(mostFrequent) === num) logicFound.push(`該號碼是第 ${colIndex+1} 欄出現次數最多的 <b class="highlight">熱門值</b>`);
-                });
-
-                // 邏輯 3: 行內運算 (例如最後一列的各項)
-                const lastRow = data[data.length - 1];
-                if (lastRow.includes(num)) logicFound.push(`該號碼直接出現在 <b class="highlight">最新一筆數據</b> 中`);
-
-                renderResult(num, logicFound);
-            });
-        }
-
-        function renderResult(num, logics) {
             const html = `
                 <div class="card">
-                    <div class="num-title">${num}</div>
-                    <div class="logic-item">
-                        <strong>分析報告：</strong><br>
-                        ${logics.length > 0 ? logics.join('<br>') : '未發現規律，可能為隨機值或複雜組合公式。'}
+                    <div class="num-label">${target}</div>
+                    <div class="logic-desc">
+                        ${matches.length > 0 ? matches.map(m => `• 符合：${m}`).join('<br>') : '未偵測到簡單規律，可能涉及多欄位運算。'}
                     </div>
+                    <div class="source-tag">邏輯驗證完成</div>
                 </div>
             `;
-            document.getElementById('results').innerHTML += html;
-        }
-    </script>
+            panel.innerHTML += html;
+        });
+    }
+</script>
+
 </body>
 </html>
