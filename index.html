@@ -177,3 +177,80 @@ function generateNumbers(strategy){
         case 12: result=getRandomExcludeRecent(allNumbers,5); break;
         case 13: result=getHotTailNumbers(allNumbers,5); break;
         case 14: result=getColdTailNumbers(allNumbers,5); break;
+        case 16: result=getEvenOddBalance(allNumbers,5); break;
+        case 17: result=getHighLowMix(allNumbers,5); break;
+        case 18: result=getRandomFromTopFreq(allNumbers,5); break;
+        case 19: result=getCrossOddEvenMix(allNumbers,5); break;
+        case 20: result=getFrontBackOddMix(allNumbers,5); break;
+        case 21: result=getAdjacentSpread(allNumbers,5); break;
+        case 24: result=getRepeatingPattern(allNumbers,5); break;
+        case 25: result=getTailFrequencyMix(allNumbers,5); break;
+        case 26: result=getOddCluster(allNumbers,5); break;
+        case 27: result=getEvenCluster(allNumbers,5); break;
+        case 28: result=getHighLowOddMix(allNumbers,5); break;
+        case 29: result=getMirrorTailMix(allNumbers,5); break;
+        case 30: result=getRandom(pool,5); break;
+    }
+
+    const hitNumbers=result.filter(n=>targetNumbers.includes(n));
+    const hitCount=hitNumbers.length;
+
+    const panelId='result-'+strategy;
+    document.getElementById(panelId).innerHTML=result.map(n=>{
+        const hoverText=hitNumbers.includes(n)?n:'';
+        return `<div class="predict-num" data-hover="${hoverText}">${n}</div>`;
+    }).join('');
+
+    document.getElementById('hit-'+strategy).innerText=`命中數：${hitCount} 個`;
+    strategyResults[strategy]={result,hitCount};
+}
+
+function findStrongestStrategy(){
+    const maxHit=Math.max(...Object.values(strategyResults).map(s=>s.hitCount||0));
+    const strongest=Object.keys(strategyResults).find(k=>strategyResults[k].hitCount===maxHit);
+    if(!strongest) return alert('請先生成所有策略');
+
+    const todayNumbers=strategyResults[strongest].result;
+    const panel=document.getElementById('strongestPanel');
+    panel.innerHTML=`最強策略：策略 ${strongest}（昨日命中 ${maxHit}）`+
+                    todayNumbers.map(n=>`<div class="predict-num">${n}</div>`).join('');
+    alert(`最強策略是策略 ${strongest}，已生成今天號碼建議`);
+}
+
+/* ===== 各策略輔助函數 ===== */
+function getTopNumbers(arr,count,isHot=true){ const freq={}; arr.forEach(n=>freq[n]=(freq[n]||0)+1); let sorted=Object.keys(freq).sort((a,b)=>isHot?freq[b]-freq[a]:freq[a]-freq[b]); return sorted.slice(0,count).map(Number);}
+function getRandom(pool,count){ const copy=[...pool]; const res=[]; while(res.length<count){ const idx=Math.floor(Math.random()*copy.length); res.push(copy[idx]); copy.splice(idx,1);} return res;}
+function getConsecutiveNumbers(arr,count){ const sorted=[...new Set(arr)].sort((a,b)=>a-b); for(let i=0;i<sorted.length-count+1;i++){ return sorted.slice(i,i+count);} return sorted.slice(0,count);}
+function getOddEvenNumbers(arr,[oddCount,evenCount]){ const odd=arr.filter(n=>n%2===1); const even=arr.filter(n=>n%2===0); return getRandom(odd,oddCount).concat(getRandom(even,evenCount));}
+function getLongestAbsentNumbers(arr,count){return getTopNumbers(arr,count,false);}
+function getConsecutiveBiasNumbers(arr,count){return getConsecutiveNumbers(arr,count);}
+function getRecentRepeatNumbers(period,count){return getRandom(arr,5);}
+
+// ===== 新策略範例函數 =====
+function getRandomWeightedByTail(pool,count){ return getRandom(pool,count); }
+function getAlternatingOddEven(pool,count){ return [1,2,3,4,5]; } // 可自訂
+function getFrontSectionHighFreq(arr,count){ return getRandom(arr,count); }
+function getBackSectionLowFreq(arr,count){ return getRandom(arr,count); }
+function getSumRangeBalanced(arr,count){ return getRandom(arr,count); }
+function getLastDigitBias(arr,count){ return getRandom(arr,count); }
+function getMirrorNumbers(pool,count){ return getRandom(pool,count); }
+function getClusterSpread(arr,count){ return getRandom(arr,count); }
+function getRandomExcludeRecent(arr,count){ return getRandom(arr,count); }
+function getHotTailNumbers(arr,count){ return getRandom(arr,count); }
+function getColdTailNumbers(arr,count){ return getRandom(arr,count); }
+function getEvenOddBalance(arr,count){ return getRandom(arr,count); }
+function getHighLowMix(arr,count){ return getRandom(arr,count); }
+function getRandomFromTopFreq(arr,count){ return getRandom(arr,count); }
+function getCrossOddEvenMix(arr,count){ return getRandom(arr,count); }
+function getFrontBackOddMix(arr,count){ return getRandom(arr,count); }
+function getAdjacentSpread(arr,count){ return getRandom(arr,count); }
+function getRepeatingPattern(arr,count){ return getRandom(arr,count); }
+function getTailFrequencyMix(arr,count){ return getRandom(arr,count); }
+function getOddCluster(arr,count){ return getRandom(arr,count); }
+function getEvenCluster(arr,count){ return getRandom(arr,count); }
+function getHighLowOddMix(arr,count){ return getRandom(arr,count); }
+function getMirrorTailMix(arr,count){ return getRandom(arr,count); }
+</script>
+
+</body>
+</html>
