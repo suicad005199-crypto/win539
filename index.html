@@ -1,38 +1,156 @@
-function getV430Prediction(hist) {
-    if(hist.length < 20) return [1,2,3,4,5,6,7,8];
-    let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-    const lastRow = hist[hist.length-1].nums;
-    const recentDraws = hist.slice(-10);
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>539 戰略分析 V.43.0 強化版</title>
+    <style>
+        :root { --bg: #0d0d0d; --panel: #1a1a1c; --primary: #00ffcc; --border: #333; --text: #e0e0e0; --sub: #888; --hit: #ff2d55; --accent: #5856d6; --success: #34c759; }
+        body { font-family: 'PingFang TC', system-ui; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; line-height: 1.4; }
+        .container { display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: auto; }
+        .panel { background: var(--panel); border-radius: 16px; padding: 16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 15px; display: flex; justify-content: space-between; }
+        
+        .bt-row { border-bottom: 1px solid #2c2c2e; padding: 12px 0; }
+        .bt-row:last-child { border: none; }
+        .bt-meta { display: flex; justify-content: space-between; margin-bottom: 8px; font-family: monospace; }
+        .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 6px; font-weight: 900; font-size: 11px; }
+        .star-fail { background: #444; color: #aaa; }
 
-    // A. 遺漏值 (Gap) 權重優化：針對「中短期遺漏」給予最高分
-    for(let i=1; i<=39; i++) {
-        let gap = 0;
-        for(let k=hist.length-1; k>=0; k--) {
-            if(!hist[k].nums.includes(i)) gap++; else break;
+        .num-group { display: flex; gap: 5px; align-items: center; margin-top: 5px; }
+        .num-label { font-size: 10px; color: var(--sub); width: 35px; }
+        .n-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #2c2c2e; font-size: 12px; font-weight: 600; transition: 0.3s; }
+        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(0,255,204,0.4); }
+        
+        .ball-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0; }
+        .ball { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: transparent; border-radius: 50%; font-weight: bold; border: 2px solid var(--primary); color: var(--primary); font-size: 18px; box-shadow: inset 0 0 8px rgba(0,255,204,0.2); }
+        
+        input[type="file"] { background: #2c2c2e; color: var(--primary); border: 1px dashed var(--primary); padding: 10px; width: 100%; box-sizing: border-box; border-radius: 8px; cursor: pointer; }
+        #logBox { background: #000; color: var(--success); padding: 12px; height: 100px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="panel">
+        <div class="panel-header">V.43.0 策略注入 (目標 3 星率 80%+)</div>
+        <input type="file" id="csvFile" accept=".csv">
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">🎯 下期精選 8 碼</div>
+        <div id="nextPred" class="ball-row">--</div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">📊 近 10 期優化回測</div>
+        <div id="btBody"></div>
+    </div>
+
+    <div id="logBox">請匯入歷史 CSV 數據啟動模擬...</div>
+</div>
+
+<script>
+    let rawData = [];
+    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
+    const pad = (n) => n.toString().padStart(2, '0');
+
+    // V.43.0 核心演算法：強化 3 星結構
+    function getV430Prediction(hist) {
+        if(hist.length < 20) return [1,2,3,4,5,6,7,8];
+        
+        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
+        const lastRow = hist[hist.length-1].nums;
+
+        // 1. 遺漏值加權 (針對 3-9 期未開號碼加碼)
+        for(let i=1; i<=39; i++) {
+            let gap = 0;
+            for(let k=hist.length-1; k>=0; k--) {
+                if(!hist[k].nums.includes(i)) gap++; else break;
+            }
+            if(gap >= 3 && gap <= 9) stats[i].score += 45; // 3星常見間隔
+            else if(gap < 3) stats[i].score += 25; // 熱碼持續
+            else stats[i].score += Math.max(0, 15 - gap);
         }
-        if (gap === 0) stats[i].score += 18;       // 連莊號加分
-        else if (gap <= 5) stats[i].score += 25;  // 熱門號加分
-        else if (gap > 20) stats[i].score -= 10;  // 極冷號扣分
+
+        // 2. 尾數熱度 (近 12 期)
+        let tailMap = Array(10).fill(0);
+        hist.slice(-12).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
+        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 5.5);
+
+        // 3. 鄰碼與連號補償 (3星關鍵)
+        lastRow.forEach(ln => {
+            if(ln > 1) stats[ln-1].score += 35;
+            if(ln < 39) stats[ln+1].score += 35;
+            stats[ln].score += 15; // 重複開出權重
+        });
+
+        // 4. 動態分區選擇 (確保 1-13, 14-26, 27-39 都有覆蓋)
+        let pool = [];
+        let zones = [
+            stats.slice(1, 14).sort((a,b)=>b.score-a.score),
+            stats.slice(14, 27).sort((a,b)=>b.score-a.score),
+            stats.slice(27, 40).sort((a,b)=>b.score-a.score)
+        ];
+
+        // 依據各區近期總得分分配名額 (3-2-3 或 2-3-3 比例)
+        pool.push(...zones[0].slice(0, 3));
+        pool.push(...zones[1].slice(0, 2));
+        pool.push(...zones[2].slice(0, 3));
+
+        return pool.sort((a,b)=>b.score-a.score).map(x=>x.n).sort((a,b)=>a-b);
     }
 
-    // B. 強勢尾數分析 (強化 2 星關鍵)
-    let tailCount = Array(10).fill(0);
-    recentDraws.forEach(d => d.nums.forEach(n => tailCount[n%10]++));
-    let topTails = tailCount.map((c, i) => ({t: i, c})).sort((a,b)=>b.c - a.c).slice(0, 3).map(x=>x.t);
-    
-    for(let i=1; i<=39; i++) {
-        if(topTails.includes(i%10)) stats[i].score += 15;
-    }
-
-    // C. 鄰碼與斜連號 (增加覆蓋率)
-    lastRow.forEach(ln => {
-        if(ln > 1) stats[ln-1].score += 22;
-        if(ln < 39) stats[ln+1].score += 22;
+    document.getElementById('csvFile').addEventListener('change', e => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
+                const c = l.split(',');
+                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
+            }).filter(r => r.nums.length === 5);
+            document.getElementById('logBox').innerHTML = "";
+            runV430();
+        };
+        reader.readAsText(e.target.files[0]);
     });
 
-    // D. 綜合排序選號 (取消分區強硬限制，改採全局前 12 碼篩選)
-    let top12 = stats.slice(1).sort((a,b)=>b.score - a.score).slice(0, 12);
-    
-    // 從前 12 碼中篩選出分布最均勻的 8 碼
-    return top12.sort((a,b)=>a.n - b.n).slice(0, 8).map(x=>x.n);
-}
+    function runV430() {
+        let btHtml = "";
+        let threeStarCount = 0;
+        const testCount = 10;
+        
+        const recentData = rawData.slice(-testCount).reverse();
+        recentData.forEach(row => {
+            const histSlice = rawData.slice(0, rawData.indexOf(row));
+            const pred = getV430Prediction(histSlice);
+            const hits = row.nums.filter(n => pred.includes(n));
+            const isTarget = hits.length >= 3;
+            if(isTarget) threeStarCount++;
+
+            btHtml += `<div class="bt-row">
+                <div class="bt-meta">
+                    <span>📅 ${row.date}</span> 
+                    <span class="star-tag ${isTarget ? '' : 'star-fail'}">${hits.length} 星命中</span>
+                </div>
+                <div class="num-group">
+                    <span class="num-label">開獎：</span>
+                    ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
+                </div>
+                <div class="num-group">
+                    <span class="num-label">建議：</span>
+                    ${pred.map(n => `<div class="n-box" style="border: 1px solid ${row.nums.includes(n)?'var(--primary)':'#444'}">${pad(n)}</div>`).join('')}
+                </div>
+            </div>`;
+        });
+
+        document.getElementById('btBody').innerHTML = btHtml;
+        const next = getV430Prediction(rawData);
+        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        
+        log(`數據讀取：${rawData.length} 期`);
+        log(`V.43.0 模擬：近 10 期中有 ${threeStarCount} 期達成 3 星以上目標`);
+        log(`當前 3 星達成率：${(threeStarCount/testCount*100).toFixed(0)}%`);
+    }
+</script>
+</body>
+</html>
