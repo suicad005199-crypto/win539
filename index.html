@@ -1,133 +1,38 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.45.2</title>
-    <style>
-        :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
-        .container { display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
-        .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
-        .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
-        .num-group { display: flex; gap: 4px; align-items: center; }
-        .num-label { font-size: 10px; color: var(--sub); width: 30px; flex-shrink: 0; }
-        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
-        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 5px var(--primary); }
-        .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
-        .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-        .m-table { border-collapse: collapse; white-space: nowrap; }
-        .m-table td, .m-table th { border: 1px solid #333; width: 18px; height: 18px; text-align: center; font-size: 9px; }
-        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
-        .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
-        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
-    </style>
-</head>
-<body>
-<div class="container">
-    <div class="panel">
-        <div class="panel-header">P1: 數據校準 (V.45.2 嚴格回測)</div>
-        <input type="file" id="csvFile" accept=".csv">
-    </div>
-    <div class="panel">
-        <div class="panel-header">P2: 深度回測看板 (排除未來函數)</div>
-        <div id="btBody"></div>
-    </div>
-    <div class="panel">
-        <div class="panel-header">P3: 01/22 下期狙擊 (8 碼飽和)</div>
-        <div id="nextPred" class="ball-row"></div>
-    </div>
-    <div class="panel">
-        <div class="panel-header">P4: 分布矩陣</div>
-        <div class="matrix-scroll" id="matrixCont"></div>
-    </div>
-    <div class="panel"><div id="logBox">系統就緒，等待數據校準...</div></div>
-</div>
+function getV430Prediction(hist) {
+    if(hist.length < 20) return [1,2,3,4,5,6,7,8];
+    let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
+    const lastRow = hist[hist.length-1].nums;
+    const recentDraws = hist.slice(-10);
 
-<script>
-    let rawData = [];
-    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
-    const pad = (n) => n.toString().padStart(2, '0');
-    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
-
-    function getV452Prediction(hist) {
-        if(hist.length < 10) return [1,2,3,4,5,6,7,8];
-        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-        
-        // 1. 最近 5 期極大加權
-        hist.slice(-5).forEach((d, i) => d.nums.forEach(n => stats[n].score += (i + 1) * 50));
-        
-        // 2. 尾數共振 (偵測最強 2 尾)
-        let tailMap = Array(10).fill(0);
-        hist.slice(-10).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        for(let i=1; i<=39; i++) stats[i].score += tailMap[i%10] * 35;
-
-        // 3. 遺漏值反彈 (gap 3-7)
-        for(let i=1; i<=39; i++) {
-            let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) {
-                if(!hist[k].nums.includes(i)) gap++; else break;
-            }
-            if(gap >= 3 && gap <= 7) stats[i].score += 150;
+    // A. 遺漏值 (Gap) 權重優化：針對「中短期遺漏」給予最高分
+    for(let i=1; i<=39; i++) {
+        let gap = 0;
+        for(let k=hist.length-1; k>=0; k--) {
+            if(!hist[k].nums.includes(i)) gap++; else break;
         }
-
-        return stats.slice(1).sort((a,b) => b.score - a.score).slice(0, 8).map(x => x.n).sort((a,b) => a-b);
+        if (gap === 0) stats[i].score += 18;       // 連莊號加分
+        else if (gap <= 5) stats[i].score += 25;  // 熱門號加分
+        else if (gap > 20) stats[i].score -= 10;  // 極冷號扣分
     }
 
-    document.getElementById('csvFile').addEventListener('change', e => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            let data = reader.result.trim().split('\n').filter(l => l.includes(',')).slice(1).map(l => {
-                const c = l.split(',');
-                return { date: c[0].trim(), nums: c.slice(1, 6).map(Number).sort((a,b) => a-b) };
-            }).filter(r => !isNaN(r.nums[0]));
+    // B. 強勢尾數分析 (強化 2 星關鍵)
+    let tailCount = Array(10).fill(0);
+    recentDraws.forEach(d => d.nums.forEach(n => tailCount[n%10]++));
+    let topTails = tailCount.map((c, i) => ({t: i, c})).sort((a,b)=>b.c - a.c).slice(0, 3).map(x=>x.t);
+    
+    for(let i=1; i<=39; i++) {
+        if(topTails.includes(i%10)) stats[i].score += 15;
+    }
 
-            // 自動偵測並校準日期順序 (最新日期置末端)
-            if (new Date(data[0].date) > new Date(data[data.length-1].date)) data.reverse();
-            rawData = data;
-            
-            document.getElementById('logBox').innerHTML = "";
-            runV452();
-        };
-        reader.readAsText(e.target.files[0]);
+    // C. 鄰碼與斜連號 (增加覆蓋率)
+    lastRow.forEach(ln => {
+        if(ln > 1) stats[ln-1].score += 22;
+        if(ln < 39) stats[ln+1].score += 22;
     });
 
-    function runV452() {
-        let btHtml = "";
-        let hitsArr = [];
-        
-        // P2 回測：嚴格確保預測 i 期時不使用 i 期的數據
-        for (let i = rawData.length - 1; i >= rawData.length - 10; i--) {
-            const histSlice = rawData.slice(0, i); 
-            const pred = getV452Prediction(histSlice);
-            const row = rawData[i];
-            const hits = row.nums.filter(n => pred.includes(n));
-            hitsArr.push(hits.length);
-            
-            btHtml += `<div class="bt-row">
-                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
-                <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
-                <div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}; font-weight:${row.nums.includes(n)?'900':'normal'}">${pad(n)}</div>`).join('')}</div>
-            </div>`;
-        }
-        document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV452Prediction(rawData);
-        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        
-        let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
-        for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
-        mHtml += `</tr></thead><tbody>`;
-        [...rawData].reverse().slice(0, 15).forEach(row => {
-            mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
-            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<span class="m-ball"></span>' : ''}</td>`;
-            mHtml += `</tr>`;
-        });
-        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
-        
-        log(`數據校準完畢。V.45.2 嚴格回測結果已生成。`);
-    }
-</script>
-</body>
-</html>
+    // D. 綜合排序選號 (取消分區強硬限制，改採全局前 12 碼篩選)
+    let top12 = stats.slice(1).sort((a,b)=>b.score - a.score).slice(0, 12);
+    
+    // 從前 12 碼中篩選出分布最均勻的 8 碼
+    return top12.sort((a,b)=>a.n - b.n).slice(0, 8).map(x=>x.n);
+}
