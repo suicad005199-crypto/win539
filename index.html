@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.42.2</title>
+    <title>539 精準分析 V.42.2 (邏輯優化版)</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { display: flex; flex-direction: column; gap: 12px; }
         .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
         .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
-        
-        /* P2 修正樣式：確保預測與開獎對齊 */
         .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
         .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
         .num-group { display: flex; gap: 4px; align-items: center; }
@@ -19,14 +17,12 @@
         .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
         .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 5px var(--primary); }
         .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
-
         .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
         .m-table { border-collapse: collapse; white-space: nowrap; }
         .m-table td, .m-table th { border: 1px solid #333; width: 18px; height: 18px; text-align: center; font-size: 9px; }
         .m-head { background: #2c2c2e; color: var(--primary); position: sticky; top: 0; }
         .m-date { background: #2c2c2e; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
         .m-ball { background: var(--hit); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
-        
         #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
         .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
         .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
@@ -35,20 +31,20 @@
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 數據注入 (V.42.2 面板修復)</div>
+        <div class="panel-header">P1: 數據注入 (優化核心 V.42.2b)</div>
         <input type="file" id="csvFile" accept=".csv">
     </div>
     <div class="panel">
-        <div class="panel-header">P2: 深度回測看板 (含每期預測號)</div>
+        <div class="panel-header">P2: 深度回測看板 (鄰號強化)</div>
         <div id="btBody"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P3: 下期結構預測 (8 碼)</div>
+        <div class="panel-header">P3: 01/22 結構預測 (優化權重)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
     <div class="panel">
         <div class="panel-header">P4: 分布矩陣</div>
-        <div class="matrix-scroll" id="matrixCont"></div>
+        <div id="matrixCont" class="matrix-scroll"></div>
     </div>
     <div class="panel"><div id="logBox">等待 CSV 匯入...</div></div>
 </div>
@@ -60,24 +56,35 @@
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
     function getV422Prediction(hist) {
-        if(hist.length < 20) return [1,2,3,4,5,6,7,8];
+        if(hist.length < 15) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         const lastRow = hist[hist.length-1].nums;
+
+        // --- 核心邏輯優化區 ---
         for(let i=1; i<=39; i++) {
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) {
                 if(!hist[k].nums.includes(i)) gap++; else break;
             }
-            stats[i].score += (gap <= 12) ? (gap * 3.0) : Math.max(0, 38 - gap); 
+            // 優化 1: 短期熱補償 (遺漏 1-4 期加分最高)
+            if (gap === 0) stats[i].score += 15; // 連莊機率
+            else if (gap <= 4) stats[i].score += (35 - gap * 5); 
+            else stats[i].score += Math.max(0, 15 - gap); 
         }
+
+        // 優化 2: 縮短尾數觀察期至 10 期 (捕捉當下風向)
         let tailMap = Array(10).fill(0);
-        hist.slice(-15).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 3.2);
+        hist.slice(-10).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
+        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 5.0);
+
+        // 優化 3: 大幅提升鄰號權重 (由 20 提升至 45)
         lastRow.forEach(ln => {
-            if(ln > 1) stats[ln-1].score += 20;
-            if(ln < 39) stats[ln+1].score += 20;
-            stats[ln].score += 15; 
+            if(ln > 1) stats[ln-1].score += 45;
+            if(ln < 39) stats[ln+1].score += 45;
+            stats[ln].score += 10; 
         });
+
+        // 區域平衡
         let zones = [[],[],[]];
         for(let i=1; i<=39; i++) {
             let z = Math.min(Math.floor((i-1)/13), 2);
@@ -91,11 +98,12 @@
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
-            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
+            const lines = reader.result.replace(/\r/g, "").trim().split('\n');
+            rawData = lines.slice(1).map(l => {
                 const c = l.split(',');
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
-            document.getElementById('logBox').innerHTML = "";
+            rawData.sort((a, b) => new Date(a.date) - new Date(b.date));
             runV422();
         };
         reader.readAsText(e.target.files[0]);
@@ -104,13 +112,12 @@
     function runV422() {
         let btHtml = "";
         let hitsArr = [];
-        // P2 核心修正點：確保 pred 變數正確生成並顯示
-        rawData.slice(-10).reverse().forEach(row => {
-            const histSlice = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV422Prediction(histSlice);
+        const recent = rawData.slice(-10).reverse();
+        recent.forEach(row => {
+            const idx = rawData.findIndex(d => d.date === row.date);
+            const pred = getV422Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             hitsArr.push(hits.length);
-            
             btHtml += `<div class="bt-row">
                 <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
                 <div class="num-group">
@@ -136,9 +143,8 @@
             mHtml += `</tr>`;
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
-        const avg = hitsArr.length > 0 ? hitsArr.reduce((a,b)=>a+b,0)/hitsArr.length : 0;
-        log(`CSV 讀取: ${rawData.length} 期 | 期望值: ${avg.toFixed(1)} 碼/期`);
-        log(`面板修復完成：P2 預測號碼已恢復顯示。`);
+        const avg = hitsArr.reduce((a,b)=>a+b,0)/10;
+        log(`數據載入成功。目前回測平均命中：${avg.toFixed(1)} 碼`);
     }
 </script>
 </body>
