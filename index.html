@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>539 精準分析 V42.2-L Optimized</title>
+<title>539 精準分析 V42.2-L+AutoLearn</title>
+
 <style>
 :root{
  --bg:#000;--panel:#1c1c1e;--primary:#ffd60a;--border:#38383a;
@@ -31,8 +32,8 @@ body{font-family:'PingFang TC',sans-serif;background:var(--bg);color:var(--text)
 .ball{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:#2c2c2e;border-radius:50%;font-weight:bold;border:2px solid var(--accent);color:var(--accent);font-size:16px}
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
 
 <div class="panel">
@@ -41,7 +42,7 @@ body{font-family:'PingFang TC',sans-serif;background:var(--bg);color:var(--text)
 </div>
 
 <div class="panel">
- <div class="panel-header">P2: 深度回測（自動學習 V42.2-L Optimized）</div>
+ <div class="panel-header">P2: 真實逐期回測 + 自動學習</div>
  <div id="btBody"></div>
 </div>
 
@@ -61,124 +62,122 @@ body{font-family:'PingFang TC',sans-serif;background:var(--bg);color:var(--text)
 
 <script>
 let rawData=[];
-const log=m=>{logBox.innerHTML+=`> ${m}<br>`;logBox.scrollTop=logBox.scrollHeight}
-const pad=n=>n.toString().padStart(2,'0')
-const formatDate=s=>{let p=s.split(/[-/]/);return p.length>=3?`${p[1]}/${p[2]}`:s}
+const log=m=>{const b=document.getElementById('logBox');b.innerHTML+=`> ${m}<br>`;b.scrollTop=b.scrollHeight;}
+const pad=n=>n.toString().padStart(2,'0');
+const formatDate=s=>{const p=s.split(/[-/]/);return p.length>=3?`${p[1]}/${p[2]}`:s}
 
-// ====== 自動學習狀態 ======
+// ===== 自動學習初始狀態 =====
 let learn={
- gapW:6,
- tailW:5,
+ gapW:8,
+ tailW:7,
  neighbor:true,
  zoneBias:[1,1,1]
-}
+};
 
-// ====== 優化預測函數 ======
+// ===== 預測核心 V42.2-L+AutoLearn =====
 function predictV42L(hist){
- if(hist.length<20) return [1,2,3,4,5,6,7,8];
-
+ if(hist.length<20) hist=hist.slice(-20); // 保證至少 20 期
  let stats=Array.from({length:39},(_,i)=>({n:i+1,score:0}));
  let last=hist.at(-1).nums;
 
- // gap 分數
+ // gap 計分
  for(let i=1;i<=39;i++){
   let gap=0;
   for(let k=hist.length-1;k>=0;k--){
-   if(!hist[k].nums.includes(i)) gap++; else break;
+   if(!hist[k].nums.includes(i)) gap++;
+   else break;
   }
-  stats[i-1].score += gap<=12 ? gap*learn.gapW : Math.max(0,38-gap);
+  stats[i-1].score += gap <= 12 ? gap*learn.gapW : Math.max(0,38-gap);
  }
 
- // tail 分數
+ // tail 計分
  let tail=Array(10).fill(0);
  hist.slice(-15).forEach(d=>d.nums.forEach(n=>tail[n%10]++));
  stats.forEach(s=>s.score += tail[s.n%10]*learn.tailW);
 
- // 鄰號加分
+ // neighbor 計分
  if(learn.neighbor){
   last.forEach(n=>{
-   if(n>1) stats[n-2].score+=20;
-   if(n<39) stats[n].score+=20;
-   stats[n-1].score+=15;
-  })
+   if(n>1) stats[n-2].score +=18;
+   if(n<39) stats[n].score +=18;
+   stats[n-1].score +=12;
+  });
  }
 
- // zones 選碼
+ // zones
  let zones=[[],[],[]];
- stats.forEach(s=>{
-  zones[Math.floor((s.n-1)/13)].push(s);
- });
+ stats.forEach(s=>zones[Math.floor((s.n-1)/13)].push(s));
  let pool=[];
  zones.forEach((z,i)=>{
   z.sort((a,b)=>b.score-a.score || a.n-b.n);
-  pool.push(...z.slice(0,3+Math.max(0,learn.zoneBias[i])));
+  pool.push(...z.slice(0,2+Math.max(0,learn.zoneBias[i])));
  });
+
+ // 選碼 10 → 壓縮 8 碼
  return pool.sort((a,b)=>b.score-a.score).slice(0,10).map(x=>x.n).sort((a,b)=>a-b).slice(0,8);
 }
 
-// ====== CSV 匯入 ======
-csvFile.addEventListener('change',e=>{
- let r=new FileReader();
- r.onload=()=>{
-  rawData=r.result.replace(/\r/g,'').trim().split('\n').slice(1).map(l=>{
-   let c=l.split(',');
-   return{date:c[0],nums:c.slice(1,6).map(Number).sort((a,b)=>a-b)};
+// ===== CSV 讀取 & 回測 =====
+document.getElementById('csvFile').addEventListener('change',e=>{
+ let reader=new FileReader();
+ reader.onload=()=>{
+  rawData=reader.result.replace(/\r/g,'').trim().split('\n').slice(1).map(l=>{
+   const c=l.split(/[,\t]/);
+   return {date:c[0], nums:c.slice(1,6).map(Number).sort((a,b)=>a-b)};
   });
-  logBox.innerHTML='';
-  run();
- }
- r.readAsText(e.target.files[0])
-})
+  document.getElementById('logBox').innerHTML='';
+  runBacktest();
+ };
+ reader.readAsText(e.target.files[0]);
+});
 
-// ====== 回測與自動學習 ======
-function run(){
- let html='',hitsArr=[];
- let sliceStart=Math.max(0,rawData.length-40); // 保證至少40期歷史
- rawData.slice(-10).forEach((row,idx)=>{
-  let hist = rawData.slice(sliceStart, rawData.length-10+idx+1);
+function runBacktest(){
+ let btHtml='',hitsArr=[];
+ rawData.forEach((row,idx)=>{
+  if(idx===0) return; // 第一行無歷史
+  let hist=rawData.slice(0,idx);
+  if(hist.length<20) hist = rawData.slice(0,idx); // 保證至少 20 期
   let pred=predictV42L(hist);
   let hits=row.nums.filter(n=>pred.includes(n)).length;
   hitsArr.push(hits);
 
-  // 自動學習更新權重
+  // 自動學習調整
   let reward=hits>=3?1:(hits==2?0.3:-0.5);
-  learn.gapW   *= 1+reward*0.1;
-  learn.tailW  *= 1+reward*0.08;
-  learn.zoneBias.forEach((v,i)=>learn.zoneBias[i] += reward>0?1:0);
+  learn.gapW *= 1+reward*0.1;
+  learn.tailW *= 1+reward*0.08;
   learn.neighbor = hits>=3;
+  learn.zoneBias[Math.floor((row.nums[0]-1)/13)] += reward>0?1:0;
 
-  html+=`<div class="bt-row">
-    <div class="bt-meta"><span>${formatDate(row.date)}</span>
-    <span class="star-tag">${hits} ★</span></div>
-    <div class="num-group"><span class="num-label">開獎</span>
-      ${row.nums.map(n=>`<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
-    </div>
-    <div class="num-group"><span class="num-label">預測</span>
-      ${pred.map(n=>`<div class="n-box">${pad(n)}</div>`).join('')}
-    </div>
+  // 顯示逐期回測
+  btHtml+=`
+  <div class="bt-row">
+   <div class="bt-meta"><span>${formatDate(row.date)}</span> <span class="star-tag">${hits} ★</span></div>
+   <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n=>`<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
+   <div class="num-group"><span class="num-label">預測</span>${pred.map(n=>`<div class="n-box">${pad(n)}</div>`).join('')}</div>
   </div>`;
  });
 
- btBody.innerHTML=html;
+ document.getElementById('btBody').innerHTML=btHtml;
 
  // 下期預測
  let next=predictV42L(rawData);
- nextPred.innerHTML=next.map(n=>`<div class="ball">${pad(n)}</div>`).join('');
+ document.getElementById('nextPred').innerHTML=next.map(n=>`<div class="ball">${pad(n)}</div>`).join('');
 
  // 分布矩陣
  let m=`<table class="m-table"><thead><tr><th class="m-date">日</th>`;
  for(let i=1;i<=39;i++) m+=`<th class="m-head">${pad(i)}</th>`;
  m+=`</tr></thead><tbody>`;
- rawData.slice(-15).forEach(r=>{
+ rawData.slice(-15).reverse().forEach(r=>{
   m+=`<tr><td class="m-date">${formatDate(r.date)}</td>`;
   for(let i=1;i<=39;i++) m+=`<td>${r.nums.includes(i)?'<span class="m-ball"></span>':''}</td>`;
   m+='</tr>';
  });
- matrixCont.innerHTML=m+'</tbody></table>';
+ document.getElementById('matrixCont').innerHTML=m+'</tbody></table>';
 
- // 平均命中
- let avg=(hitsArr.reduce((a,b)=>a+b,0)/hitsArr.length).toFixed(2);
- log(`近十期平均命中 ${avg} 碼 | 權重 gap=${learn.gapW.toFixed(2)}, tail=${learn.tailW.toFixed(2)}, neighbor=${learn.neighbor}`);
+ // log
+ const avg=(hitsArr.reduce((a,b)=>a+b,0)/hitsArr.length).toFixed(2);
+ log(`回測完成 | 近十期平均命中 ${avg} 碼`);
+ log(`學習狀態 gap=${learn.gapW.toFixed(2)}, tail=${learn.tailW.toFixed(2)}, neighbor=${learn.neighbor}`);
 }
 </script>
 </body>
