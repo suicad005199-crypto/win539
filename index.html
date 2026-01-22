@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 模擬演化 V.44.2</title>
+    <title>539 模擬演化 V.44.3</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -19,132 +19,129 @@
         .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
         .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
         .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
-        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
         .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-        .m-table { border-collapse: collapse; white-space: nowrap; }
-        .m-table td, .m-table th { border: 1px solid #333; width: 18px; height: 18px; text-align: center; font-size: 9px; }
+        .m-table { border-collapse: collapse; white-space: nowrap; width: 100%; }
+        .m-table td, .m-table th { border: 1px solid #333; height: 20px; text-align: center; font-size: 9px; }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 60px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); margin-top: 5px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 模擬數據注入</div>
+        <div class="panel-header">P1: 數據注入</div>
         <input type="file" id="csvFile" accept=".csv">
     </div>
     <div class="panel">
-        <div class="panel-header">P2: 演化回測報告 <span id="btRate" style="color:var(--accent)">等待匯入...</span></div>
+        <div class="panel-header">P2: 近十期模擬回測 <span id="avgHit" style="color:var(--accent)"></span></div>
         <div id="btBody"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P3: 01/22 模擬最優 8 碼</div>
+        <div class="panel-header">P3: 01/22 模擬最優 8 碼 (鄰號擴散版)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
     <div class="panel">
         <div class="panel-header">P4: 分布矩陣</div>
         <div class="matrix-scroll" id="matrixCont"></div>
     </div>
-    <div class="panel"><div id="logBox">系統已就緒。模擬邏輯：鄰號擴散 + 尾數熱度對沖。</div></div>
+    <div id="logBox">> 系統已就緒。正在等待數據以對齊計算邏輯。</div>
 </div>
 
 <script>
     let rawData = [];
-    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
-    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    // V.44.2 模擬引擎邏輯
-    function runSimEngine(hist) {
-        if(hist.length < 10) return [1,2,3,4,5,6,7,8];
-        let scores = Array(40).fill(0);
-        const lastRow = hist[hist.length-1].nums;
+    // V.44.3 核心模擬算法
+    function predictEngine(history) {
+        if (history.length < 5) return [1,2,3,4,5,6,7,8];
+        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
+        const lastBatch = history.slice(-12);
+        const lastRow = history[history.length - 1].nums;
 
-        // 1. 鄰號擴散 (關鍵修正：針對掛2問題)
+        // 1. 鄰號擴散權重 (解決掛2關鍵)
         lastRow.forEach(n => {
-            if(n > 1) scores[n-1] += 55;
-            if(n < 39) scores[n+1] += 55;
-            scores[n] += 15; // 考慮小機率連莊
+            if (n > 1) stats[n - 1].score += 50;
+            if (n < 39) stats[n + 1].score += 50;
         });
 
-        // 2. 遺漏值與尾數權重
+        // 2. 尾數共振計算
         let tailMap = Array(10).fill(0);
-        hist.slice(-15).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        
-        for(let i=1; i<=39; i++) {
-            // 尾數熱度
-            scores[i] += (tailMap[i%10] * 6);
-            // 中期遺漏補償 (5-10期)
+        lastBatch.forEach(d => d.nums.forEach(n => tailMap[n % 10]++));
+        let topTails = tailMap.map((v, i) => ({ t: i, v })).sort((a, b) => b.v - a.v).slice(0, 2).map(x => x.t);
+
+        for (let i = 1; i <= 39; i++) {
+            if (topTails.includes(i % 10)) stats[i].score += 60;
+            // 遺漏補正 (中長期)
             let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 5 && gap <= 10) scores[i] += 40;
+            for (let k = history.length - 1; k >= 0; k--) {
+                if (!history[k].nums.includes(i)) gap++; else break;
+            }
+            if (gap >= 4 && gap <= 9) stats[i].score += 35;
         }
 
-        // 3. 家族結構優化 (3-3-2)
-        let sorted = scores.map((s, i) => ({n: i, s})).slice(1).sort((a,b) => b.s - a.s);
+        // 3. 輸出結構化 8 碼 (3-3-2)
         let final8 = [];
-        
-        // 抓出分數最高的兩組家族
-        let topTails = tailMap.map((v, i) => ({t: i, v})).sort((a,b)=>b.v-a.v).slice(0, 2).map(x=>x.t);
+        let sorted = stats.slice(1).sort((a, b) => b.score - a.score);
         
         topTails.forEach(t => {
-            let f = sorted.filter(x => x.n % 10 === t).slice(0, 3);
-            final8.push(...f.map(x => x.n));
+            let family = sorted.filter(x => x.n % 10 === t).slice(0, 3);
+            final8.push(...family.map(x => x.n));
         });
-
-        // 補足散碼
+        
         let others = sorted.filter(x => !final8.includes(x.n));
-        while(final8.length < 8) final8.push(others.shift().n);
+        while (final8.length < 8) final8.push(others.shift().n);
 
-        return final8.sort((a,b) => a-b);
+        return final8.sort((a, b) => a - b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
-            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
-                const c = l.split(',');
-                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
-            }).filter(r => r.nums.length === 5);
-            if (new Date(rawData[0].date) > new Date(rawData[rawData.length-1].date)) rawData.reverse();
-            executeSimulation();
+            const lines = reader.result.trim().split('\n');
+            rawData = lines.slice(1).map(l => {
+                const parts = l.split(',');
+                return { date: parts[0], nums: parts.slice(1, 6).map(n => parseInt(n)).sort((a, b) => a - b) };
+            }).filter(d => !isNaN(d.nums[0]));
+            
+            // 確保日期由舊到新排序以利計算
+            rawData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            runSimulation();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function executeSimulation() {
-        let btHtml = ""; let hitStats = [];
-        const testSet = rawData.slice(-10).reverse();
+    function runSimulation() {
+        let btHtml = ""; let totalHits = 0;
+        const recent = rawData.slice(-10).reverse();
 
-        testSet.forEach(row => {
-            const idx = rawData.indexOf(row);
-            const pred = runSimEngine(rawData.slice(0, idx));
+        recent.forEach(row => {
+            const idx = rawData.findIndex(d => d.date === row.date);
+            const pred = predictEngine(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
-            hitStats.push(hits.length);
+            totalHits += hits.length;
 
             btHtml += `<div class="bt-row">
-                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
+                <div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div>
                 <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
                 <div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div>
             </div>`;
         });
 
         document.getElementById('btBody').innerHTML = btHtml;
-        const avg = hitStats.reduce((a,b)=>a+b,0)/10;
-        document.getElementById('btRate').innerText = `平均命中: ${avg.toFixed(1)} 碼`;
+        document.getElementById('avgHit').innerText = `(平均命中: ${(totalHits/10).toFixed(1)})`;
         
-        const next = runSimEngine(rawData);
-        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        
-        // 矩陣 P4
-        let mHtml = `<table class="m-table"><thead><tr><th style="background:#2c2c2e;position:sticky;left:0;z-index:5">日</th>`;
-        for(let i=1; i<=39; i++) mHtml += `<th style="color:var(--primary)">${pad(i)}</th>`;
-        mHtml += `</tr></thead><tbody>`;
-        rawData.slice(-15).reverse().forEach(row => {
-            mHtml += `<tr><td style="background:#2c2c2e;position:sticky;left:0">${formatDate(row.date)}</td>`;
-            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<div style="background:var(--hit);width:10px;height:10px;border-radius:50%;margin:auto"></div>' : ''}</td>`;
+        const nextPred = predictEngine(rawData);
+        document.getElementById('nextPred').innerHTML = nextPred.map(n => `<div class="ball">${pad(n)}</div>`).join('');
+
+        // P4 矩陣
+        let mHtml = `<table class="m-table"><tr><th>期</th>`;
+        for(let i=1; i<=39; i++) mHtml += `<th>${pad(i)}</th>`;
+        rawData.slice(-12).reverse().forEach(r => {
+            mHtml += `<tr><td>${r.date.split('/')[2]}</td>`;
+            for(let i=1; i<=39; i++) mHtml += `<td>${r.nums.includes(i)?'●':''}</td>`;
             mHtml += `</tr>`;
         });
-        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
-        log(`模擬完成！鄰號權重已針對當前盤勢鎖定。`);
+        document.getElementById('matrixCont').innerHTML = mHtml + `</table>`;
+        document.getElementById('logBox').innerText = `> 模擬對齊完成。目前採用 3-3-2 動態家族權重。`;
     }
 </script>
 </body>
