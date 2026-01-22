@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.42.8 動態容錯版</title>
+    <title>539 精準分析 V.42.9 策略專注版</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -24,10 +24,10 @@
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 數據注入 (V.42.8)</div><input type="file" id="csvFile" accept=".csv"></div>
-    <div class="panel"><div class="panel-header">P2: 深度回測 (容錯機制優化)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 01/22 下期狙擊號碼 (8 碼)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">動態容錯系統已就緒...</div></div>
+    <div class="panel"><div class="panel-header">P1: 數據注入 (V.42.9)</div><input type="file" id="csvFile" accept=".csv"></div>
+    <div class="panel"><div class="panel-header">P2: 策略優化回測 (尾數連動鎖定)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 01/22 策略狙擊 (8 碼)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">策略優化模式：尾數權重優先級提升。</div></div>
 </div>
 
 <script>
@@ -35,55 +35,54 @@
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV428Prediction(hist) {
+    function getV429Prediction(hist) {
         if(hist.length < 20) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
         const lastRow = hist[hist.length-1].nums;
 
-        // 1. 遺漏深度分析
+        // 1. 遺漏期數計算
         for(let i=1; i<=39; i++) {
             let g = 0;
             for(let k=hist.length-1; k>=0; k--) {
                 if(!hist[k].nums.includes(i)) g++; else break;
             }
             stats[i].gap = g;
-            if(g >= 4 && g <= 9) stats[i].score += 48; // 中期熱點強化
-            else if(g > 15) stats[i].score += 35; // 容錯機制：拉高極冷碼權重
-            else stats[i].score += (g * 2);
+            // 優化：中期熱點 (5-8期) 給予穩定基礎分
+            if(g >= 5 && g <= 8) stats[i].score += 30;
         }
 
-        // 2. 尾數共振 (增加多樣性)
+        // 2. 尾數家族強鎖定 (主策略)
         let tailMap = Array(10).fill(0);
-        hist.slice(-15).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 6.0);
+        hist.slice(-12).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
+        
+        // 找出最強的兩個尾數家族
+        let topTails = tailMap.map((count, tail) => ({tail, count}))
+                             .sort((a,b) => b.count - a.count)
+                             .slice(0, 2).map(x => x.tail);
 
-        // 3. 鄰號過濾
+        for(let i=1; i<=39; i++) {
+            if(topTails.includes(i%10)) stats[i].score += 55; // 強制提升尾數權重
+            stats[i].score += (tailMap[i%10] * 5);
+        }
+
+        // 3. 鄰號與動態修正 (從策略)
         lastRow.forEach(ln => {
-            if(ln > 1) stats[ln-1].score += 22;
-            if(ln < 39) stats[ln+1].score += 22;
+            [ln-1, ln+1].forEach(adj => {
+                if(adj >= 1 && adj <= 39 && stats[adj].gap <= 10) stats[adj].score += 20;
+            });
         });
 
-        // 4. 容錯分配：全域競爭代替強制分區
-        let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
-        
-        // 確保 8 碼中包含：4 碼高分、2 碼尾數共振最強、2 碼遺漏平衡
+        // 4. 選碼決策
         let final8 = [];
-        let pool = sorted.slice(0, 15); // 從前 15 名中挑選
-        
-        // 優先填入前 4 名
-        final8.push(...pool.splice(0, 4).map(x => x.n));
-        
-        // 從剩餘中挑選 2 碼不同尾數的，增加覆蓋面
-        for(let i=0; i<pool.length && final8.length < 6; i++){
-            if(!final8.some(n => n%10 === pool[i].n%10)) {
-                final8.push(pool[i].n);
-                pool.splice(i, 1);
-                i--;
-            }
-        }
-        
-        // 補齊至 8 碼
-        while(final8.length < 8) final8.push(pool.shift().n);
+        let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
+
+        // A. 優先選取強尾數家族的前 4 名 (達成 2 星的核心)
+        let tailPicks = sorted.filter(x => topTails.includes(x.n%10)).slice(0, 4);
+        final8.push(...tailPicks.map(x => x.n));
+
+        // B. 從其餘號碼挑選高分的中位碼填補
+        let others = sorted.filter(x => !final8.includes(x.n));
+        final8.push(...others.slice(0, 4).map(x => x.n));
 
         return final8.sort((a,b) => a-b);
     }
@@ -96,26 +95,26 @@
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
             if (new Date(rawData[0].date) > new Date(rawData[rawData.length-1].date)) rawData.reverse();
-            runV428();
+            runV429();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runV428() {
+    function runV429() {
         let btHtml = "";
         let hitsArr = [];
         const viewData = [...rawData].slice(-10).reverse();
         viewData.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV428Prediction(rawData.slice(0, idx));
+            const pred = getV429Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             hitsArr.push(hits.length);
             btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV428Prediction(rawData);
+        const next = getV429Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        log(`V.42.8 啟動 | 容錯分層：熱/冷/家族比例已重分配`);
+        log(`V.42.9 專注模式啟動：尾數鎖定+中期轉熱碼遞補`);
     }
 </script>
 </body>
