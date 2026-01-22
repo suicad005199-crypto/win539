@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.43.6 核心共振版</title>
+    <title>539 精準分析 V.43.7 組合極致版</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -17,88 +17,60 @@
         .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
         .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 5px var(--primary); }
         .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
-        .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-        .m-table { border-collapse: collapse; white-space: nowrap; }
-        .m-table td, .m-table th { border: 1px solid #333; width: 18px; height: 18px; text-align: center; font-size: 9px; }
-        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
         .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
         .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="panel">
-        <div class="panel-header">P1: 數據注入 (V.43.6 核心共振)</div>
-        <input type="file" id="csvFile" accept=".csv">
-    </div>
-    <div class="panel">
-        <div class="panel-header">P2: 三星衝刺回測 (家族聚攏率校準)</div>
-        <div id="btBody"></div>
-    </div>
-    <div class="panel">
-        <div class="panel-header">P3: 01/22 下期共振預測 (8 碼)</div>
-        <div id="nextPred" class="ball-row"></div>
-    </div>
-    <div class="panel">
-        <div class="panel-header">P4: 聚攏矩陣</div>
-        <div class="matrix-scroll" id="matrixCont"></div>
-    </div>
-    <div class="panel"><div id="logBox">共振優化模式：已將家族權重提升至 75%。</div></div>
+    <div class="panel"><div class="panel-header">P1: 數據注入 (V.43.7 組合極致)</div><input type="file" id="csvFile" accept=".csv"></div>
+    <div class="panel"><div class="panel-header">P2: 三星衝刺回測 (4+4 結構)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 01/22 三星狙擊組合 (8 碼)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">優化成功：目前採取雙家族 4+4 強力黏性策略。</div></div>
 </div>
 
 <script>
     let rawData = [];
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
-    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    function getV436Prediction(hist) {
+    function getV437Prediction(hist) {
         if(hist.length < 20) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
         const lastRow = hist[hist.length-1].nums;
-        
-        // 1. 遺漏權重修正
+
+        // 1. 遺漏深度校準
         for(let i=1; i<=39; i++) {
             let g = 0;
             for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
             stats[i].gap = g;
-            if(g >= 5 && g <= 9) stats[i].score += 50; // 中期高爆發區
-            else if(g === 0) stats[i].score += 25; // 強化連莊意願
+            if(g >= 6 && g <= 9) stats[i].score += 55; // 強化高黏性中期碼
         }
 
-        // 2. 家族共振核心 (V.43.6 升級)
+        // 2. 家族權重倍增
         let tailMap = Array(10).fill(0);
         hist.slice(-12).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        let topTails = tailMap.map((count, tail) => ({tail, count}))
-                             .sort((a,b) => b.count - a.count)
-                             .slice(0, 2).map(x => x.tail);
+        let sortedTails = tailMap.map((count, tail) => ({tail, count})).sort((a,b)=>b.count-a.count);
+        let topTails = sortedTails.slice(0, 2).map(x => x.tail);
 
         for(let i=1; i<=39; i++) {
-            if(topTails.includes(i%10)) {
-                stats[i].score += 70; // 基礎家族分
-                if(lastRow.includes(i)) stats[i].score += 30; // 家族內連莊共振
-            }
-            stats[i].score += (tailMap[i%10] * 8);
+            if(topTails.includes(i%10)) stats[i].score += 80;
+            stats[i].score += (tailMap[i%10] * 10);
         }
 
-        // 3. 鄰號修正
-        lastRow.forEach(ln => {
-            [ln-1, ln+1].forEach(adj => { if(adj >= 1 && adj <= 39) stats[adj].score += 20; });
-        });
-
-        // 4. 聚攏選碼決策 (強勢家族優先)
+        // 3. 4+4 配額決策
         let final8 = [];
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
 
-        // A. 核心：前二家族各取 3 碼 (共 6 碼，衝擊 3 星主力)
         topTails.forEach(t => {
-            let family = sorted.filter(x => x.n%10 === t).slice(0, 3);
+            let family = sorted.filter(x => x.n%10 === t).slice(0, 4);
             final8.push(...family.map(x => x.n));
         });
 
-        // B. 剩餘 2 碼取全域最高分 (鄰號或防禦碼)
-        let others = sorted.filter(x => !final8.includes(x.n)).slice(0, 2);
-        final8.push(...others.map(x => x.n));
+        // 若不足 8 碼則補齊
+        let others = sorted.filter(x => !final8.includes(x.n));
+        while(final8.length < 8) final8.push(others.shift().n);
 
         return final8.sort((a,b) => a-b);
     }
@@ -111,34 +83,22 @@
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
             if (new Date(rawData[0].date) > new Date(rawData[rawData.length-1].date)) rawData.reverse();
-            runV436();
+            runV437();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runV436() {
-        let btHtml = ""; let hitsArr = [];
+    function runV437() {
+        let btHtml = "";
         rawData.slice(-10).reverse().forEach(row => {
             const idx = rawData.indexOf(row);
-            const pred = getV436Prediction(rawData.slice(0, idx));
+            const pred = getV437Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
-            hitsArr.push(hits.length);
-            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
+            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV436Prediction(rawData);
+        const next = getV437Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        
-        let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
-        for(let i=1; i<=39; i++) mHtml += `<th>${pad(i)}</th>`;
-        mHtml += `</tr></thead><tbody>`;
-        rawData.slice(-15).reverse().forEach(row => {
-            mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
-            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<div style="background:#ff375f;width:10px;height:10px;border-radius:50%;margin:auto"></div>' : ''}</td>`;
-            mHtml += `</tr>`;
-        });
-        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
-        log(`V.43.6 運行中：已實施家族聚攏，目標將 1 星轉化為高星組合。`);
     }
 </script>
 </body>
