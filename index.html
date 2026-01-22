@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.43.5 衝刺三星版</title>
+    <title>539 精準分析 V.43.6 核心共振版</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -28,22 +28,22 @@
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 數據注入 (V.43.5 衝刺版)</div>
+        <div class="panel-header">P1: 數據注入 (V.43.6 核心共振)</div>
         <input type="file" id="csvFile" accept=".csv">
     </div>
     <div class="panel">
-        <div class="panel-header">P2: 深度回測看板 (專注三星共振)</div>
+        <div class="panel-header">P2: 三星衝刺回測 (家族聚攏率校準)</div>
         <div id="btBody"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P3: 01/22 三星狙擊組合 (8 碼)</div>
+        <div class="panel-header">P3: 01/22 下期共振預測 (8 碼)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P4: 分布矩陣 (共振視覺化)</div>
+        <div class="panel-header">P4: 聚攏矩陣</div>
         <div class="matrix-scroll" id="matrixCont"></div>
     </div>
-    <div class="panel"><div id="logBox">三星優化模式已啟動，等待 CSV 匯入...</div></div>
+    <div class="panel"><div id="logBox">共振優化模式：已將家族權重提升至 75%。</div></div>
 </div>
 
 <script>
@@ -52,51 +52,51 @@
     const pad = (n) => n.toString().padStart(2, '0');
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    function getV435Prediction(hist) {
+    function getV436Prediction(hist) {
         if(hist.length < 20) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
         const lastRow = hist[hist.length-1].nums;
         
-        // 1. 遺漏區間權重重構
+        // 1. 遺漏權重修正
         for(let i=1; i<=39; i++) {
-            let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) {
-                if(!hist[k].nums.includes(i)) gap++; else break;
-            }
-            stats[i].gap = gap;
-            // 狙擊 3 星黃金區：中期(4-8)與冷轉溫(13-16)
-            if(gap >= 4 && gap <= 8) stats[i].score += 45;
-            else if(gap >= 13 && gap <= 16) stats[i].score += 40;
-            else stats[i].score += (gap <= 12) ? (gap * 2) : 5;
+            let g = 0;
+            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
+            stats[i].gap = g;
+            if(g >= 5 && g <= 9) stats[i].score += 50; // 中期高爆發區
+            else if(g === 0) stats[i].score += 25; // 強化連莊意願
         }
 
-        // 2. 尾數家族共振 (主攻策略)
+        // 2. 家族共振核心 (V.43.6 升級)
         let tailMap = Array(10).fill(0);
-        hist.slice(-15).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        let sortedTails = tailMap.map((count, tail) => ({tail, count})).sort((a,b)=>b.count-a.count);
-        let topTails = sortedTails.slice(0, 2).map(x => x.tail); // 前兩強家族
+        hist.slice(-12).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
+        let topTails = tailMap.map((count, tail) => ({tail, count}))
+                             .sort((a,b) => b.count - a.count)
+                             .slice(0, 2).map(x => x.tail);
 
         for(let i=1; i<=39; i++) {
-            if(topTails.includes(i%10)) stats[i].score += 65; // 強制提升共振
-            stats[i].score += (tailMap[i%10] * 5);
+            if(topTails.includes(i%10)) {
+                stats[i].score += 70; // 基礎家族分
+                if(lastRow.includes(i)) stats[i].score += 30; // 家族內連莊共振
+            }
+            stats[i].score += (tailMap[i%10] * 8);
         }
 
-        // 3. 矩陣鄰號修正
+        // 3. 鄰號修正
         lastRow.forEach(ln => {
-            [ln-1, ln+1].forEach(adj => { if(adj >= 1 && adj <= 39) stats[adj].score += 25; });
+            [ln-1, ln+1].forEach(adj => { if(adj >= 1 && adj <= 39) stats[adj].score += 20; });
         });
 
-        // 4. 配額分配 (3-3-2 結構以衝擊 3 星)
+        // 4. 聚攏選碼決策 (強勢家族優先)
         let final8 = [];
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
-        
-        // A. 第一家族取 3 碼
-        let t1 = sorted.filter(x => x.n%10 === topTails[0]).slice(0, 3);
-        final8.push(...t1.map(x => x.n));
-        // B. 第二家族取 3 碼
-        let t2 = sorted.filter(x => x.n%10 === topTails[1] && !final8.includes(x.n)).slice(0, 3);
-        final8.push(...t2.map(x => x.n));
-        // C. 剩餘高分碼補齊
+
+        // A. 核心：前二家族各取 3 碼 (共 6 碼，衝擊 3 星主力)
+        topTails.forEach(t => {
+            let family = sorted.filter(x => x.n%10 === t).slice(0, 3);
+            final8.push(...family.map(x => x.n));
+        });
+
+        // B. 剩餘 2 碼取全域最高分 (鄰號或防禦碼)
         let others = sorted.filter(x => !final8.includes(x.n)).slice(0, 2);
         final8.push(...others.map(x => x.n));
 
@@ -111,26 +111,26 @@
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
             if (new Date(rawData[0].date) > new Date(rawData[rawData.length-1].date)) rawData.reverse();
-            runV435();
+            runV436();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runV435() {
+    function runV436() {
         let btHtml = ""; let hitsArr = [];
         rawData.slice(-10).reverse().forEach(row => {
             const idx = rawData.indexOf(row);
-            const pred = getV435Prediction(rawData.slice(0, idx));
+            const pred = getV436Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             hitsArr.push(hits.length);
             btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV435Prediction(rawData);
+        const next = getV436Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
         let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
-        for(let i=1; i<=39; i++) mHtml += `<th style="color:#ffd60a">${pad(i)}</th>`;
+        for(let i=1; i<=39; i++) mHtml += `<th>${pad(i)}</th>`;
         mHtml += `</tr></thead><tbody>`;
         rawData.slice(-15).reverse().forEach(row => {
             mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
@@ -138,7 +138,7 @@
             mHtml += `</tr>`;
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
-        log(`V.43.5 已加載：強制 3-3-2 家族結構以衝擊 3 星。`);
+        log(`V.43.6 運行中：已實施家族聚攏，目標將 1 星轉化為高星組合。`);
     }
 </script>
 </body>
