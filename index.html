@@ -1,41 +1,157 @@
-function getV422Prediction(hist) {
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>539 精準分析 V.42.5 極端權重版</title>
+    <style>
+        :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
+        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
+        .container { display: flex; flex-direction: column; gap: 12px; }
+        .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
+        .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+        .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
+        .num-group { display: flex; gap: 4px; align-items: center; }
+        .num-label { font-size: 10px; color: var(--sub); width: 30px; flex-shrink: 0; }
+        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
+        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 5px var(--primary); }
+        .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
+        .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+        .m-table { border-collapse: collapse; white-space: nowrap; }
+        .m-table td, .m-table th { border: 1px solid #333; width: 18px; height: 18px; text-align: center; font-size: 9px; }
+        .m-head { background: #2c2c2e; color: var(--primary); position: sticky; top: 0; }
+        .m-date { background: #2c2c2e; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
+        .m-ball { background: var(--hit); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
+        .ball-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+        .ball { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #3a3a3c, #1c1c1e); border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 18px; box-shadow: 0 0 10px rgba(10,132,255,0.3); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="panel">
+        <div class="panel-header">P1: 數據注入 (極速權重 V.42.5)</div>
+        <input type="file" id="csvFile" accept=".csv">
+    </div>
+    <div class="panel">
+        <div class="panel-header">P2: 優化回測 (鄰號＋極熱邏輯)</div>
+        <div id="btBody"></div>
+    </div>
+    <div class="panel" style="background: linear-gradient(to bottom, #1c1c1e, #000);">
+        <div class="panel-header">P3: 01/22 結構預測 (8 碼)</div>
+        <div id="nextPred" class="ball-row"></div>
+        <p style="text-align:center; color:var(--sub); font-size:10px; margin-top:8px;">已強制壓制長冷號，聚焦短期熱區聯動</p>
+    </div>
+    <div class="panel">
+        <div class="panel-header">P4: 趨勢分佈</div>
+        <div id="matrixCont" class="matrix-scroll"></div>
+    </div>
+    <div id="logBox">等待 CSV 匯入後進行權重重組...</div>
+</div>
+
+<script>
+    let rawData = [];
+    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
+    const pad = (n) => n.toString().padStart(2, '0');
+    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
+
+    function getV425Prediction(hist) {
         if(hist.length < 15) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         const lastRow = hist[hist.length-1].nums;
 
+        // 核心：製造分數斷層
         for(let i=1; i<=39; i++) {
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) {
                 if(!hist[k].nums.includes(i)) gap++; else break;
             }
-            // 策略：極大化短期熱號 (遺漏 0-2 期) 的分數，直接壓制冷號
-            if (gap === 0) stats[i].score += 40; // 連莊權重拉高
-            else if (gap <= 2) stats[i].score += 50; // 剛開過的回補權重最高
-            else if (gap <= 5) stats[i].score += 20; 
-            else stats[i].score -= 10; // 長冷號直接扣分，不讓它佔名額
+            // 極端遺漏權重：只留熱號，冷號(gap > 5)直接大幅扣分
+            if (gap === 0) stats[i].score += 35; // 連莊
+            else if (gap <= 2) stats[i].score += 55; // 極熱回補期 (核心加分)
+            else if (gap <= 4) stats[i].score += 25; 
+            else stats[i].score -= 20; // 排除長期冷號
         }
 
-        // 尾數：縮短到最近 7 期，反映最即時的尾數熱度
+        // 即時尾數：縮短至 7 期，加權倍率提高
         let tailMap = Array(10).fill(0);
         hist.slice(-7).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 8.0);
+        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 10.0);
 
-        // 鄰號：維持高權重 45，這是 539 命中 2-3 碼的關鍵
+        // 強勢鄰號：維持高壓權重 50
         lastRow.forEach(ln => {
-            if(ln > 1) stats[ln-1].score += 45;
-            if(ln < 39) stats[ln+1].score += 45;
+            if(ln > 1) stats[ln-1].score += 50;
+            if(ln < 39) stats[ln+1].score += 50;
         });
 
-        // 區域過濾：確保 8 碼不會擠在同一個區間
-        let zones = [[],[],[]];
-        for(let i=1; i<=39; i++) {
-            let z = Math.min(Math.floor((i-1)/13), 2);
-            zones[z].push(stats[i]);
-        }
-        let pool = [];
-        // 每區強迫取前 2-3 名，剩餘由總分決定
-        zones.forEach(z => pool.push(...z.sort((a,b)=>b.score-a.score).slice(0, 2)));
-        let finalPool = stats.sort((a,b)=>b.score-a.score).slice(0, 15); // 先取總分前 15
+        // 智能分區篩選
+        let finalPool = stats.slice(1).sort((a,b) => b.score - a.score).slice(0, 15);
         
-        return finalPool.filter(x => x.n > 0).slice(0, 8).map(x=>x.n).sort((a,b)=>a-b);
+        // 確保三區 (1-13, 14-26, 27-39) 至少都有號碼，避免斷區
+        let selected = [];
+        [1, 14, 27].forEach(start => {
+            let zoneBest = finalPool.find(x => x.n >= start && x.n < start + 13);
+            if (zoneBest) selected.push(zoneBest);
+        });
+
+        // 補齊至 8 碼
+        finalPool.forEach(x => {
+            if (selected.length < 8 && !selected.find(s => s.n === x.n)) {
+                selected.push(x);
+            }
+        });
+
+        return selected.map(x => x.n).sort((a,b) => a - b);
     }
+
+    document.getElementById('csvFile').addEventListener('change', e => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const lines = reader.result.replace(/\r/g, "").trim().split('\n');
+            rawData = lines.slice(1).map(l => {
+                const c = l.split(',');
+                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
+            }).filter(r => r.nums.length === 5);
+            rawData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            runV425();
+        };
+        reader.readAsText(e.target.files[0]);
+    });
+
+    function runV425() {
+        let btHtml = "";
+        let hitsArr = [];
+        const recent = rawData.slice(-10).reverse();
+        recent.forEach(row => {
+            const idx = rawData.findIndex(d => d.date === row.date);
+            const pred = getV425Prediction(rawData.slice(0, idx));
+            const hits = row.nums.filter(n => pred.includes(n));
+            hitsArr.push(hits.length);
+            btHtml += `<div class="bt-row">
+                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag ${hits.length>=2?'':'low'}" style="background:${hits.length>=2?'var(--success)':'#444'}">${hits.length} ★</span></div>
+                <div class="num-group">
+                    <span class="num-label">開獎</span>
+                    ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
+                </div>
+            </div>`;
+        });
+        document.getElementById('btBody').innerHTML = btHtml;
+        const next = getV425Prediction(rawData);
+        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        
+        let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
+        for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
+        mHtml += `</tr></thead><tbody>`;
+        rawData.slice(-15).reverse().forEach(row => {
+            mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
+            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<span class="m-ball"></span>' : ''}</td>`;
+            mHtml += `</tr>`;
+        });
+        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
+        const avg = hitsArr.reduce((a,b)=>a+b,0)/10;
+        log(`V.42.5 部署完成。平均命中預期：${avg.toFixed(1)} 碼。已排除長期冷門號。`);
+    }
+</script>
+</body>
+</html>
