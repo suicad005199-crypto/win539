@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.43.7 組合極致版</title>
+    <title>539 精準分析 V.43.8 組合強化版</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -24,10 +24,10 @@
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 數據注入 (V.43.7 組合極致)</div><input type="file" id="csvFile" accept=".csv"></div>
-    <div class="panel"><div class="panel-header">P2: 三星衝刺回測 (4+4 結構)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 01/22 三星狙擊組合 (8 碼)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">優化成功：目前採取雙家族 4+4 強力黏性策略。</div></div>
+    <div class="panel"><div class="panel-header">P1: 數據注入 (V.43.8 組合優化)</div><input type="file" id="csvFile" accept=".csv"></div>
+    <div class="panel"><div class="panel-header">P2: 衝擊三星回測 (冷熱交叉分佈)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 01/22 組合狙擊 (8 碼)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">系統已校準：強化家族內部分層權重。</div></div>
 </div>
 
 <script>
@@ -35,44 +35,52 @@
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV437Prediction(hist) {
+    function getV438Prediction(hist) {
         if(hist.length < 20) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
         const lastRow = hist[hist.length-1].nums;
 
-        // 1. 遺漏深度校準
         for(let i=1; i<=39; i++) {
             let g = 0;
             for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
             stats[i].gap = g;
-            if(g >= 6 && g <= 9) stats[i].score += 55; // 強化高黏性中期碼
+            if(g >= 5 && g <= 10) stats[i].score += 50; 
+            if(g >= 15) stats[i].score += 30; // 防禦冷碼
         }
 
-        // 2. 家族權重倍增
         let tailMap = Array(10).fill(0);
         hist.slice(-12).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        let sortedTails = tailMap.map((count, tail) => ({tail, count})).sort((a,b)=>b.count-a.count);
-        let topTails = sortedTails.slice(0, 2).map(x => x.tail);
+        let topTails = tailMap.map((count, tail) => ({tail, count})).sort((a,b)=>b.count-a.count).slice(0, 2).map(x => x.tail);
 
         for(let i=1; i<=39; i++) {
-            if(topTails.includes(i%10)) stats[i].score += 80;
-            stats[i].score += (tailMap[i%10] * 10);
+            if(topTails.includes(i%10)) stats[i].score += 70;
+            stats[i].score += (tailMap[i%10] * 8);
         }
 
-        // 3. 4+4 配額決策
         let final8 = [];
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
 
+        // 家族 4+4 並進行冷熱交叉選碼
         topTails.forEach(t => {
-            let family = sorted.filter(x => x.n%10 === t).slice(0, 4);
-            final8.push(...family.map(x => x.n));
+            let family = sorted.filter(x => x.n%10 === t);
+            // 優先選 1 碼熱碼 (gap < 4), 2 碼中期 (4-10), 1 碼冷碼 (>10)
+            let picks = [
+                family.find(x => x.gap < 4),
+                ...family.filter(x => x.gap >= 4 && x.gap <= 10).slice(0, 2),
+                family.find(x => x.gap > 10)
+            ].filter(x => x !== undefined);
+            
+            // 補齊至 4 碼
+            family.forEach(f => { if(picks.length < 4 && !picks.includes(f)) picks.push(f); });
+            final8.push(...picks.map(x => x.n));
         });
 
-        // 若不足 8 碼則補齊
-        let others = sorted.filter(x => !final8.includes(x.n));
-        while(final8.length < 8) final8.push(others.shift().n);
+        while(final8.length < 8) {
+            let top = sorted.find(x => !final8.includes(x.n));
+            if(top) final8.push(top.n); else break;
+        }
 
-        return final8.sort((a,b) => a-b);
+        return final8.sort((a,b) => a-b).slice(0, 8);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -83,21 +91,21 @@
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
             if (new Date(rawData[0].date) > new Date(rawData[rawData.length-1].date)) rawData.reverse();
-            runV437();
+            runV438();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runV437() {
+    function runV438() {
         let btHtml = "";
         rawData.slice(-10).reverse().forEach(row => {
             const idx = rawData.indexOf(row);
-            const pred = getV437Prediction(rawData.slice(0, idx));
+            const pred = getV438Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV437Prediction(rawData);
+        const next = getV438Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
     }
 </script>
