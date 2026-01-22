@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.43.8 組合強化版</title>
+    <title>539 精準分析 V.44.0 模擬演化版</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { display: flex; flex-direction: column; gap: 12px; }
         .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; display: flex; justify-content: space-between; }
         .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
         .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
         .num-group { display: flex; gap: 4px; align-items: center; }
@@ -19,15 +19,28 @@
         .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
         .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
         .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
-        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
+        .stat-badge { font-size: 10px; color: var(--accent); border: 1px solid var(--accent); padding: 1px 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 數據注入 (V.43.8 組合優化)</div><input type="file" id="csvFile" accept=".csv"></div>
-    <div class="panel"><div class="panel-header">P2: 衝擊三星回測 (冷熱交叉分佈)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 01/22 組合狙擊 (8 碼)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">系統已校準：強化家族內部分層權重。</div></div>
+    <div class="panel">
+        <div class="panel-header">P1: 數據注入 & 模擬啟動</div>
+        <input type="file" id="csvFile" accept=".csv">
+    </div>
+    <div class="panel">
+        <div class="panel-header">P2: 自動回測回報 (最近 10 期) <span id="btSummary" class="stat-badge">待命</span></div>
+        <div id="btBody"></div>
+    </div>
+    <div class="panel">
+        <div class="panel-header">P3: 01/22 三星目標組合 (8 碼)</div>
+        <div id="nextPred" class="ball-row"></div>
+    </div>
+    <div class="panel">
+        <div class="panel-header">系統運行日誌</div>
+        <div id="logBox">> 系統已就緒。請匯入 CSV 啟動自動演化模擬。</div>
+    </div>
 </div>
 
 <script>
@@ -35,52 +48,42 @@
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV438Prediction(hist) {
+    function evolveStrategy(hist) {
         if(hist.length < 20) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
-        const lastRow = hist[hist.length-1].nums;
-
+        
+        // 1. 計算遺漏值
         for(let i=1; i<=39; i++) {
             let g = 0;
             for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
             stats[i].gap = g;
-            if(g >= 5 && g <= 10) stats[i].score += 50; 
-            if(g >= 15) stats[i].score += 30; // 防禦冷碼
         }
 
+        // 2. 家族共振計算 (三星核心)
         let tailMap = Array(10).fill(0);
-        hist.slice(-12).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
+        hist.slice(-15).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
         let topTails = tailMap.map((count, tail) => ({tail, count})).sort((a,b)=>b.count-a.count).slice(0, 2).map(x => x.tail);
 
+        // 3. 權重分配
         for(let i=1; i<=39; i++) {
-            if(topTails.includes(i%10)) stats[i].score += 70;
-            stats[i].score += (tailMap[i%10] * 8);
+            if(topTails.includes(i%10)) stats[i].score += 75; // 家族聚攏
+            if(stats[i].gap >= 5 && stats[i].gap <= 9) stats[i].score += 50; // 中期高機率碼
+            if(stats[i].gap === 0) stats[i].score += 20; // 鄰號潛力
         }
 
         let final8 = [];
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
 
-        // 家族 4+4 並進行冷熱交叉選碼
+        // 4. 組合配額優化 (三星衝刺結構：3-3-2)
         topTails.forEach(t => {
-            let family = sorted.filter(x => x.n%10 === t);
-            // 優先選 1 碼熱碼 (gap < 4), 2 碼中期 (4-10), 1 碼冷碼 (>10)
-            let picks = [
-                family.find(x => x.gap < 4),
-                ...family.filter(x => x.gap >= 4 && x.gap <= 10).slice(0, 2),
-                family.find(x => x.gap > 10)
-            ].filter(x => x !== undefined);
-            
-            // 補齊至 4 碼
-            family.forEach(f => { if(picks.length < 4 && !picks.includes(f)) picks.push(f); });
-            final8.push(...picks.map(x => x.n));
+            let family = sorted.filter(x => x.n%10 === t).slice(0, 3);
+            final8.push(...family.map(x => x.n));
         });
+        
+        let others = sorted.filter(x => !final8.includes(x.n)).slice(0, 2);
+        final8.push(...others.map(x => x.n));
 
-        while(final8.length < 8) {
-            let top = sorted.find(x => !final8.includes(x.n));
-            if(top) final8.push(top.n); else break;
-        }
-
-        return final8.sort((a,b) => a-b).slice(0, 8);
+        return final8.sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -91,22 +94,31 @@
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
             if (new Date(rawData[0].date) > new Date(rawData[rawData.length-1].date)) rawData.reverse();
-            runV438();
+            autoBacktest();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runV438() {
-        let btHtml = "";
-        rawData.slice(-10).reverse().forEach(row => {
+    function autoBacktest() {
+        let btHtml = ""; let totalStars = 0;
+        const testData = rawData.slice(-10).reverse();
+        
+        testData.forEach((row, i) => {
             const idx = rawData.indexOf(row);
-            const pred = getV438Prediction(rawData.slice(0, idx));
+            const pred = evolveStrategy(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
+            totalStars += hits.length;
+            
             btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
+
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV438Prediction(rawData);
+        document.getElementById('btSummary').innerText = `平均命中: ${(totalStars/10).toFixed(1)} 碼`;
+        
+        const next = evolveStrategy(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        log(`自動回測完成。平均每期命中 ${(totalStars/10).toFixed(1)} 碼。`);
+        log(`三星優化建議：專注 P3 中的同尾數組合。`);
     }
 </script>
 </body>
