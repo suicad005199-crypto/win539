@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.42.3 - 6碼回測版</title>
+    <title>539 精準分析 V.42.5 - 工程穩定版</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { display: flex; flex-direction: column; gap: 12px; }
         .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
         .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
-        
-        /* P2 樣式 */
         .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
         .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
         .num-group { display: flex; gap: 4px; align-items: center; }
@@ -19,15 +17,13 @@
         .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
         .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 5px var(--primary); }
         .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
-
         .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
         .m-table { border-collapse: collapse; white-space: nowrap; }
         .m-table td, .m-table th { border: 1px solid #333; width: 18px; height: 18px; text-align: center; font-size: 9px; }
         .m-head { background: #2c2c2e; color: var(--primary); position: sticky; top: 0; }
         .m-date { background: #2c2c2e; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
         .m-ball { background: var(--hit); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
-        
-        #logBox { background: #000; color: var(--success); padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); line-height: 1.5; }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); line-height: 1.6; }
         .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
         .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
     </style>
@@ -35,179 +31,198 @@
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 數據注入 (6碼穩定版)</div>
+        <div class="panel-header">P1: 數據注入 (V.42.5 健壯版)</div>
         <input type="file" id="csvFile" accept=".csv">
     </div>
-    
     <div class="panel">
         <div class="panel-header">P2: 逐期回測 (最近 10 期)</div>
         <div id="btBody"></div>
     </div>
-
     <div class="panel">
-        <div class="panel-header">P3: 下期結構預測 (精選 6 碼)</div>
+        <div class="panel-header">P3: 下期預測 (鎖定成功狀態)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
-
     <div class="panel">
         <div class="panel-header">P4: 分布矩陣</div>
         <div class="matrix-scroll" id="matrixCont"></div>
     </div>
-
     <div class="panel">
         <div id="logBox">等待 CSV 匯入...</div>
     </div>
 </div>
 
 <script>
-    // 4️⃣ 參數模組化
+    // 1️⃣ 參數模組化與 Clamp 定義
     const CONFIG = {
-        weights: {
-            gapShort: 3.0,     // 短漏碼權重
-            tailFreq: 3.2,     // 尾數熱度權重
-            neighbor: 20,      // 鄰號權重
-            reentry: 15        // 重號權重
+        baseWeights: {
+            gapShort: 3.5,
+            tailFreq: 3.2,
+            neighbor: 25,
+            reentry: 18
+        },
+        range: {
+            neighbor: [8, 35], //
+            gapShort: [2.0, 6.5] //
         },
         constraints: {
-            maxSameTail: 2,    // 同尾最多 2 碼
-            maxConsecutive: 2, // 連號最多 2 碼
-            maxPerZone: 3      // 單一區段 (1-13, 14-26, 27-39) 最多 3 碼
+            maxSameTail: 2,
+            maxConsecutiveLen: 2,
+            maxPerZone: 3
         }
     };
 
+    // 輔助函式：限制數值範圍
+    const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+
     let rawData = [];
-    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
+    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
 
-    // 核心預測邏輯
-    function getV423Prediction(hist) {
+    /**
+     * 核心預測函數 - 已移除遞迴
+     * @param {Array} hist 歷史資料
+     * @param {Object} lastFeedback 上一期的命中回饋量
+     */
+    function getV425Prediction(hist, lastFeedback = { hitCount: 2 }) {
         if (hist.length < 20) return [1, 2, 3, 4, 5, 6];
 
+        // 2️⃣ 動態權重與正向強化邏輯
+        let activeWeights = { ...CONFIG.baseWeights };
+        
+        if (lastFeedback.hitCount < 2) {
+            // 失敗調整：遠離上一期
+            activeWeights.neighbor = clamp(activeWeights.neighbor * 0.7, CONFIG.range.neighbor[0], CONFIG.range.neighbor[1]);
+            activeWeights.gapShort = clamp(activeWeights.gapShort * 1.3, CONFIG.range.gapShort[0], CONFIG.range.gapShort[1]);
+        } else if (lastFeedback.hitCount >= 3) {
+            // 3️⃣ 正向強化：回歸/鎖定成功權重
+            activeWeights = { ...CONFIG.baseWeights }; 
+        }
+
+        // --- 評分邏輯 ---
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         const lastRow = hist[hist.length - 1].nums;
-
-        // 1. 漏碼分析
+        
         for (let i = 1; i <= 39; i++) {
             let gap = 0;
             for (let k = hist.length - 1; k >= 0; k--) {
                 if (!hist[k].nums.includes(i)) gap++; else break;
             }
-            stats[i].score += (gap <= 12) ? (gap * CONFIG.weights.gapShort) : Math.max(0, 38 - gap);
+            stats[i].score += (gap <= 12) ? (gap * activeWeights.gapShort) : Math.max(0, 38 - gap);
         }
 
-        // 2. 尾數分析 (最近 15 期)
         let tailMap = Array(10).fill(0);
         hist.slice(-15).forEach(d => d.nums.forEach(n => tailMap[n % 10]++));
-        for (let i = 1; i <= 39; i++) stats[i].score += (tailMap[i % 10] * CONFIG.weights.tailFreq);
+        for (let i = 1; i <= 39; i++) stats[i].score += (tailMap[i % 10] * activeWeights.tailFreq);
 
-        // 3. 鄰號與重號
         lastRow.forEach(ln => {
-            if (ln > 1) stats[ln - 1].score += CONFIG.weights.neighbor;
-            if (ln < 39) stats[ln + 1].score += CONFIG.weights.neighbor;
-            stats[ln].score += CONFIG.weights.reentry;
+            if (ln > 1) stats[ln - 1].score += activeWeights.neighbor;
+            if (ln < 39) stats[ln + 1].score += activeWeights.neighbor;
+            stats[ln].score += activeWeights.reentry;
         });
 
-        // 4. 初選前 12 碼 (擴大池子進行結構篩選)
-        let candidates = stats.slice(1).sort((a, b) => b.score - a.score).slice(0, 12);
-        
-        // 5. 二次篩選 (結構約束)
+        const candidates = stats.slice(1).sort((a, b) => b.score - a.score);
         let finalSix = [];
-        let tailCount = {};
-        let zoneCount = [0, 0, 0];
 
-        for (let cand of candidates) {
+        // 結構檢核
+        const checkStructure = (num, pool, strictConsecutive = true) => {
+            if (pool.filter(n => n % 10 === num % 10).length >= CONFIG.constraints.maxSameTail) return false;
+            const z = Math.min(Math.floor((num - 1) / 13), 2);
+            if (pool.filter(n => Math.min(Math.floor((n - 1) / 13), 2) === z).length >= CONFIG.constraints.maxPerZone) return false;
+            
+            if (strictConsecutive) {
+                const temp = [...pool, num].sort((a, b) => a - b);
+                let count = 1, maxC = 1;
+                for (let i = 1; i < temp.length; i++) {
+                    if (temp[i] === temp[i-1] + 1) { count++; maxC = Math.max(maxC, count); }
+                    else count = 1;
+                }
+                if (maxC > CONFIG.constraints.maxConsecutiveLen) return false;
+            }
+            return true;
+        };
+
+        for (let c of candidates) {
             if (finalSix.length >= 6) break;
+            if (checkStructure(c.n, finalSix, true)) finalSix.push(c.n);
+        }
 
-            const t = cand.n % 10;
-            const z = Math.min(Math.floor((cand.n - 1) / 13), 2);
-            
-            // 檢查連號 (避免三連號)
-            const hasTooManyConsecutive = finalSix.filter(n => Math.abs(n - cand.n) === 1).length >= 2;
-            
-            if (
-                (tailCount[t] || 0) < CONFIG.constraints.maxSameTail &&
-                zoneCount[z] < CONFIG.constraints.maxPerZone &&
-                !hasTooManyConsecutive
-            ) {
-                finalSix.push(cand.n);
-                tailCount[t] = (tailCount[t] || 0) + 1;
-                zoneCount[z]++;
+        if (finalSix.length < 6) {
+            for (let c of candidates) {
+                if (finalSix.length >= 6) break;
+                if (finalSix.includes(c.n)) continue;
+                if (checkStructure(c.n, finalSix, false)) finalSix.push(c.n);
             }
         }
 
-        // 若篩選後不足 6 碼，則用最高分補齊
-        if (finalSix.length < 6) {
-            candidates.forEach(c => {
-                if (finalSix.length < 6 && !finalSix.includes(c.n)) finalSix.push(c.n);
-            });
+        while (finalSix.length < 6) {
+            let best = candidates.find(c => !finalSix.includes(c.n));
+            if (best) finalSix.push(best.n); else break;
         }
 
         return finalSix.sort((a, b) => a - b);
     }
 
+    // --- 執行控管 ---
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
-            const lines = reader.result.replace(/\r/g, "").trim().split('\n');
-            rawData = lines.map(l => {
+            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
                 const c = l.split(',');
-                return { 
-                    date: c[0].trim(), 
-                    nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) 
-                };
+                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
-            
             document.getElementById('logBox').innerHTML = "";
-            runAnalysis();
+            runV425();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runAnalysis() {
+    function runV425() {
         let btHtml = "";
         let hitsArr = [];
-        const testCount = 10;
-        const testData = rawData.slice(-testCount);
+        let allPredictions = []; // 快取所有預測結果避免遞迴
 
-        // 2️⃣ & 3️⃣ 嚴格逐期回測
-        testData.reverse().forEach(row => {
-            const targetIdx = rawData.findIndex(r => r.date === row.date);
-            const histSlice = rawData.slice(0, targetIdx); // 第 N 期只看 1 ~ N-1
+        // 預先計算回測範圍內每一期的預測 (Walk-forward)
+        // 這裡從 index 20 開始，確保有足夠歷史資料
+        const startIndex = Math.max(0, rawData.length - 30); 
+        let lastHitCountForFeedback = 2; // 初始假設
+
+        for (let i = startIndex; i < rawData.length; i++) {
+            const hist = rawData.slice(0, i);
+            const pred = getV425Prediction(hist, { hitCount: lastHitCountForFeedback });
             
-            const pred = getV423Prediction(histSlice);
-            const hits = row.nums.filter(n => pred.includes(n));
-            hitsArr.push(hits.length);
+            // 計算命中數提供給下一期做 Feedback
+            const realNums = rawData[i].nums;
+            lastHitCountForFeedback = realNums.filter(n => pred.includes(n)).length;
             
+            allPredictions.push({ date: rawData[i].date, pred: pred, hits: lastHitCountForFeedback });
+        }
+
+        // 渲染最近 10 期
+        const displayData = allPredictions.slice(-10).reverse();
+        displayData.forEach(item => {
+            const realRow = rawData.find(r => r.date === item.date);
+            hitsArr.push(item.hits);
             btHtml += `<div class="bt-row">
-                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
+                <div class="bt-meta"><span>📅 ${formatDate(item.date)}</span> <span class="star-tag">${item.hits} ★</span></div>
                 <div class="num-group">
                     <span class="num-label">開獎</span>
-                    ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
+                    ${realRow.nums.map(n => `<div class="n-box ${item.pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
                 </div>
                 <div class="num-group">
                     <span class="num-label">預測</span>
-                    ${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}; font-weight:${row.nums.includes(n)?'900':'normal'}">${pad(n)}</div>`).join('')}
+                    ${item.pred.map(n => `<div class="n-box" style="color:${realRow.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}
                 </div>
             </div>`;
         });
-
         document.getElementById('btBody').innerHTML = btHtml;
 
-        // 下期預測
-        const next = getV423Prediction(rawData);
+        // 下期預測 (使用最後一期的命中結果作為 Feedback)
+        const next = getV425Prediction(rawData, { hitCount: lastHitCountForFeedback });
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        // 矩陣顯示
         renderMatrix();
-
-        // 統計計算
-        const avg = hitsArr.reduce((a,b)=>a+b, 0) / testCount;
-        const stableCount = hitsArr.filter(h => h >= 2).length;
-        
-        log(`資料總量: ${rawData.length} 期`);
-        log(`最近 ${testCount} 期平均命中: ${avg.toFixed(2)} 碼`);
-        log(`≥2 碼達成率: ${(stableCount/testCount*100).toFixed(0)}% (${stableCount}/${testCount} 期)`);
+        log(`穩定度 (≥2碼): ${hitsArr.filter(h => h >= 2).length * 10}%`);
     }
 
     function renderMatrix() {
