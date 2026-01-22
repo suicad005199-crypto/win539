@@ -31,22 +31,22 @@
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 數據注入 (V.44.0 熱點強襲)</div>
+        <div class="panel-header">P1: 數據注入 (V.44.0 末端優先版)</div>
         <input type="file" id="csvFile" accept=".csv">
     </div>
     <div class="panel">
-        <div class="panel-header">P2: 深度回測看板 (3星專攻)</div>
+        <div class="panel-header">P2: 深度回測看板 (3星 50% 目標)</div>
         <div id="btBody"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P3: 下期預測 (8 碼飽和)</div>
+        <div class="panel-header">P3: 下期狙擊 (8 碼飽和)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
     <div class="panel">
         <div class="panel-header">P4: 分布矩陣</div>
         <div class="matrix-scroll" id="matrixCont"></div>
     </div>
-    <div class="panel"><div id="logBox">系統就緒，請上傳數據...</div></div>
+    <div class="panel"><div id="logBox">請上傳您的 121 檔案...</div></div>
 </div>
 
 <script>
@@ -56,10 +56,10 @@
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
     function getV440Prediction(hist) {
-        if(hist.length < 15) return [1,2,3,4,5,6,7,8];
+        if(hist.length < 10) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
-        // 1. 強力溫碼加權 (遺漏 4-9 期)
+        // 1. 核心溫碼 (針對 1 月份趨勢：遺漏 4-9 期)
         for(let i=1; i<=39; i++) {
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) {
@@ -69,24 +69,22 @@
             else stats[i].score += gap * 5;
         }
 
-        // 2. 同尾熱度 (Top 2 尾數權重提升)
+        // 2. 同尾熱度
         let tailMap = Array(10).fill(0);
         hist.slice(-10).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
         for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 20);
 
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
         
-        // 3. 區間強行飽和 (找最近 3 期熱區)
+        // 3. 區間飽和 (強制鎖定最近 3 期熱區)
         let zCounts = [0, 0, 0];
         hist.slice(-3).forEach(d => d.nums.forEach(n => zCounts[Math.min(Math.floor((n-1)/13), 2)]++));
         let bestZ = zCounts.indexOf(Math.max(...zCounts));
 
         let res = [];
-        // 該區間直接塞入 6 碼
         let focusPool = sorted.filter(x => Math.min(Math.floor((x.n-1)/13), 2) === bestZ).slice(0, 6);
         res.push(...focusPool.map(x=>x.n));
         
-        // 補齊剩餘 2 碼
         for(let x of sorted) {
             if(res.length < 8 && !res.includes(x.n)) res.push(x.n);
         }
@@ -96,10 +94,20 @@
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
-            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
+            // 自動過濾空行並判斷日期順序
+            let lines = reader.result.replace(/\r/g, "").trim().split('\n').filter(l => l.includes(','));
+            let data = lines.slice(1).map(l => {
                 const c = l.split(',');
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
+
+            // 【核心修正】檢查日期。如果第一筆比最後一筆舊，則反轉數組。
+            if (new Date(data[0].date) < new Date(data[data.length-1].date)) {
+                rawData = data; // 檔案末端已經是最新，直接使用
+            } else {
+                rawData = data.reverse(); // 否則反轉
+            }
+
             document.getElementById('logBox').innerHTML = "";
             runV440();
         };
@@ -111,8 +119,14 @@
         let hitsArr = [];
         let s3 = 0;
         
-        rawData.slice(-10).reverse().forEach(row => {
-            const histSlice = rawData.slice(0, rawData.indexOf(row));
+        // 顯示回測時，由新到舊顯示 (rawData 本身末端是最新)
+        let displayData = [...rawData].reverse();
+
+        displayData.slice(0, 10).forEach(row => {
+            // 回測邏輯：取該期之前的數據
+            const histSlice = rawData.slice(0, rawData.findIndex(r => r.date === row.date));
+            if(histSlice.length < 5) return;
+
             const pred = getV440Prediction(histSlice);
             const hits = row.nums.filter(n => pred.includes(n));
             hitsArr.push(hits.length);
@@ -137,15 +151,14 @@
         let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
         for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
         mHtml += `</tr></thead><tbody>`;
-        rawData.slice(-15).reverse().forEach(row => {
+        displayData.slice(0, 15).forEach(row => {
             mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
             for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<span class="m-ball"></span>' : ''}</td>`;
             mHtml += `</tr>`;
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
         
-        log(`數據注入完成。V.44.0 正全力追擊 3 星簇群。`);
-        log(`近期盤勢發散，本版已強化「同尾」與「熱點」權重。`);
+        log(`末端數據偵測完畢。目前 1 月趨勢已載入核心。`);
     }
 </script>
 </body>
