@@ -2,93 +2,148 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>539 極化狙擊 V.43.8</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>539 精準分析 V.43.8</title>
     <style>
-        :root { --bg: #000; --primary: #ffd60a; --success: #32d74b; --hit: #ff375f; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 10px; font-size: 13px; }
-        .panel { border: 1px solid #333; padding: 12px; border-radius: 10px; margin-bottom: 10px; background: #111; }
-        .n-box { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background: #222; margin: 2px; border-radius: 4px; }
-        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; box-shadow: 0 0 8px var(--primary); }
-        .ball { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; background: #000; border: 2px solid var(--success); color: var(--success); border-radius: 50%; font-weight: bold; margin: 5px; font-size: 18px; }
-        .star-tag { background: var(--hit); color: #fff; padding: 2px 6px; border-radius: 4px; float: right; font-weight: bold; }
+        :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
+        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
+        .container { display: flex; flex-direction: column; gap: 12px; }
+        .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
+        .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+        .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
+        .num-group { display: flex; gap: 4px; align-items: center; }
+        .num-label { font-size: 10px; color: var(--sub); width: 30px; flex-shrink: 0; }
+        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
+        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 5px var(--primary); }
+        .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
+        .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+        .m-table { border-collapse: collapse; white-space: nowrap; }
+        .m-table td, .m-table th { border: 1px solid #333; width: 18px; height: 18px; text-align: center; font-size: 9px; }
+        .m-head { background: #2c2c2e; color: var(--primary); position: sticky; top: 0; }
+        .m-date { background: #2c2c2e; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
+        .m-ball { background: var(--hit); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
+        .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
+        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
     </style>
 </head>
 <body>
-<div class="panel">
-    <b>V.43.8 極化飽和 (3星 50% 目標)</b><br>
-    <input type="file" id="csv" style="margin-top:10px;">
+<div class="container">
+    <div class="panel">
+        <div class="panel-header">P1: 數據注入 (V.43.8 極化狙擊)</div>
+        <input type="file" id="csvFile" accept=".csv">
+    </div>
+    <div class="panel">
+        <div class="panel-header">P2: 深度回測看板 (三星 50% 挑戰)</div>
+        <div id="btBody"></div>
+    </div>
+    <div class="panel">
+        <div class="panel-header">P3: 下期飽和預測 (8 碼)</div>
+        <div id="nextPred" class="ball-row"></div>
+    </div>
+    <div class="panel">
+        <div class="panel-header">P4: 分布矩陣</div>
+        <div class="matrix-scroll" id="matrixCont"></div>
+    </div>
+    <div class="panel"><div id="logBox">等待 CSV 匯入...</div></div>
 </div>
-<div class="panel">
-    <div style="color:var(--success)">➔ 下期建議 (飽和狙擊 8 碼)</div>
-    <div id="next" style="text-align:center;"></div>
-</div>
-<div id="bt"></div>
 
 <script>
-    const pad = n => n.toString().padStart(2, '0');
-    document.getElementById('csv').onchange = e => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const lines = reader.result.split('\n').filter(l => l.trim());
-            const data = lines.slice(1).map(l => {
-                const c = l.split(',');
-                return { date: c[0], nums: c.slice(1,6).map(Number).sort((a,b)=>a-b) };
-            }).filter(x => !x.nums.some(isNaN));
-            run(data);
-        };
-        reader.readAsText(e.target.files[0]);
-    };
+    let rawData = [];
+    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
+    const pad = (n) => n.toString().padStart(2, '0');
+    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    function solve(hist) {
+    function getV438Prediction(hist) {
+        if(hist.length < 15) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-        const last = hist[hist.length-1].nums;
         
-        // 1. 溫號臨界點加權
+        // 1. 溫號臨界點加權 (針對 3 星連動)
         for(let i=1; i<=39; i++) {
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) {
                 if(!hist[k].nums.includes(i)) gap++; else break;
             }
-            if (gap >= 4 && gap <= 7) stats[i].score += 100; // 重壓溫號
+            if (gap >= 4 && gap <= 7) stats[i].score += 100; 
             else stats[i].score += gap * 5;
         }
 
-        // 2. 尾數飽和偵測 (Top 2 尾數各取 2 碼)
+        // 2. 尾數簇群 (增加三星機率)
         let tailMap = Array(10).fill(0);
         hist.slice(-10).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
         for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 15);
 
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
         
-        // 3. 飽和區間投彈 (偵測最強區，砸入 6 碼)
-        let zCounts = [0,0,0];
-        hist.slice(-4).forEach(d => d.nums.forEach(n => zCounts[Math.min((n-1)//13, 2)]++));
+        // 3. 飽和投彈 (偵測熱區直接砸入 6 碼)
+        let zCounts = [0, 0, 0];
+        hist.slice(-4).forEach(d => d.nums.forEach(n => zCounts[Math.min(Math.floor((n-1)/13), 2)]++));
         let hotZ = zCounts.indexOf(Math.max(...zCounts));
 
         let res = [];
-        let hotPool = sorted.filter(x => Math.min((x.n-1)//13, 2) === hotZ).slice(0, 6);
+        let hotPool = sorted.filter(x => Math.min(Math.floor((x.n-1)/13), 2) === hotZ).slice(0, 6);
         res.push(...hotPool.map(x=>x.n));
         
-        // 剩餘 2 碼補強跨區
         for(let x of sorted) {
             if(res.length < 8 && !res.includes(x.n)) res.push(x.n);
         }
         return res.sort((a,b)=>a-b);
     }
 
-    function run(data) {
-        let html = "";
-        data.slice(-10).reverse().forEach(row => {
-            const pred = solve(data.slice(0, data.indexOf(row)));
+    document.getElementById('csvFile').addEventListener('change', e => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
+                const c = l.split(',');
+                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
+            }).filter(r => r.nums.length === 5);
+            document.getElementById('logBox').innerHTML = "";
+            runV438();
+        };
+        reader.readAsText(e.target.files[0]);
+    });
+
+    function runV438() {
+        let btHtml = "";
+        let hitsArr = [];
+        let star3Count = 0;
+        
+        rawData.slice(-10).reverse().forEach(row => {
+            const histSlice = rawData.slice(0, rawData.indexOf(row));
+            const pred = getV438Prediction(histSlice);
             const hits = row.nums.filter(n => pred.includes(n));
-            html += `<div class="panel">
-                <span class="star-tag">${hits.length}★</span>${row.date}<br>
-                ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
+            hitsArr.push(hits.length);
+            if(hits.length >= 3) star3Count++;
+            
+            btHtml += `<div class="bt-row">
+                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
+                <div class="num-group">
+                    <span class="num-label">開獎</span>
+                    ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
+                </div>
+                <div class="num-group">
+                    <span class="num-label">預測</span>
+                    ${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}; font-weight:${row.nums.includes(n)?'900':'normal'}">${pad(n)}</div>`).join('')}
+                </div>
             </div>`;
         });
-        document.getElementById('bt').innerHTML = html;
-        document.getElementById('next').innerHTML = solve(data).map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        document.getElementById('btBody').innerHTML = btHtml;
+        const next = getV438Prediction(rawData);
+        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        
+        let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
+        for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
+        mHtml += `</tr></thead><tbody>`;
+        rawData.slice(-15).reverse().forEach(row => {
+            mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
+            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<span class="m-ball"></span>' : ''}</td>`;
+            mHtml += `</tr>`;
+        });
+        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
+        
+        log(`數據載入: ${rawData.length} 期 | 三星達成率: ${(star3Count/10*100).toFixed(0)}%`);
+        log(`策略優化：已切換至 V.43.8 飽和狙擊邏輯。`);
     }
 </script>
 </body>
