@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.43.8</title>
+    <title>539 精準分析 V.43.9</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -31,15 +31,15 @@
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 數據注入 (V.43.8 極化狙擊)</div>
+        <div class="panel-header">P1: 數據注入 (V.43.9 斷層狙擊)</div>
         <input type="file" id="csvFile" accept=".csv">
     </div>
     <div class="panel">
-        <div class="panel-header">P2: 深度回測看板 (三星 50% 挑戰)</div>
+        <div class="panel-header">P2: 真實回測看板 (三星目標校準)</div>
         <div id="btBody"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P3: 下期飽和預測 (8 碼)</div>
+        <div class="panel-header">P3: 下期狙擊號碼 (8 碼)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
     <div class="panel">
@@ -55,36 +55,37 @@
     const pad = (n) => n.toString().padStart(2, '0');
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    function getV438Prediction(hist) {
-        if(hist.length < 15) return [1,2,3,4,5,6,7,8];
+    function getV439Prediction(hist) {
+        if(hist.length < 10) return [1,2,3,4,5,6,7,8];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
-        // 1. 溫號臨界點加權 (針對 3 星連動)
+        // 1. 遺漏權重：聚焦近期 3-8 期溫號
         for(let i=1; i<=39; i++) {
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) {
                 if(!hist[k].nums.includes(i)) gap++; else break;
             }
-            if (gap >= 4 && gap <= 7) stats[i].score += 100; 
-            else stats[i].score += gap * 5;
+            stats[i].score += (gap >= 3 && gap <= 8) ? 120 : (gap * 3);
         }
 
-        // 2. 尾數簇群 (增加三星機率)
+        // 2. 尾數狙擊：鎖定最強 2 尾，強制入選
         let tailMap = Array(10).fill(0);
-        hist.slice(-10).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 15);
+        hist.slice(-7).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
+        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 18);
 
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
         
-        // 3. 飽和投彈 (偵測熱區直接砸入 6 碼)
+        // 3. 斷層掃描：找出最近開獎最密集的區間
         let zCounts = [0, 0, 0];
-        hist.slice(-4).forEach(d => d.nums.forEach(n => zCounts[Math.min(Math.floor((n-1)/13), 2)]++));
-        let hotZ = zCounts.indexOf(Math.max(...zCounts));
+        hist.slice(-3).forEach(d => d.nums.forEach(n => zCounts[Math.min(Math.floor((n-1)/13), 2)]++));
+        let focusZ = zCounts.indexOf(Math.max(...zCounts));
 
         let res = [];
-        let hotPool = sorted.filter(x => Math.min(Math.floor((x.n-1)/13), 2) === hotZ).slice(0, 6);
-        res.push(...hotPool.map(x=>x.n));
+        // 密集區直接分配 5 碼名額，強迫撞球
+        let zonePool = sorted.filter(x => Math.min(Math.floor((x.n-1)/13), 2) === focusZ).slice(0, 5);
+        res.push(...zonePool.map(x=>x.n));
         
+        // 剩餘 3 碼從全局高分中挑選
         for(let x of sorted) {
             if(res.length < 8 && !res.includes(x.n)) res.push(x.n);
         }
@@ -99,19 +100,19 @@
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
             document.getElementById('logBox').innerHTML = "";
-            runV438();
+            runV439();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runV438() {
+    function runV439() {
         let btHtml = "";
         let hitsArr = [];
         let star3Count = 0;
         
         rawData.slice(-10).reverse().forEach(row => {
             const histSlice = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV438Prediction(histSlice);
+            const pred = getV439Prediction(histSlice);
             const hits = row.nums.filter(n => pred.includes(n));
             hitsArr.push(hits.length);
             if(hits.length >= 3) star3Count++;
@@ -129,7 +130,7 @@
             </div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV438Prediction(rawData);
+        const next = getV439Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
         let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
@@ -142,8 +143,8 @@
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
         
-        log(`數據載入: ${rawData.length} 期 | 三星達成率: ${(star3Count/10*100).toFixed(0)}%`);
-        log(`策略優化：已切換至 V.43.8 飽和狙擊邏輯。`);
+        log(`實戰數據校準完畢。`);
+        log(`三星實踐率：${(star3Count/10*100).toFixed(0)}% (排除虛假模擬)`);
     }
 </script>
 </body>
