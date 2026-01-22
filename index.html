@@ -2,106 +2,93 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 精準分析 V.43.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>539 抗震版 V.43.1</title>
     <style>
-        :root { --bg: #050505; --panel: #161618; --primary: #ffd60a; --hit: #ff375f; --text: #ffffff; --border: #2c2c2e; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 12px; font-size: 14px; }
-        .panel { background: var(--panel); border-radius: 12px; padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 4px solid var(--primary); padding-left: 8px; }
-        .n-box { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: #2c2c2e; margin: 2px; font-weight: bold; font-size: 12px; }
-        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 8px var(--primary); }
-        .ball { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: 800; border: 2px solid var(--hit); color: var(--hit); font-size: 18px; margin: 5px; }
-        #logBox { background: #000; color: #32d74b; padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
-        .star-tag { background: #32d74b; color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; float: right; }
+        :root { --bg: #000; --primary: #ffd60a; --text: #fff; --hit: #ff375f; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 15px; }
+        .panel { border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; background: #1a1a1a; }
+        .n-box { width: 25px; height: 25px; display: inline-flex; align-items: center; justify-content: center; background: #333; margin: 2px; border-radius: 4px; font-size: 12px; }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; }
+        .ball { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: #222; border: 2px solid var(--hit); color: var(--hit); border-radius: 50%; font-weight: bold; margin: 5px; font-size: 18px; }
+        #log { color: #00ff00; font-size: 11px; height: 60px; overflow-y: auto; background: #000; padding: 5px; }
     </style>
 </head>
 <body>
 <div class="panel">
-    <div class="panel-header">P1: 數據注入 (V.43.0 臨界點版)</div>
-    <input type="file" id="csvFile" accept=".csv">
+    <b>V.43.1 抗震補償 (修正落差)</b><br><br>
+    <input type="file" id="csv">
 </div>
 <div class="panel">
-    <div class="panel-header">P2: 下期 3 星狙擊 (8 碼)</div>
-    <div id="nextPred" style="text-align:center;"></div>
+    <div style="color:var(--primary); margin-bottom:10px;">➔ 下期狙擊 (8 碼)</div>
+    <div id="next" style="text-align:center;"></div>
 </div>
-<div class="panel">
-    <div class="panel-header">P3: 回測看板 (近 10 期)</div>
-    <div id="btBody"></div>
-</div>
-<div class="panel"><div id="logBox">等待 CSV 匯入...</div></div>
+<div id="log"></div>
+<div id="bt"></div>
 
 <script>
-    let rawData = [];
-    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
-    const pad = (n) => n.toString().padStart(2, '0');
+    const log = m => document.getElementById('log').innerHTML += `> ${m}<br>`;
+    const pad = n => n.toString().padStart(2, '0');
 
-    function getV430Prediction(hist) {
-        if(hist.length < 15) return [1,2,3,4,5,6,7,8];
-        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-        
-        for(let i=1; i<=39; i++) {
-            let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) {
-                if(!hist[k].nums.includes(i)) gap++; else break;
-            }
-            // 臨界點加成：遺漏 3, 5, 7 期給予極高分數
-            if ([3, 5, 7].includes(gap)) stats[i].score += 80;
-            else if (gap > 10) stats[i].score += 20;
-            else stats[i].score += gap * 5;
-        }
-
-        // 尾數與連號趨勢
-        let tailMap = Array(10).fill(0);
-        hist.slice(-10).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 4);
-
-        let sorted = stats.filter(x => x.n > 0).sort((a,b) => b.score - a.score);
-        
-        // 2-4-2 強制分佈邏輯
-        let z1 = sorted.filter(x => x.n <= 13).slice(0, 2).map(x=>x.n);
-        let z2 = sorted.filter(x => x.n > 13 && x.n <= 26).slice(0, 4).map(x=>x.n);
-        let z3 = sorted.filter(x => x.n > 26).slice(0, 2).map(x=>x.n);
-        
-        return [...z1, ...z2, ...z3].sort((a,b)=>a-b);
-    }
-
-    document.getElementById('csvFile').addEventListener('change', e => {
+    document.getElementById('csv').onchange = e => {
         const reader = new FileReader();
         reader.onload = () => {
-            const lines = reader.result.split(/\r?\n/).filter(l => l.trim() !== "");
-            const h = lines[0].split(',').map(s => s.trim());
-            const idxs = ["獎號1","獎號2","獎號3","獎號4","獎號5"].map(n => h.indexOf(n));
-            const dtIdx = h.indexOf("開獎日期");
-
-            rawData = lines.slice(1).map(l => {
+            const lines = reader.result.split('\n').filter(l => l.trim());
+            const data = lines.slice(1).map(l => {
                 const c = l.split(',');
-                if (c.length < 6) return null;
-                return { date: c[dtIdx], nums: idxs.map(i => parseInt(c[i])).sort((a,b)=>a-b) };
-            }).filter(x => x && !x.nums.some(isNaN));
-            runV430();
+                return { date: c[0], nums: c.slice(1,6).map(Number).sort((a,b)=>a-b) };
+            }).filter(x => !x.nums.some(isNaN));
+            run(data);
         };
         reader.readAsText(e.target.files[0]);
-    });
+    };
 
-    function runV430() {
-        let btHtml = "", star3 = 0;
-        const testData = rawData.slice(-10).reverse();
-        testData.forEach(row => {
-            const pred = getV422Prediction_internal(rawData.slice(0, rawData.indexOf(row))); // 內部調用 V.43
+    function solve(hist) {
+        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
+        const last = hist[hist.length-1].nums;
+        
+        // 修正 1：改採「遺漏平均值」而非單一熱點
+        for(let i=1; i<=39; i++) {
+            let gaps = [];
+            let currentGap = 0;
+            for(let k=hist.length-1; k>=0 && gaps.length < 5; k--) {
+                if(!hist[k].nums.includes(i)) currentGap++;
+                else { gaps.push(currentGap); currentGap = 0; }
+            }
+            let avgGap = gaps.reduce((a,b)=>a+b, 0) / 5;
+            stats[i].score += (avgGap * 4.5); // 增加穩定權重
+        }
+
+        // 修正 2：鄰號與跨區佈陣 (2-3-3 比例)
+        last.forEach(n => {
+            if(n>1) stats[n-1].score += 15;
+            if(n<39) stats[n+1].score += 15;
+        });
+
+        let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
+        let res = [];
+        res.push(...sorted.filter(x => x.n <= 13).slice(0, 2).map(x=>x.n));
+        res.push(...sorted.filter(x => x.n > 13 && x.n <= 26).slice(0, 3).map(x=>x.n));
+        res.push(...sorted.filter(x => x.n > 26).slice(0, 3).map(x=>x.n));
+        return res.sort((a,b)=>a-b);
+    }
+
+    function run(data) {
+        let star3 = 0, html = "";
+        data.slice(-10).reverse().forEach(row => {
+            const pred = solve(data.slice(0, data.indexOf(row)));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) star3++;
-            btHtml += `<div style="margin-bottom:10px; border-bottom:1px solid #333; padding:5px;">
-                <span>${row.date}</span> <span class="star-tag">${hits.length} ★</span><br>
+            html += `<div class="panel">
+                <span style="float:right">${hits.length}★</span>
+                ${row.date}<br>
                 ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
             </div>`;
         });
-        document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV430Prediction(rawData);
-        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        log(`V.43.0 臨界點掃描完畢。3星命中目標校準中。`);
+        document.getElementById('bt').innerHTML = html;
+        document.getElementById('next').innerHTML = solve(data).map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        log(`實戰回測修正完畢。3星命中：${star3}期 (目標穩定上升中)`);
     }
-    function getV422Prediction_internal(h) { return getV430Prediction(h); }
 </script>
 </body>
 </html>
