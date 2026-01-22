@@ -3,33 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>539 抗震版 V.43.1</title>
+    <title>539 飽和狙擊 V.43.5</title>
     <style>
-        :root { --bg: #000; --primary: #ffd60a; --text: #fff; --hit: #ff375f; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 15px; }
-        .panel { border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; background: #1a1a1a; }
-        .n-box { width: 25px; height: 25px; display: inline-flex; align-items: center; justify-content: center; background: #333; margin: 2px; border-radius: 4px; font-size: 12px; }
-        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; }
-        .ball { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: #222; border: 2px solid var(--hit); color: var(--hit); border-radius: 50%; font-weight: bold; margin: 5px; font-size: 18px; }
-        #log { color: #00ff00; font-size: 11px; height: 60px; overflow-y: auto; background: #000; padding: 5px; }
+        :root { --bg: #000; --primary: #ffd60a; --hit: #ff375f; --success: #32d74b; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 10px; font-size: 13px; }
+        .panel { border: 1px solid #333; padding: 12px; border-radius: 10px; margin-bottom: 10px; background: #111; }
+        .n-box { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background: #222; margin: 2px; border-radius: 5px; }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; box-shadow: 0 0 8px var(--primary); }
+        .ball { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: #000; border: 2px solid var(--success); color: var(--success); border-radius: 50%; font-weight: bold; margin: 4px; font-size: 18px; }
+        .star-tag { background: var(--hit); color: #fff; padding: 2px 6px; border-radius: 4px; float: right; }
     </style>
 </head>
 <body>
 <div class="panel">
-    <b>V.43.1 抗震補償 (修正落差)</b><br><br>
-    <input type="file" id="csv">
+    <b>V.43.5 飽和狙擊 (3星強化)</b><br>
+    <input type="file" id="csv" style="margin-top:10px;">
 </div>
 <div class="panel">
-    <div style="color:var(--primary); margin-bottom:10px;">➔ 下期狙擊 (8 碼)</div>
-    <div id="next" style="text-align:center;"></div>
+    <div style="color:var(--success)">➔ 下期建議 (8 碼飽和陣列)</div>
+    <div id="next" style="text-align:center; padding:10px;"></div>
 </div>
-<div id="log"></div>
 <div id="bt"></div>
 
 <script>
-    const log = m => document.getElementById('log').innerHTML += `> ${m}<br>`;
     const pad = n => n.toString().padStart(2, '0');
-
     document.getElementById('csv').onchange = e => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -45,49 +42,59 @@
 
     function solve(hist) {
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-        const last = hist[hist.length-1].nums;
         
-        // 修正 1：改採「遺漏平均值」而非單一熱點
+        // 1. 溫號臨界點 (倍率從 4.5 -> 8.0)
         for(let i=1; i<=39; i++) {
-            let gaps = [];
-            let currentGap = 0;
-            for(let k=hist.length-1; k>=0 && gaps.length < 5; k--) {
-                if(!hist[k].nums.includes(i)) currentGap++;
-                else { gaps.push(currentGap); currentGap = 0; }
+            let gap = 0;
+            for(let k=hist.length-1; k>=0; k--) {
+                if(!hist[k].nums.includes(i)) gap++; else break;
             }
-            let avgGap = gaps.reduce((a,b)=>a+b, 0) / 5;
-            stats[i].score += (avgGap * 4.5); // 增加穩定權重
+            if (gap >= 3 && gap <= 6) stats[i].score += 80; 
+            else stats[i].score += (gap * 4);
         }
 
-        // 修正 2：鄰號與跨區佈陣 (2-3-3 比例)
-        last.forEach(n => {
-            if(n>1) stats[n-1].score += 15;
-            if(n<39) stats[n+1].score += 15;
-        });
+        // 2. 尾數強壓 (同尾聚類)
+        let tailMap = Array(10).fill(0);
+        hist.slice(-10).forEach(d => d.nums.forEach(n => tailMap[n%10]++));
+        for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 12); // 大幅提升尾數權重
 
         let sorted = stats.slice(1).sort((a,b) => b.score - a.score);
+        
+        // 3. 區間投彈 (偵測最強區間，不求平衡)
+        let zCounts = [0,0,0];
+        hist.slice(-3).forEach(d => d.nums.forEach(n => zCounts[Math.min((n-1)//13, 2)]++));
+        let bestZ = zCounts.indexOf(Math.max(...zCounts));
+
         let res = [];
-        res.push(...sorted.filter(x => x.n <= 13).slice(0, 2).map(x=>x.n));
-        res.push(...sorted.filter(x => x.n > 13 && x.n <= 26).slice(0, 3).map(x=>x.n));
-        res.push(...sorted.filter(x => x.n > 26).slice(0, 3).map(x=>x.n));
+        // 熱區直接灌 5 碼
+        let hotNums = sorted.filter(x => Math.min((x.n-1)//13, 2) === bestZ).slice(0, 5);
+        res.push(...hotNums.map(x=>x.n));
+        
+        // 剩餘 3 碼選分數最高且能湊同尾的
+        for(let x of sorted) {
+            if(res.length < 8 && !res.includes(x.n)) {
+                if(res.some(rn => rn % 10 === x.n % 10)) res.push(x.n);
+            }
+        }
+        // 最終補齊
+        for(let i=0; i<sorted.length && res.length < 8; i++) {
+            if(!res.includes(sorted[i].n)) res.push(sorted[i].n);
+        }
         return res.sort((a,b)=>a-b);
     }
 
     function run(data) {
-        let star3 = 0, html = "";
+        let html = "";
         data.slice(-10).reverse().forEach(row => {
             const pred = solve(data.slice(0, data.indexOf(row)));
             const hits = row.nums.filter(n => pred.includes(n));
-            if(hits.length >= 3) star3++;
             html += `<div class="panel">
-                <span style="float:right">${hits.length}★</span>
-                ${row.date}<br>
+                <span class="star-tag">${hits.length}★</span>${row.date}<br>
                 ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
             </div>`;
         });
         document.getElementById('bt').innerHTML = html;
         document.getElementById('next').innerHTML = solve(data).map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        log(`實戰回測修正完畢。3星命中：${star3}期 (目標穩定上升中)`);
     }
 </script>
 </body>
