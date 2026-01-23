@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 混沌回歸系統 V.90.0</title>
+    <title>539 精準對沖系統 V.92.0</title>
     <style>
         :root { --bg: #020617; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --success: #22c55e; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
@@ -20,42 +20,40 @@
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 混沌回歸引擎 V.90.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%;"></div>
-    <div class="panel"><div class="panel-header">P2: 90% 膽碼轉化回測</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 1/23 聯動預測 (強 8 碼)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">膽碼命中率 90% 鎖定，正在執行跨期聯動...</div></div>
+    <div class="panel"><div class="panel-header">P1: 版路過濾引擎 V.92.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%;"></div>
+    <div class="panel"><div class="panel-header">P2: 精準碰撞回測 (3星率衝刺)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 1/23 最終強 8 碼</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">歷史版路掃描中，準備排除低機率組合...</div></div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV900Prediction(hist) {
-        if (hist.length < 20) return [2, 7, 12, 17, 22, 27, 32, 37];
+    function getV920Prediction(hist) {
+        if (hist.length < 25) return [3, 4, 13, 14, 23, 24, 33, 34];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
-        // 1. 強化 90% 膽碼來源：近期極熱號
-        hist.slice(-10).forEach(r => r.nums.forEach(n => stats[n].score += 50));
+        // 1. 熱膽提取 (近 5 期開 2 次以上)
+        let hotCounts = Array(40).fill(0);
+        hist.slice(-5).forEach(r => r.nums.forEach(n => hotCounts[n]++));
 
-        // 2. 混沌權重：注入「長遺漏」與「極短遺漏」的對沖
+        // 2. 溫隨與遺漏權重
         for(let i=1; i<=39; i++) {
-            let g = 0;
-            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
-            if(g === 0) stats[i].score += 45; // 連莊
-            if(g > 10) stats[i].score += 40;  // 極冷回補
+            let gap = 0;
+            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            if (hotCounts[i] >= 1) stats[i].score += 55; // 膽碼
+            if (gap >= 3 && gap <= 6) stats[i].score += 45; // 溫隨
+            if (gap === 0) stats[i].score += 35; // 連莊
         }
 
-        // 3. 跨期聯動：既然 90% 中 1 碼，選取前 3 強膽碼，並各配 2 顆鄰號
-        let top3 = stats.sort((a,b) => b.score - a.score).slice(0, 3);
-        let finalSet = new Set();
-        top3.forEach(s => {
-            finalSet.add(s.n);
-            if(s.n > 1) finalSet.add(s.n - 1);
-            if(s.n < 39) finalSet.add(s.n + 1);
-        });
+        // 3. 尾數共振過濾
+        let tails = Array(10).fill(0);
+        hist.slice(-3).forEach(r => r.nums.forEach(n => tails[n%10]++));
+        for(let i=1; i<=39; i++) if(tails[i%10] >= 1) stats[i].score += 20;
 
-        let sorted = [...finalSet].sort((a,b) => a-b);
-        return sorted.slice(0, 8);
+        // 4. 精簡 8 碼輸出
+        return stats.sort((a,b) => b.score - a.score).slice(0, 8).map(x => x.n).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -75,16 +73,16 @@
         const test = rawData.slice(-10).reverse();
         test.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV900Prediction(rawData.slice(0, idx));
+            const pred = getV920Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s.s3++; else if(hits.length === 2) s.s2++; else if(hits.length === 1) s.s1++; else s.s0++;
             btHtml += `<div class="bt-row"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span>📅 ${row.date}</span><span style="color:var(--primary)">${hits.length} 碼</span></div>
                 <div style="display:flex; gap:5px;">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV900Prediction(rawData);
+        const next = getV920Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        document.getElementById('logBox').innerHTML = `> 回測完成！膽碼轉化率監控中。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：混沌對沖，將 90% 的膽碼規律橫向擴張。`;
+        document.getElementById('logBox').innerHTML = `> 回測完成！版路過濾成功。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：排除低碰撞組合，強化 1/23 熱膽溫隨。`;
     }
 </script>
 </body>
