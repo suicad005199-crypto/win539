@@ -3,83 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 最終收網 V.108.1</title>
+    <title>539 極限優化 V.110</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
-        .container { display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
-        .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
-        .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
-        .num-group { display: flex; gap: 4px; align-items: center; }
-        .num-label { font-size: 10px; color: var(--sub); width: 30px; flex-shrink: 0; }
-        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
-        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 5px var(--primary); }
-        .star-tag { background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
-        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
-        .ball-row { display: flex; flex-wrap: wrap; gap: 6px; }
-        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #2c2c2e; border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
+        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; line-height: 1.5; }
+        .container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; }
+        .panel { background: var(--panel); border-radius: 12px; padding: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 15px; letter-spacing: 1px; }
+        
+        /* Input Styling */
+        input[type="file"] { width: 100%; color: var(--sub); font-size: 12px; }
+        
+        /* Stats Styling */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; text-align: center; }
+        .stat-card { background: #2c2c2e; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+        .stat-val { display: block; font-size: 18px; font-weight: 900; color: var(--success); }
+        .stat-label { font-size: 10px; color: var(--sub); }
+
+        /* Backtest Row */
+        .bt-row { border-bottom: 1px solid var(--border); padding: 12px 0; animation: fadeIn 0.3s ease; }
+        .bt-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .date { font-family: monospace; color: var(--sub); }
+        .star-tag { background: var(--hit); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        .star-tag.win { background: var(--success); color: #000; }
+
+        /* Numbers */
+        .num-group { display: flex; gap: 6px; align-items: center; margin-top: 5px; }
+        .num-label { font-size: 10px; color: var(--sub); width: 35px; font-weight: bold; }
+        .n-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #2c2c2e; font-size: 12px; font-weight: bold; border: 1px solid #3a3a3c; }
+        .n-box.hit { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 8px rgba(255, 214, 10, 0.4); }
+        .n-box.pred-hit { color: var(--primary); border-color: var(--primary); }
+
+        /* Next Prediction Balls */
+        .ball-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0; }
+        .ball { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #3a3a3c, #000); border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 18px; box-shadow: 0 4px 10px rgba(10, 132, 255, 0.3); }
+
+        #logBox { background: #000; color: var(--success); padding: 12px; height: 60px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: V.108.1 重心修復注入</div><input type="file" id="csvFile" accept=".csv"></div>
-    <div class="panel"><div class="panel-header">P2: 1/23 最終回測報告 (鎖定四星路徑)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 1/23 推薦 8 碼 (空間重心版)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">區間重心修復中，目標指向 1/23 跨度回填...</div></div>
+    <div class="panel">
+        <div class="panel-header">數據注入 (CSV 檔案)</div>
+        <input type="file" id="csvFile" accept=".csv">
+        <div id="logBox">系統待命中... 請上傳歷史數據檔案。</div>
+    </div>
+
+    <div id="resultPanel" class="panel" style="display:none;">
+        <div class="panel-header">回測分析報告 (V.110)</div>
+        <div class="stats-grid">
+            <div class="stat-card"><span id="rate3" class="stat-val">0%</span><span class="stat-label">3星率</span></div>
+            <div class="stat-card"><span id="rate2" class="stat-val">0%</span><span class="stat-label">2星率</span></div>
+            <div class="stat-card"><span id="rate1" class="stat-val">0%</span><span class="stat-label">1星率</span></div>
+        </div>
+        <div id="btBody"></div>
+    </div>
+
+    <div id="predPanel" class="panel" style="display:none;">
+        <div class="panel-header">1/23 最終收網 (動態間距 8 碼)</div>
+        <div id="nextPred" class="ball-row"></div>
+        <div style="font-size: 10px; color: var(--sub); text-align: center; margin-top: 10px;">
+            策略：$3:1:1:3$ 空間包夾 + 尾數共振修復
+        </div>
+    </div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV1081Prediction(hist) {
-        if (hist.length < 20) return [01,08,12,19,23,27,31,35];
+    // V.110 核心演算法
+    function getV110Prediction(hist) {
+        if (hist.length < 15) return [1, 4, 8, 14, 21, 31, 34, 38];
+        
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
+        
         for(let i=1; i<=39; i++) {
             let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            // V.108.1 修正：強化 6-10 期遺漏權重
-            if (gap >= 6 && gap <= 10) stats[i].score += 115;
-            if (gap === 1 || gap === 2) stats[i].score += 80;
-            if (gap >= 15) stats[i].score += 50;
+            for(let k=hist.length-1; k>=0; k--) {
+                if(!hist[k].nums.includes(i)) gap++;
+                else break;
+            }
+            
+            // 權重 A: 長冷回歸 (遺漏 >= 10 期)
+            if (gap >= 10) stats[i].score += 150;
+            // 權重 B: 熱碼連莊 (遺漏 1-2 期)
+            else if (gap === 1 || gap === 2) stats[i].score += 90;
+            // 權重 C: 尾數共振 (鎖定 3, 4 尾)
+            if ([3, 4, 1, 8].includes(i % 10)) stats[i].score += 50;
+            // 排除死亡區間 (遺漏 3-5 期)
+            if (gap >= 3 && gap <= 5) stats[i].score -= 60;
         }
 
         let final = [];
-        const zones = [[1,10],[11,20],[21,30],[31,39]];
+        // 動態空間包夾佈陣 3:1:1:3
+        const zones = [
+            { r: [1, 10], c: 3 },
+            { r: [11, 20], c: 1 },
+            { r: [21, 30], c: 1 },
+            { r: [31, 39], c: 3 }
+        ];
+
         zones.forEach(z => {
-            let sub = stats.slice(z[0], z[1]+1).sort((a,b) => b.score - a.score).slice(0, 2);
+            let sub = stats.slice(z.r[0], z.r[1] + 1)
+                           .sort((a,b) => b.score - a.score)
+                           .slice(0, z.c);
             final.push(...sub.map(x => x.n));
         });
-        return final.sort((a,b) => a-b);
+
+        return final.sort((a, b) => a - b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
-            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
-                const c = l.split(',');
-                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
-            }).filter(r => r.nums.length === 5);
-            run();
+            try {
+                const lines = reader.result.replace(/\r/g, "").trim().split('\n');
+                rawData = lines.map(l => {
+                    const c = l.split(',');
+                    return {
+                        date: c[0].trim(),
+                        nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b)
+                    };
+                }).filter(r => r.nums.length === 5);
+
+                if (rawData.length > 0) {
+                    document.getElementById('resultPanel').style.display = 'block';
+                    document.getElementById('predPanel').style.display = 'block';
+                    runBacktest();
+                }
+            } catch (err) {
+                alert("檔案格式錯誤，請確保為 CSV 格式。");
+            }
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function run() {
-        let btHtml = ""; let s = { s4:0, s3:0, s2:0 };
-        rawData.slice(-10).reverse().forEach(row => {
-            const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV1081Prediction(hist);
+    function runBacktest() {
+        let btHtml = "";
+        let s = { s3:0, s2:0, s1:0, total: 10 };
+        const testData = rawData.slice(-10).reverse();
+
+        testData.forEach((row, idx) => {
+            const histSnapshot = rawData.slice(0, rawData.indexOf(row));
+            const pred = getV110Prediction(histSnapshot);
             const hits = row.nums.filter(n => pred.includes(n));
-            if(hits.length >= 4) s.s4++; else if(hits.length === 3) s.s3++; else if(hits.length === 2) s.s2++;
-            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
+            
+            if(hits.length >= 3) s.s3++;
+            else if(hits.length === 2) s.s2++;
+            else if(hits.length === 1) s.s1++;
+
+            btHtml += `
+                <div class="bt-row">
+                    <div class="bt-meta">
+                        <span class="date">📅 ${row.date}</span>
+                        <span class="star-tag ${hits.length >= 2 ? 'win' : ''}">${hits.length} ★</span>
+                    </div>
+                    <div class="num-group">
+                        <span class="num-label">開獎</span>
+                        ${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}
+                    </div>
+                    <div class="num-group">
+                        <span class="num-label">預測</span>
+                        ${pred.map(n => `<div class="n-box ${row.nums.includes(n)?'pred-hit':''}" style="opacity:${row.nums.includes(n)?'1':'0.4'}">${pad(n)}</div>`).join('')}
+                    </div>
+                </div>`;
         });
+
+        // 更新統計
+        document.getElementById('rate3').innerText = ((s.s3 / 10) * 100).toFixed(0) + "%";
+        document.getElementById('rate2').innerText = ((s.s2 / 10) * 100).toFixed(0) + "%";
+        document.getElementById('rate1').innerText = ((s.s1 / 10) * 100).toFixed(0) + "%";
+        
         document.getElementById('btBody').innerHTML = btHtml;
-        document.getElementById('nextPred').innerHTML = getV1081Prediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        document.getElementById('logBox').innerHTML = `> V.108.1 最終戰備。回測 4 星達成率穩定。<br>> 策略：重點回填 1/22 空缺區間 (12-22)。`;
+        
+        // 生成下期預測
+        const nextPred = getV110Prediction(rawData);
+        document.getElementById('nextPred').innerHTML = nextPred.map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        
+        document.getElementById('logBox').innerHTML = `> V.110 優化引擎運行完畢。<br>> 10 期回測命中率：${((s.s3+s.s2)/10*100).toFixed(0)}% (2星以上)。<br>> 1/23 最終 8 碼已鎖定。`;
     }
 </script>
+
 </body>
 </html>
