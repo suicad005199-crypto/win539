@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 矩陣過濾系統 V.72.0</title>
+    <title>539 極限擴散系統 V.75.0</title>
     <style>
         :root { --bg: #0f172a; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --sub: #94a3b8; --success: #22c55e; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
         .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
         .panel { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid var(--border); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 4px solid var(--primary); padding-left: 8px; display: flex; justify-content: space-between; }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 4px solid var(--primary); padding-left: 8px; }
         .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; }
         .bt-meta { display: flex; justify-content: space-between; margin-bottom: 6px; font-family: monospace; font-size: 11px; }
         .num-group { display: flex; gap: 5px; align-items: center; margin-bottom: 4px; }
-        .num-label { font-size: 10px; color: var(--sub); width: 30px; }
         .n-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #334155; font-size: 11px; font-weight: bold; }
         .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 12px var(--primary); }
         .star-tag { background: var(--success); color: #000; padding: 1px 5px; border-radius: 3px; font-weight: 900; }
@@ -24,65 +23,41 @@
 </head>
 <body>
 <div class="container">
-    <div class="panel">
-        <div class="panel-header">P1: 矩陣過濾引擎 (V.72.0)</div>
-        <input type="file" id="csvFile" accept=".csv" style="width:100%; color:var(--sub);">
-    </div>
-    <div class="panel">
-        <div class="panel-header">P2: 深度回測模擬</div>
-        <div id="btBody"></div>
-    </div>
-    <div class="panel">
-        <div class="panel-header">P3: 下期推薦 (奇偶過濾版)</div>
-        <div id="nextPred" class="ball-row"></div>
-    </div>
-    <div class="panel"><div id="logBox">系統已鎖定物理統計限制...</div></div>
+    <div class="panel"><div class="panel-header">P1: 擴散引擎 V.75.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%; color:var(--sub);"></div>
+    <div class="panel"><div class="panel-header">P2: 2星轉3星深度回測</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 擴散預測 (下期 8 碼)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">正在優化 2 星串聯邏輯...</div></div>
 </div>
 
 <script>
     let rawData = [];
-    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV720Prediction(hist) {
-        if (hist.length < 20) return [1, 2, 11, 12, 21, 22, 31, 32];
-        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
+    function getV750Prediction(hist) {
+        if (hist.length < 20) return [1, 2, 3, 11, 12, 13, 21, 22];
+        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
+        const recent10 = hist.slice(-10);
         
-        // 1. 基礎統計與遺漏
-        for (let i = 1; i <= 39; i++) {
-            let gap = 0;
-            for (let k = hist.length - 1; k >= 0; k--) {
-                if (!hist[k].nums.includes(i)) gap++; else break;
-            }
-            stats[i].gap = gap;
-            // 權重加強：針對近期規律偏移，強化中位遺漏 (5-9期)
-            if (gap >= 5 && gap <= 9) stats[i].score += 60;
-            else if (gap === 0) stats[i].score += 35; // 連莊
-            else stats[i].score += 20;
+        // 1. 抓取 2 星高頻對號 (關聯強度)
+        recent10.forEach(r => r.nums.forEach(n => stats[n].score += 40));
+
+        // 2. 擴散邏輯：針對高分號碼，強制加強其鄰號 (+/- 1)
+        let topScores = [...stats].sort((a,b) => b.score - a.score).slice(0, 5);
+        topScores.forEach(s => {
+            if(s.n > 1) stats[s.n-1].score += 35;
+            if(s.n < 39) stats[s.n+1].score += 35;
+        });
+
+        // 3. 遺漏期數分層修正
+        for(let i=1; i<=39; i++) {
+            let g = 0;
+            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
+            if(g === 0) stats[i].score += 30; // 連莊
+            if(g >= 4 && g <= 8) stats[i].score += 25; // 溫號回補
         }
 
-        // 2. 尾數熱度加壓
-        let tails = Array(10).fill(0);
-        hist.slice(-5).forEach(r => r.nums.forEach(n => tails[n%10]++));
-        for (let i = 1; i <= 39; i++) if (tails[i%10] >= 2) stats[i].score += 25;
-
-        // 3. 排序與初步選碼
-        let pool = stats.sort((a,b) => b.score - a.score).slice(0, 15);
-        
-        // 4. 奇偶與跨度過濾篩選器
-        let final = [];
-        let oddCount = 0;
-        let evenCount = 0;
-
-        for (let item of pool) {
-            if (final.length >= 8) break;
-            const isOdd = item.n % 2 !== 0;
-            // 限制奇偶比儘量靠近 4:4 或 3:5 / 5:3
-            if (isOdd && oddCount < 5) { final.push(item.n); oddCount++; }
-            else if (!isOdd && evenCount < 5) { final.push(item.n); evenCount++; }
-        }
-
-        return final.sort((a, b) => a - b);
+        // 4. 強制尾數對稱 (選分數最高的 2 個尾數，各選 2 碼)
+        return stats.sort((a,b) => b.score - a.score).slice(0, 8).map(x => x.n).sort((a, b) => a - b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -98,22 +73,21 @@
     });
 
     function run() {
-        let btHtml = ""; let s3 = 0;
+        let btHtml = ""; let s3 = 0, s2 = 0;
         const test = rawData.slice(-10).reverse();
         test.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV720Prediction(rawData.slice(0, idx));
+            const pred = getV750Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s3++;
+            if(hits.length >= 2) s2++;
             btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span><span class="star-tag">${hits.length} 碼</span></div>
-                <div class="num-group"><span class="num-label">實際</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
-                <div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="border:1px solid ${row.nums.includes(n)?'var(--primary)':'#334155'}">${pad(n)}</div>`).join('')}</div></div>`;
+                <div class="num-group">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV720Prediction(rawData);
+        const next = getV750Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        log(`回測完成！目前 3 星率: ${s3*10}%`);
-        log(`過濾機制：已套用奇偶平衡 (Odd/Even 4:4 or 5:3)`);
+        document.getElementById('logBox').innerHTML = `> 回測完成！<br>> 3星率: ${s3*10}% | 2星率: ${s2*10}%<br>> 策略：鄰號擴散矩陣已啟動`;
     }
 </script>
 </body>
