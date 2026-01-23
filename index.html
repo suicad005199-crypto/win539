@@ -3,63 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 區塊聚壓系統 V.82.0</title>
+    <title>539 鑽石鏈結系統 V.85.0</title>
     <style>
-        :root { --bg: #0f172a; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --sub: #94a3b8; --success: #22c55e; }
+        :root { --bg: #020617; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --success: #22c55e; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
         .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
-        .panel { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid var(--border); }
+        .panel { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid var(--border); box-shadow: 0 0 15px rgba(251, 191, 36, 0.1); }
         .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 4px solid var(--primary); padding-left: 8px; }
         .bt-row { border-bottom: 1px solid var(--border); padding: 8px 0; }
-        .num-group { display: flex; gap: 5px; }
         .n-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #334155; font-size: 11px; font-weight: bold; }
-        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 10px var(--primary); }
+        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 12px var(--primary); }
         .ball-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0; }
-        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; font-weight: bold; background: #000; }
-        #logBox { background: #020617; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border-radius: 6px; }
+        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; font-weight: bold; background: #000; box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border-radius: 6px; border: 1px solid var(--primary); }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 區塊聚壓引擎 V.82.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%; color:var(--sub);"></div>
-    <div class="panel"><div class="panel-header">P2: 2星轉3星聚壓回測</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 聚壓預測 (下期 8 碼)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">正在執行區塊密度計算...</div></div>
+    <div class="panel"><div class="panel-header">P1: 鑽石鏈結引擎 V.85.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%;"></div>
+    <div class="panel"><div class="panel-header">P2: 1星轉3星鏈結回測</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 鏈結預測 (4 組雙子星)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">鑽石鏈結已就緒，等待數據串聯...</div></div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV820Prediction(hist) {
-        if (hist.length < 15) return [1,2,3,4,11,12,13,14];
+    function getV850Prediction(hist) {
+        if (hist.length < 20) return [1,2,11,12,21,22,31,32];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
-        // 1. 區塊密度熱力掃描
-        const zones = [[1,10],[11,20],[21,30],[31,39]];
-        let zoneHeat = zones.map(z => ({ 
-            range: z, 
-            heat: hist.slice(-5).reduce((acc, r) => acc + r.nums.filter(n => n >= z[0] && n <= z[1]).length, 0)
-        })).sort((a,b) => b.heat - a.heat);
-
-        // 2. 核心區塊權重加壓 (鎖定前二熱區)
-        const hotZones = zoneHeat.slice(0, 2);
+        // 1. 抓取高頻膽碼 (近 7 期)
+        hist.slice(-7).forEach(r => r.nums.forEach(n => stats[n].score += 50));
+        
+        // 2. 遺漏期數權重 (鎖定溫號)
         for(let i=1; i<=39; i++) {
-            let inHot = hotZones.some(hz => i >= hz.range[0] && i <= hz.range[1]);
-            stats[i].score += inHot ? 60 : 10;
-            
-            // 鄰號與連莊加權
             let g = 0;
             for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
-            if(g === 0) stats[i].score += 30;
-            if(g >= 2 && g <= 4) stats[i].score += 25;
+            if(g >= 2 && g <= 5) stats[i].score += 40;
         }
 
-        // 3. 強制連號對沖
-        let base = stats.sort((a,b) => b.score - a.score).slice(0, 8).map(x => x.n);
-        let final = [...new Set(base)];
-        
-        return final.sort((a, b) => a - b);
+        // 3. 鑽石鏈結：選出前 4 強膽碼，並強制綁定其「熱度關聯碼」
+        let top4 = stats.sort((a,b) => b.score - a.score).slice(0, 4).map(x => x.n);
+        let finalPool = [];
+        top4.forEach(n => {
+            finalPool.push(n);
+            // 鏈結邏輯：若小於 30 則綁定同尾 +10，若大於 30 則綁定鄰號 -1
+            let partner = (n <= 29) ? n + 10 : n - 1;
+            if (partner > 39) partner = n - 10;
+            finalPool.push(partner);
+        });
+
+        return [...new Set(finalPool)].slice(0, 8).sort((a, b) => a - b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -79,16 +75,16 @@
         const test = rawData.slice(-10).reverse();
         test.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV820Prediction(rawData.slice(0, idx));
+            const pred = getV850Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s.s3++; else if(hits.length === 2) s.s2++; else if(hits.length === 1) s.s1++; else s.s0++;
-            btHtml += `<div class="bt-row"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span>📅 ${row.date}</span><span style="color:var(--primary)">${hits.length} 碼</span></div>
-                <div class="num-group">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
+            btHtml += `<div class="bt-row"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span>📅 ${row.date}</span><span style="color:var(--primary)">${hits.length} 碼命中</span></div>
+                <div style="display:flex; gap:5px;">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV820Prediction(rawData);
+        const next = getV850Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        document.getElementById('logBox').innerHTML = `> 回測完成！區塊聚壓已啟動。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：鎖定高密度熱區，強制串聯。`;
+        document.getElementById('logBox').innerHTML = `> 回測完成！鑽石鏈結啟動。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：將 60% 的 1 星膽碼強行綑綁轉化。`;
     }
 </script>
 </body>
