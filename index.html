@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 規律錨定系統 V.58.0</title>
+    <title>539 冷熱對沖系統 V.60.0</title>
     <style>
         :root { --bg: #0f172a; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --sub: #94a3b8; --hit: #f43f5e; --success: #22c55e; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
@@ -14,29 +14,29 @@
         .bt-meta { display: flex; justify-content: space-between; margin-bottom: 6px; font-family: monospace; font-size: 11px; }
         .num-group { display: flex; gap: 5px; align-items: center; margin-bottom: 4px; }
         .num-label { font-size: 10px; color: var(--sub); width: 30px; }
-        .n-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #334155; font-size: 11px; font-weight: bold; }
-        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 8px var(--primary); }
-        .star-tag { background: var(--success); color: #000; padding: 1px 5px; border-radius: 3px; font-weight: bold; }
+        .n-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #334155; font-size: 11px; font-weight: bold; color: #cbd5e1; }
+        .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 12px rgba(251, 191, 36, 0.8); border: 1px solid #fff; }
+        .star-tag { background: var(--success); color: #000; padding: 1px 5px; border-radius: 3px; font-weight: 900; }
         .ball-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 8px 0; }
-        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; font-weight: bold; }
-        #logBox { background: #020617; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border-radius: 6px; }
+        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; font-weight: bold; background: #000; }
+        #logBox { background: #020617; color: var(--success); padding: 10px; height: 85px; overflow-y: auto; font-family: monospace; font-size: 11px; border-radius: 6px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 規律鎖定引擎 (V.58.0)</div>
+        <div class="panel-header">P1: 冷熱雙軌引擎 (V.60.0)</div>
         <input type="file" id="csvFile" accept=".csv" style="width:100%; color:var(--sub);">
     </div>
     <div class="panel">
-        <div class="panel-header">P2: 深度回測 (當前 3 星率提升中)</div>
+        <div class="panel-header">P2: 深度模擬看板 (目標 60%)</div>
         <div id="btBody"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P3: 錨定預測 (下期 8 碼)</div>
+        <div class="panel-header">P3: 對沖預測 (下期 8 碼)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
-    <div class="panel"><div id="logBox">系統已鎖定近期規律，請匯入數據...</div></div>
+    <div class="panel"><div id="logBox">雙軌引擎準備就緒，請匯入 CSV...</div></div>
 </div>
 
 <script>
@@ -44,38 +44,38 @@
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV580Prediction(hist) {
-        if (hist.length < 10) return [1,2,3,4,11,12,13,14];
-        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-        const recent5 = hist.slice(-5);
-        const lastRow = hist[hist.length-1].nums;
-
-        // 1. 動態權重：聚焦極短線規律 (Weight: 60)
-        recent5.forEach(r => r.nums.forEach(n => {
-            stats[n].score += 45; 
-            if(n > 1) stats[n-1].score += 25; // 強化鄰號
-            if(n < 39) stats[n+1].score += 25;
-        }));
-
-        // 2. 尾數偵測：尋找近 3 期連發尾數
-        let tailMap = Array(10).fill(0);
-        hist.slice(-3).forEach(r => r.nums.forEach(n => tailMap[n%10]++));
-        for(let i=1; i<=39; i++) if(tailMap[i%10] >= 2) stats[i].score += 35;
-
-        // 3. 遺漏期數優化：抓「短遺漏」(2-4期) 的號碼，這類號碼最容易在熱區回補
-        for(let i=1; i<=39; i++) {
-            let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) {
-                if(!hist[k].nums.includes(i)) gap++; else break;
+    function getV600Prediction(hist) {
+        if (hist.length < 20) return [1,2,3,4,11,12,13,14];
+        let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
+        
+        // 1. 計算遺漏期數
+        for (let i = 1; i <= 39; i++) {
+            let g = 0;
+            for (let k = hist.length - 1; k >= 0; k--) {
+                if (!hist[k].nums.includes(i)) g++; else break;
             }
-            if(gap >= 2 && gap <= 4) stats[i].score += 30;
+            stats[i].gap = g;
         }
 
-        // 4. 強制結構：確保前 8 碼中包含上一期的至少 1 顆連莊號與其鄰號
-        lastRow.forEach(n => stats[n].score += 15);
+        // 2. 熱碼軌道 (近 7 期)
+        hist.slice(-7).forEach(r => r.nums.forEach(n => stats[n].score += 30));
+        
+        // 3. 冷碼軌道 (遺漏補償)
+        for (let i = 1; i <= 39; i++) {
+            if (stats[i].gap >= 8) stats[i].score += (stats[i].gap * 2.5);
+            if (stats[i].gap === 0) stats[i].score += 35; // 連莊權重
+        }
 
-        // 5. 輸出：依總分排序取前 8
-        return stats.sort((a,b) => b.score - a.score).slice(0, 8).map(x=>x.n).sort((a,b)=>a-b);
+        // 4. 尾數平衡：尋找消失 3 期以上的尾數加權
+        let tails = Array(10).fill(0);
+        hist.slice(-3).forEach(r => r.nums.forEach(n => tails[n%10]++));
+        for (let i = 1; i <= 39; i++) if(tails[i%10] === 0) stats[i].score += 40;
+
+        // 5. 對沖策略：選 5 顆熱分最高，3 顆冷分最高
+        let hotPool = stats.filter(s => s.gap < 8).sort((a,b) => b.score - a.score).slice(0, 5);
+        let coldPool = stats.filter(s => s.gap >= 8).sort((a,b) => b.score - a.score).slice(0, 3);
+        
+        return [...hotPool, ...coldPool].map(x => x.n).sort((a, b) => a - b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -95,18 +95,18 @@
         const test = rawData.slice(-10).reverse();
         test.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV580Prediction(rawData.slice(0, idx));
+            const pred = getV600Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s3++;
-            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span><span class="star-tag">${hits.length} 碼命中</span></div>
+            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span><span class="star-tag">${hits.length} 碼</span></div>
                 <div class="num-group"><span class="num-label">實際</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
                 <div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="border:1px solid ${row.nums.includes(n)?'var(--primary)':'#334155'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV580Prediction(rawData);
+        const next = getV600Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         log(`回測完成！目前 3 星率: ${s3*10}%`);
-        log(`下期推薦: ${next.join(',')}`);
+        log(`策略：雙軌對沖模式 (5熱 3冷)`);
     }
 </script>
 </body>
