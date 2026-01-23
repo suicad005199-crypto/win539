@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 極限共振 V.111</title>
+    <title>539 金字塔聯動 V.111</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; line-height: 1.5; }
         .container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; }
         .panel { background: var(--panel); border-radius: 12px; padding: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 15px; letter-spacing: 1px; }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 15px; }
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; text-align: center; }
         .stat-card { background: #2c2c2e; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
         .stat-val { display: block; font-size: 18px; font-weight: 900; color: var(--success); }
@@ -18,70 +18,56 @@
         .bt-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .star-tag { background: var(--hit); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .star-tag.win { background: var(--success); color: #000; }
-        .num-group { display: flex; gap: 6px; align-items: center; margin-top: 5px; }
-        .num-label { font-size: 10px; color: var(--sub); width: 35px; font-weight: bold; }
-        .n-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #2c2c2e; font-size: 12px; font-weight: bold; border: 1px solid #3a3a3c; }
-        .n-box.hit { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 8px rgba(255, 214, 10, 0.4); }
+        .n-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #2c2c2e; font-size: 12px; font-weight: bold; border: 1px solid #3a3a3c; display: inline-flex; margin-right: 2px; }
+        .n-box.hit { background: var(--primary); color: #000; border-color: var(--primary); }
         .ball-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0; }
         .ball { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #3a3a3c, #000); border-radius: 50%; font-weight: bold; border: 2px solid var(--accent); color: var(--accent); font-size: 18px; box-shadow: 0 4px 10px rgba(10, 132, 255, 0.3); }
-        #logBox { background: #000; color: var(--success); padding: 12px; height: 60px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); margin-top: 10px; border-radius: 8px; }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 60px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); margin-top: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="panel">
-        <div class="panel-header">V.111 共振數據注入</div>
+        <div class="panel-header">V.111 聯動引擎注入</div>
         <input type="file" id="csvFile" accept=".csv">
-        <div id="logBox">等待 CSV 注入... 策略已就位。</div>
+        <div id="logBox">系統已優化 2:2:2:2 平衡權重，等待數據...</div>
     </div>
-
     <div id="resultPanel" class="panel" style="display:none;">
-        <div class="panel-header">回測決算報告 (V.111)</div>
+        <div class="panel-header">1/23 最終回測結果</div>
         <div class="stats-grid">
-            <div class="stat-card"><span id="rate3" class="stat-val">0%</span><span class="stat-label">3星/4星率</span></div>
+            <div class="stat-card"><span id="rate3" class="stat-val">0%</span><span class="stat-label">3星及以上</span></div>
             <div class="stat-card"><span id="rate2" class="stat-val">0%</span><span class="stat-label">2星穩定度</span></div>
-            <div class="stat-card"><span id="rate1" class="stat-val">0%</span><span class="stat-label">碰撞效能</span></div>
+            <div class="stat-card"><span id="rate1" class="stat-val">0%</span><span class="stat-label">1星保底</span></div>
         </div>
         <div id="btBody"></div>
     </div>
-
     <div id="predPanel" class="panel" style="display:none;">
-        <div class="panel-header">1/23 最終 8 碼 (極限共振)</div>
+        <div class="panel-header">1/23 推薦 8 碼 (金字塔聯動)</div>
         <div id="nextPred" class="ball-row"></div>
-        <div style="font-size: 10px; color: var(--sub); text-align: center; margin-top: 10px;">整合 V.100/107/108 強勢邏輯</div>
     </div>
 </div>
-
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
-
-    function getV111Prediction(hist) {
-        if (hist.length < 20) return [01,04,08,13,23,27,31,38];
+    function getV111(hist) {
+        if (hist.length < 15) return [03,06,13,17,23,26,31,34];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-        
         for(let i=1; i<=39; i++) {
             let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) {
-                if(!hist[k].nums.includes(i)) gap++; else break;
-            }
-            // V.111 混合權重
-            if (gap === 1) stats[i].score += 120; // 融合 V.107 (高命中熱碼)
-            if (gap >= 6 && gap <= 9) stats[i].score += 140; // 融合 V.108 (金字塔中段)
-            if (gap >= 15) stats[i].score += 80; // 長冷回歸
-            if ([1, 3, 4, 8].includes(i % 10)) stats[i].score += 45; // 尾數共振
+            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            if (gap === 1 || gap === 2) stats[i].score += 100; // 聯動高熱
+            if (gap >= 7 && gap <= 12) stats[i].score += 125; // 階梯解凍
+            if (gap >= 20) stats[i].score += 70; // 長冷必補
+            if ([3, 6, 1].includes(i % 10)) stats[i].score += 40; // 尾數共振
         }
-
         let final = [];
-        const zones = [{r:[1,10],c:2}, {r: [11,20],c:2}, {r:[21,30],c:2}, {r:[31,39],c:2}];
+        const zones = [[1,10],[11,20],[21,30],[31,39]];
         zones.forEach(z => {
-            let sub = stats.slice(z.r[0], z.r[1]+1).sort((a,b) => b.score - a.score).slice(0, z.c);
+            let sub = stats.slice(z[0], z[1]+1).sort((a,b) => b.score - a.score).slice(0, 2);
             final.push(...sub.map(x => x.n));
         });
         return final.sort((a,b) => a-b);
     }
-
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -89,30 +75,25 @@
                 const c = l.split(',');
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
-            if(rawData.length > 0) {
-                document.getElementById('resultPanel').style.display = 'block';
-                document.getElementById('predPanel').style.display = 'block';
-                run();
-            }
+            if(rawData.length > 0) { document.getElementById('resultPanel').style.display = 'block'; document.getElementById('predPanel').style.display = 'block'; run(); }
         };
         reader.readAsText(e.target.files[0]);
     });
-
     function run() {
         let btHtml = ""; let s = { s3:0, s2:0, s1:0 };
         rawData.slice(-10).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV111Prediction(hist);
+            const pred = getV111(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s.s3++; else if(hits.length === 2) s.s2++; else if(hits.length === 1) s.s1++;
-            btHtml += `<div class="bt-row"><div class="bt-meta"><span style="color:var(--sub)">${row.date}</span> <span class="star-tag ${hits.length>=2?'win':''}">${hits.length} ★</span></div><div class="num-group">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
+            btHtml += `<div class="bt-row"><div class="bt-meta"><span>${row.date}</span> <span class="star-tag ${hits.length>=2?'win':''}">${hits.length} ★</span></div><div>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('rate3').innerText = (s.s3*10) + "%";
         document.getElementById('rate2').innerText = (s.s2*10) + "%";
         document.getElementById('rate1').innerText = (s.s1*10) + "%";
         document.getElementById('btBody').innerHTML = btHtml;
-        document.getElementById('nextPred').innerHTML = getV111Prediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        document.getElementById('logBox').innerHTML = `> V.111 決戰模式啟動。<br>> 融合跨期聯動與空間平衡。<br>> 1/23 收網目標：3星以上高碰撞。`;
+        document.getElementById('nextPred').innerHTML = getV111(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        document.getElementById('logBox').innerHTML = `> V.111 聯動優化完畢。目標三星爆發。`;
     }
 </script>
 </body>
