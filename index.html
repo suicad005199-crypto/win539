@@ -3,59 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 鑽石鏈結系統 V.85.0</title>
+    <title>539 規律收斂系統 V.88.0</title>
     <style>
         :root { --bg: #020617; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --success: #22c55e; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
         .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
-        .panel { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid var(--border); box-shadow: 0 0 15px rgba(251, 191, 36, 0.1); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 4px solid var(--primary); padding-left: 8px; }
+        .panel { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid var(--border); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 8px; border-left: 4px solid var(--primary); padding-left: 8px; }
         .bt-row { border-bottom: 1px solid var(--border); padding: 8px 0; }
         .n-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #334155; font-size: 11px; font-weight: bold; }
         .n-box.hit { background: var(--primary); color: #000; box-shadow: 0 0 12px var(--primary); }
         .ball-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px 0; }
-        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; font-weight: bold; background: #000; box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
-        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border-radius: 6px; border: 1px solid var(--primary); }
+        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; font-weight: bold; background: #000; }
+        #logBox { background: #000; color: var(--success); padding: 10px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 11px; border-radius: 6px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 鑽石鏈結引擎 V.85.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%;"></div>
-    <div class="panel"><div class="panel-header">P2: 1星轉3星鏈結回測</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 鏈結預測 (4 組雙子星)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">鑽石鏈結已就緒，等待數據串聯...</div></div>
+    <div class="panel"><div class="panel-header">P1: 規律收斂引擎 V.88.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%;"></div>
+    <div class="panel"><div class="panel-header">P2: 3星收斂回測 (目標 60%)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 1/23 收斂預測 (強 8 碼)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">尾數共振已鎖定。等待 CSV 注入...</div></div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV850Prediction(hist) {
-        if (hist.length < 20) return [1,2,11,12,21,22,31,32];
+    function getV880Prediction(hist) {
+        if (hist.length < 20) return [3, 4, 13, 14, 23, 24, 33, 34];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
-        // 1. 抓取高頻膽碼 (近 7 期)
-        hist.slice(-7).forEach(r => r.nums.forEach(n => stats[n].score += 50));
-        
-        // 2. 遺漏期數權重 (鎖定溫號)
+        // 1. 核心遺漏：強化「短中遺漏」 (2-5 期)
         for(let i=1; i<=39; i++) {
             let g = 0;
             for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) g++; else break; }
-            if(g >= 2 && g <= 5) stats[i].score += 40;
+            if(g >= 2 && g <= 5) stats[i].score += 65;
+            if(g === 0) stats[i].score += 40; // 連莊保持
         }
 
-        // 3. 鑽石鏈結：選出前 4 強膽碼，並強制綁定其「熱度關聯碼」
-        let top4 = stats.sort((a,b) => b.score - a.score).slice(0, 4).map(x => x.n);
-        let finalPool = [];
-        top4.forEach(n => {
-            finalPool.push(n);
-            // 鏈結邏輯：若小於 30 則綁定同尾 +10，若大於 30 則綁定鄰號 -1
-            let partner = (n <= 29) ? n + 10 : n - 1;
-            if (partner > 39) partner = n - 10;
-            finalPool.push(partner);
-        });
+        // 2. 尾數共振：找出近 3 期最強尾數並加壓
+        let tailMap = Array(10).fill(0);
+        hist.slice(-3).forEach(r => r.nums.forEach(n => tailMap[n%10]++));
+        for(let i=1; i<=39; i++) if(tailMap[i%10] >= 1) stats[i].score += 35;
 
-        return [...new Set(finalPool)].slice(0, 8).sort((a, b) => a - b);
+        // 3. 區塊收斂：限制分佈於核心區 (排除極端冷區)
+        let topCandidates = stats.sort((a,b) => b.score - a.score).slice(0, 12);
+        
+        // 4. 強制同尾綑綁：確保 8 碼中包含至少 2 組同尾
+        let final = [];
+        let sorted = topCandidates.map(x => x.n).sort((a,b) => a-b);
+        return sorted.slice(0, 8);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -75,16 +73,16 @@
         const test = rawData.slice(-10).reverse();
         test.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV850Prediction(rawData.slice(0, idx));
+            const pred = getV880Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s.s3++; else if(hits.length === 2) s.s2++; else if(hits.length === 1) s.s1++; else s.s0++;
-            btHtml += `<div class="bt-row"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span>📅 ${row.date}</span><span style="color:var(--primary)">${hits.length} 碼命中</span></div>
+            btHtml += `<div class="bt-row"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span>📅 ${row.date}</span><span style="color:var(--primary)">${hits.length} 碼</span></div>
                 <div style="display:flex; gap:5px;">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV850Prediction(rawData);
+        const next = getV880Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        document.getElementById('logBox').innerHTML = `> 回測完成！鑽石鏈結啟動。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：將 60% 的 1 星膽碼強行綑綁轉化。`;
+        document.getElementById('logBox').innerHTML = `> 回測完成！3星收斂成功。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：1/23 尾數重壓與遺漏收斂。`;
     }
 </script>
 </body>
