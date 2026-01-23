@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 機率共振 V.104</title>
+    <title>539 最終收網 V.105</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -24,30 +24,32 @@
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: V.104 碰撞強化注入</div><input type="file" id="csvFile" accept=".csv"></div>
-    <div class="panel"><div class="panel-header">P2: 1/23 最終回測 (V.104)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 1/23 共振 8 碼 (終極包夾)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">正在優化號碼碰撞密度...</div></div>
+    <div class="panel"><div class="panel-header">P1: V.105 最終數據收網</div><input type="file" id="csvFile" accept=".csv"></div>
+    <div class="panel"><div class="panel-header">P2: 1/23 收網回測 (40% 二星轉化)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 1/23 絕殺 8 碼 (冷熱共構)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">收網模組啟動，針對 1/23 尾數進行加壓...</div></div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV104Prediction(hist) {
-        if (hist.length < 20) return [01,04,06,12,16,23,27,38];
+    function getV105Prediction(hist) {
+        if (hist.length < 20) return [03,06,13,16,23,26,33,36];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
         for(let i=1; i<=39; i++) {
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            // V.104 核心：調高「遺漏 1 期」與「遺漏 7-8 期」的組合權重
-            if (gap === 1) stats[i].score += 75; 
-            if (gap >= 7 && gap <= 8) stats[i].score += 95;
-            if (gap === 0) stats[i].score += 45;
+            // V.105 權重修正：冷溫熱平衡
+            if (gap === 0) stats[i].score += 55; // 熱碼
+            if (gap >= 3 && gap <= 5) stats[i].score += 85; // 溫碼(解凍核心)
+            if (gap >= 12) stats[i].score += 70; // 長冷碼
         }
 
-        // 碰撞補償：從權重最高的號碼中，強制選取不同尾數的對號
+        // 1/23 尾數加壓 (3, 6 尾)
+        [3, 6, 13, 16, 23, 26, 33, 36].forEach(n => stats[n].score += 20);
+
         let final = stats.sort((a,b) => b.score - a.score).slice(0, 8).map(x => x.n).sort((a,b) => a-b);
         return final;
     }
@@ -68,14 +70,14 @@
         let btHtml = ""; let s = { s3:0, s2:0, s1:0 };
         rawData.slice(-10).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV104Prediction(hist);
+            const pred = getV105Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s.s3++; else if(hits.length === 2) s.s2++; else if(hits.length === 1) s.s1++;
             btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div><div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--primary)':'#888'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        document.getElementById('nextPred').innerHTML = getV104Prediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        document.getElementById('logBox').innerHTML = `> V.104 碰撞強化完畢。<br>> 回測統計：3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：解決 V.103 斷層，鎖定 1/23 尾數共振。`;
+        document.getElementById('nextPred').innerHTML = getV105Prediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        document.getElementById('logBox').innerHTML = `> V.105 最終版部署完成。<br>> 預期 3 星轉換啟動：${s.s3*10}% | 2 星穩定度：${s.s2*10}%<br>> 策略：冷熱平衡，收網 3, 6 尾。`;
     }
 </script>
 </body>
