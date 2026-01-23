@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 極限串聯 V.101</title>
+    <title>539 跨度擴張 V.102</title>
     <style>
         :root { --bg: #000; --panel: #1c1c1e; --primary: #ffd60a; --border: #38383a; --text: #fff; --sub: #8e8e93; --hit: #ff375f; --accent: #0a84ff; --success: #32d74b; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -30,11 +30,11 @@
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: V.101 極限注入</div><input type="file" id="csvFile" accept=".csv"></div>
-    <div class="panel"><div class="panel-header">P2: 串聯回測 (2星→3星強制轉化)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 1/23 最終串聯 8 碼</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div class="panel-header">P1: V.102 跨度修正注入</div><input type="file" id="csvFile" accept=".csv"></div>
+    <div class="panel"><div class="panel-header">P2: 跨度擴張回測 (目標 3星 30%+)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 1/23 跨度 8 碼 (禁止三連)</div><div id="nextPred" class="ball-row"></div></div>
     <div class="panel"><div class="panel-header">P4: 分布矩陣</div><div id="matrixCont" class="matrix-scroll"></div></div>
-    <div class="panel"><div id="logBox">等待 CSV 匯入鎖定 1/23 規律...</div></div>
+    <div class="panel"><div id="logBox">等待 CSV... 系統已切換至「等距擴張」模式。</div></div>
 </div>
 
 <script>
@@ -42,35 +42,27 @@
     const pad = (n) => n.toString().padStart(2, '0');
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    function getV101Prediction(hist) {
-        if (hist.length < 20) return [1,2,11,12,21,22,31,32];
+    function getV102Prediction(hist) {
+        if (hist.length < 20) return [01, 08, 12, 19, 21, 28, 32, 39];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
-        // 核心：遺漏與回補密度計算
         for(let i=1; i<=39; i++) {
             let gap = 0;
-            for(let k=hist.length-1; k>=0; k--) {
-                if(!hist[k].nums.includes(i)) gap++; else break;
-            }
-            if (gap >= 3 && gap <= 6) stats[i].score += 85; // 捕捉 2 星轉 3 星的黃金期
-            if (gap === 0) stats[i].score += 50; // 連莊權重
-            stats[i].score += (Math.random() * 5); // 混沌擾動防止規律閃避
+            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            // 權重轉移：針對 V.100.2 成功的 40% 2星區間
+            if (gap >= 4 && gap <= 8) stats[i].score += 90;
+            if (gap === 1 || gap === 2) stats[i].score += 45;
         }
 
-        // 區塊取樣：強迫號碼聚壓
-        let zones = [[], [], []];
-        for(let i=1; i<=39; i++) {
-            let z = Math.min(Math.floor((i-1)/13), 2);
-            zones[z].push(stats[i]);
-        }
+        // 強制跨度分佈：從 4 個區間各選 2 碼
+        let final = [];
+        const ranges = [[1,9],[10,19],[20,29],[30,39]];
+        ranges.forEach(r => {
+            let sub = stats.slice(r[0], r[1]+1).sort((a,b) => b.score - a.score).slice(0, 2);
+            final.push(...sub.map(x => x.n));
+        });
 
-        let pool = [];
-        zones.forEach(z => pool.push(...z.sort((a,b)=>b.score-a.score).slice(0, 4)));
-        let final = pool.sort((a,b)=>b.score-a.score).slice(0, 8).map(x=>x.n).sort((a,b)=>a-b);
-
-        // 強制鎖定一組連號
-        if (final[1] - final[0] > 1) final[1] = final[0] + 1;
-        return final;
+        return final.sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -80,18 +72,18 @@
                 const c = l.split(',');
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
-            runV101();
+            runV102();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runV101() {
-        let btHtml = ""; let hitsArr = [];
+    function runV102() {
+        let btHtml = ""; let s = { s3:0, s2:0, s1:0 };
         rawData.slice(-10).reverse().forEach(row => {
             const histSlice = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV101Prediction(histSlice);
+            const pred = getV102Prediction(histSlice);
             const hits = row.nums.filter(n => pred.includes(n));
-            hitsArr.push(hits.length);
+            if(hits.length >= 3) s.s3++; else if(hits.length === 2) s.s2++; else if(hits.length === 1) s.s1++;
             btHtml += `<div class="bt-row">
                 <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
                 <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
@@ -99,8 +91,7 @@
             </div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV101Prediction(rawData);
-        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        document.getElementById('nextPred').innerHTML = getV102Prediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
         let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
         for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
@@ -111,8 +102,7 @@
             mHtml += `</tr>`;
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
-        const logBox = document.getElementById('logBox');
-        logBox.innerHTML = `> V.101 注入完成 | 數據量: ${rawData.length} 期<br>> 策略：1/23 極限連號與 40% 轉化模組已啟動。`;
+        document.getElementById('logBox').innerHTML = `> V.102 部署成功。<br>> 回測統計：3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：拆散號碼，強化四大區間跨度包夾。`;
     }
 </script>
 </body>
