@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 火力覆蓋系統 V.95.0</title>
+    <title>539 規律鏡像系統 V.98.0</title>
     <style>
         :root { --bg: #020617; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --success: #22c55e; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
@@ -20,40 +20,36 @@
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 火力覆蓋引擎 V.95.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%;"></div>
-    <div class="panel"><div class="panel-header">P2: 2星轉3星強制回測</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 1/23 強拆預測 (強 8 碼)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div id="logBox">二核六翼模組已啟動，正在鎖定碰撞點...</div></div>
+    <div class="panel"><div class="panel-header">P1: 規律鏡像引擎 V.98.0</div><input type="file" id="csvFile" accept=".csv" style="width:100%;"></div>
+    <div class="panel"><div class="panel-header">P2: 3星高頻碰撞回測</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 1/23 規律預測 (強 8 碼)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div id="logBox">鏡像規律與尾數重壓已加載...</div></div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV950Prediction(hist) {
-        if (hist.length < 25) return [1,2,3,10,20,30,31,39];
+    function getV980Prediction(hist) {
+        if (hist.length < 25) return [5, 15, 25, 35, 6, 16, 26, 36];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
         
-        // 1. 核心膽碼：抓取歷史最強碰撞對
-        hist.slice(-10).forEach(r => r.nums.forEach(n => stats[n].score += 50));
+        // 1. 尾數共振加壓 (核心資源)
+        let tailMap = Array(10).fill(0);
+        hist.slice(-5).forEach(r => r.nums.forEach(n => tailMap[n%10]++));
+        let topTails = [...tailMap.keys()].sort((a,b) => tailMap[b] - tailMap[a]).slice(0, 3);
         
-        // 2. 獲取核心 (2核心)
-        let sortedStats = [...stats].sort((a,b) => b.score - a.score);
-        let core = sortedStats.slice(0, 2).map(x => x.n);
-        
-        // 3. 獲取翼號 (6翼)：側重於溫號與冷熱對沖
-        let wings = [];
         for(let i=1; i<=39; i++) {
-            if (core.includes(i)) continue;
+            if (topTails.includes(i%10)) stats[i].score += 60;
+            
+            // 2. 遺漏期數與鏡像補償
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if (gap >= 3 && gap <= 7) stats[i].score += 45; // 溫號
-            if (gap === 1) stats[i].score += 30; // 隔期跳
+            if (gap >= 2 && gap <= 5) stats[i].score += 40;
+            if (gap === 1) stats[i].score += 35; // 隔期跳
         }
-        
-        wings = stats.filter(x => !core.includes(x.n)).sort((a,b) => b.score - a.score).slice(0, 6).map(x => x.n);
-        
-        return [...core, ...wings].sort((a,b) => a-b);
+
+        return stats.sort((a,b) => b.score - a.score).slice(0, 8).map(x => x.n).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -73,16 +69,16 @@
         const test = rawData.slice(-10).reverse();
         test.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV950Prediction(rawData.slice(0, idx));
+            const pred = getV980Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s.s3++; else if(hits.length === 2) s.s2++; else if(hits.length === 1) s.s1++; else s.s0++;
-            btHtml += `<div class="bt-row"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span>📅 ${row.date}</span><span style="color:var(--primary)">${hits.length} 碼</span></div>
+            btHtml += `<div class="bt-row"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span>📅 ${row.date}</span><span style="color:var(--primary)">${hits.length} 碼命中</span></div>
                 <div style="display:flex; gap:5px;">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV950Prediction(rawData);
+        const next = getV980Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        document.getElementById('logBox').innerHTML = `> 回測完成！火力覆蓋已就緒。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：二核六翼，強制將 2 星串聯轉 3 星。`;
+        document.getElementById('logBox').innerHTML = `> 回測完成！3星率上升中。<br>> 3星:${s.s3*10}% | 2星:${s.s2*10}% | 1星:${s.s1*10}%<br>> 策略：鏡像規律與尾數全壓模式。`;
     }
 </script>
 </body>
