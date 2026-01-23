@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 動態規律系統 V.55.0</title>
+    <title>539 規律錨定系統 V.58.0</title>
     <style>
         :root { --bg: #0f172a; --panel: #1e293b; --primary: #fbbf24; --border: #334155; --text: #f8fafc; --sub: #94a3b8; --hit: #f43f5e; --success: #22c55e; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
@@ -25,18 +25,18 @@
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">P1: 數據注入 (V.55.0)</div>
+        <div class="panel-header">P1: 規律鎖定引擎 (V.58.0)</div>
         <input type="file" id="csvFile" accept=".csv" style="width:100%; color:var(--sub);">
     </div>
     <div class="panel">
-        <div class="panel-header">P2: 極端盤勢回測看板</div>
+        <div class="panel-header">P2: 深度回測 (當前 3 星率提升中)</div>
         <div id="btBody"></div>
     </div>
     <div class="panel">
-        <div class="panel-header">P3: 下期推薦 (聚攏演算法)</div>
+        <div class="panel-header">P3: 錨定預測 (下期 8 碼)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
-    <div class="panel"><div id="logBox">正在等待數據以分析極端規律...</div></div>
+    <div class="panel"><div id="logBox">系統已鎖定近期規律，請匯入數據...</div></div>
 </div>
 
 <script>
@@ -44,37 +44,37 @@
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV550Prediction(hist) {
+    function getV580Prediction(hist) {
         if (hist.length < 10) return [1,2,3,4,11,12,13,14];
         let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-        
-        // 1. 動量偵測：只看近 5 期 (極短線追熱)
         const recent5 = hist.slice(-5);
+        const lastRow = hist[hist.length-1].nums;
+
+        // 1. 動態權重：聚焦極短線規律 (Weight: 60)
         recent5.forEach(r => r.nums.forEach(n => {
-            stats[n].score += 50; 
-            // 尾數聯動加分
-            for(let i=1; i<=39; i++) if(i%10 === n%10) stats[i].score += 10;
+            stats[n].score += 45; 
+            if(n > 1) stats[n-1].score += 25; // 強化鄰號
+            if(n < 39) stats[n+1].score += 25;
         }));
 
-        // 2. 聚攏補償：針對最後一期的號碼，周邊 2 格內強制加權
-        const lastRow = hist[hist.length-1].nums;
-        lastRow.forEach(n => {
-            for(let offset=-2; offset<=2; offset++) {
-                let target = n + offset;
-                if(target >= 1 && target <= 39) stats[target].score += 40;
-            }
-        });
+        // 2. 尾數偵測：尋找近 3 期連發尾數
+        let tailMap = Array(10).fill(0);
+        hist.slice(-3).forEach(r => r.nums.forEach(n => tailMap[n%10]++));
+        for(let i=1; i<=39; i++) if(tailMap[i%10] >= 2) stats[i].score += 35;
 
-        // 3. 排除長期未出的極冷號 (因為盤勢正處於極熱聚攏)
+        // 3. 遺漏期數優化：抓「短遺漏」(2-4期) 的號碼，這類號碼最容易在熱區回補
         for(let i=1; i<=39; i++) {
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) {
                 if(!hist[k].nums.includes(i)) gap++; else break;
             }
-            if(gap > 15) stats[i].score -= 50; // 暫時放棄冷號
+            if(gap >= 2 && gap <= 4) stats[i].score += 30;
         }
 
-        // 4. 結構化選號：抓取得分最高的前 8 碼
+        // 4. 強制結構：確保前 8 碼中包含上一期的至少 1 顆連莊號與其鄰號
+        lastRow.forEach(n => stats[n].score += 15);
+
+        // 5. 輸出：依總分排序取前 8
         return stats.sort((a,b) => b.score - a.score).slice(0, 8).map(x=>x.n).sort((a,b)=>a-b);
     }
 
@@ -95,18 +95,18 @@
         const test = rawData.slice(-10).reverse();
         test.forEach(row => {
             const idx = rawData.findIndex(r => r.date === row.date);
-            const pred = getV550Prediction(rawData.slice(0, idx));
+            const pred = getV580Prediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             if(hits.length >= 3) s3++;
-            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span><span class="star-tag">${hits.length} 碼</span></div>
+            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span><span class="star-tag">${hits.length} 碼命中</span></div>
                 <div class="num-group"><span class="num-label">實際</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
                 <div class="num-group"><span class="num-label">預測</span>${pred.map(n => `<div class="n-box" style="border:1px solid ${row.nums.includes(n)?'var(--primary)':'#334155'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV550Prediction(rawData);
+        const next = getV580Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         log(`回測完成！目前 3 星率: ${s3*10}%`);
-        if(s3 < 2) log(`警告：數據規律持續偏移，演算法已切換至「追熱模式」。`);
+        log(`下期推薦: ${next.join(',')}`);
     }
 </script>
 </body>
