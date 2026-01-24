@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.53.8 | Extreme 2-Star Logic</title>
+    <title>Oracle V.53.8 | 6-Code 100% Target</title>
     <style>
         :root { --bg: #090909; --panel: #1a1a1a; --primary: #ff3b30; --accent: #32d74b; --text: #f2f2f7; --border: #3a3a3c; --sub: #8e8e93; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; font-size: 13px; }
@@ -35,27 +35,27 @@
 <body>
 
 <div class="card">
-    <div class="header">數據注入 (Extreme V.53.8)</div>
+    <div class="header">數據注入 (V.53.8 Slim-6)</div>
     <input type="file" id="csvFile" accept=".csv">
-    <div id="logBox">等待 CSV 檔案匯入...</div>
+    <div id="logBox">等待 CSV 檔案匯入並執行回測...</div>
 </div>
 
 <div class="card">
-    <div class="header">極致二星策略 (8碼)</div>
+    <div class="header">下期策略預測 (精選 6 碼)</div>
     <div id="nextPred" class="ball-row"></div>
     <div class="summary">
-        <div class="stat-item"><div class="stat-label">演算法</div><div class="stat-val">共現關係鎖定</div></div>
-        <div class="stat-item"><div class="stat-label">2★ 命中率</div><div id="winProb" class="stat-val">--%</div></div>
+        <div class="stat-item"><div class="stat-label">建議組合</div><div class="stat-val">二星 15 組</div></div>
+        <div class="stat-item"><div class="stat-label">2★ 命中率評估</div><div id="winProb" class="stat-val">--%</div></div>
     </div>
 </div>
 
 <div class="card">
-    <div class="header">分佈矩陣</div>
+    <div class="header">分布矩陣 (趨勢軌跡)</div>
     <div class="matrix-scroll" id="matrixCont"></div>
 </div>
 
 <div class="card">
-    <div class="header">回測數據 (最近 10 期)</div>
+    <div class="header">真實逐期回測 (近 10 期)</div>
     <div id="btBody"></div>
 </div>
 
@@ -65,44 +65,62 @@
     const pad = (n) => n.toString().padStart(2, '0');
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    function getPrediction(hist) {
-        if(hist.length < 30) return [1,10,11,20,21,30,31,39];
+    function get6CodePrediction(hist) {
+        if(hist.length < 10) return [1, 11, 21, 31, 5, 15];
         
-        const last5 = hist.slice(-5);
-        let coMatrix = Array(40).fill(0).map(() => Array(40).fill(0));
-        let singleScores = Array(40).fill(0);
+        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
+        const last3 = hist.slice(-3);
+        const last10 = hist.slice(-10);
 
-        // 1. 建立共現頻次矩陣 (核心優化)
-        hist.slice(-50).forEach(period => {
-            period.nums.forEach(n1 => {
-                singleScores[n1]++;
-                period.nums.forEach(n2 => { if(n1 !== n2) coMatrix[n1][n2]++; });
-            });
-        });
+        // 1. 核心尾數分析 (選出最強 2 個尾數)
+        let tailMap = {};
+        last10.forEach(d => d.nums.forEach(n => { let t = n % 10; tailMap[t] = (tailMap[t] || 0) + 1; }));
+        let topTails = Object.entries(tailMap).sort((a,b) => b[1] - a[1]).slice(0, 2).map(x => parseInt(x[0]));
 
-        // 2. 找出最強關聯對
-        let pairs = [];
         for(let i=1; i<=39; i++) {
-            for(let j=i+1; j<=39; j++) {
-                let score = coMatrix[i][j] * 5 + (singleScores[i] + singleScores[j]);
-                // 尾數相同加成
-                if(i % 10 === j % 10) score *= 1.5;
-                // 鄰號加成
-                if(Math.abs(i - j) === 1) score *= 1.2;
-                pairs.push({ p: [i, j], s: score });
+            // A. 尾數權重 (極高)
+            if (topTails.includes(i % 10)) scores[i].s += 1000;
+
+            // B. 鄰位與重排 (熱點偏移)
+            last3.forEach(d => {
+                d.nums.forEach(ln => {
+                    if (Math.abs(ln - i) === 1) scores[i].s += 500; // 鄰碼
+                    if (ln === i) scores[i].s += 300; // 連莊碼
+                });
+            });
+
+            // C. 遺漏週期補償 (遺漏 3-7 期最易出 2 星)
+            let gap = 0;
+            for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            if (gap >= 3 && gap <= 7) scores[i].s += 600;
+        }
+
+        // D. 多樣化分區選擇 (確保 6 碼分佈)
+        let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
+        let selected = [];
+        let bins = [0, 0, 0, 0]; // 代表 0s, 1s, 2s, 3s 字頭
+
+        for(let item of sorted) {
+            let binIdx = Math.floor(item.n / 10);
+            if (selected.length < 6) {
+                if (bins[binIdx] < 2) { // 每個字頭最多選 2 個碼
+                    selected.push(item.n);
+                    bins[binIdx]++;
+                }
             }
         }
-        pairs.sort((a, b) => b.s - a.s);
-
-        // 3. 挑選 8 碼 (優先確保最強二星對)
-        let selected = new Set();
-        for(let pair of pairs) {
-            if(selected.size >= 8) break;
-            selected.add(pair.p[0]);
-            if(selected.size < 8) selected.add(pair.p[1]);
+        
+        // 補足碼號
+        if(selected.length < 6) {
+            for(let item of sorted) {
+                if(!selected.includes(item.n)) {
+                    selected.push(item.n);
+                    if(selected.length >= 6) break;
+                }
+            }
         }
 
-        return Array.from(selected).sort((a,b) => a-b);
+        return selected.sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -113,38 +131,39 @@
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
             document.getElementById('logBox').innerHTML = "";
-            runSystem();
+            runBacktest();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runSystem() {
+    function runBacktest() {
         let btHtml = ""; let winCount = 0; 
-        const testPeriods = 20; 
+        const testCount = Math.min(rawData.length - 10, 20);
 
-        for(let i = rawData.length - testPeriods; i < rawData.length; i++) {
-            const pred = getPrediction(rawData.slice(0, i));
+        for(let i = rawData.length - testCount; i < rawData.length; i++) {
+            const pred = get6CodePrediction(rawData.slice(0, i));
             const hits = rawData[i].nums.filter(n => pred.includes(n));
             if(hits.length >= 2) winCount++;
         }
 
         rawData.slice(-10).reverse().forEach(row => {
             const idx = rawData.indexOf(row);
-            const pred = getPrediction(rawData.slice(0, idx));
+            const pred = get6CodePrediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row">
                 <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="hit-tag">${hits.length} ★</span></div>
                 <div class="num-group">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
-                <div style="color:var(--sub); font-size:10px; margin-top:4px;">優化預測: ${pred.map(pad).join(', ')}</div>
+                <div style="color:var(--sub); font-size:10px; margin-top:4px;">精選: ${pred.map(pad).join(', ')}</div>
             </div>`;
         });
 
         document.getElementById('btBody').innerHTML = btHtml;
-        document.getElementById('nextPred').innerHTML = getPrediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
+        document.getElementById('nextPred').innerHTML = get6CodePrediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        const winP = ((winCount/testPeriods)*100).toFixed(0);
-        document.getElementById('winProb').innerText = winP + "%";
+        const finalProb = ((winCount / testCount) * 100).toFixed(0);
+        document.getElementById('winProb').innerText = finalProb + "%";
 
+        // 矩陣繪製
         let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
         for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
         mHtml += `</tr></thead><tbody>`;
@@ -155,9 +174,12 @@
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
 
-        log(`[極致優化：共現矩陣鎖定啟動]`);
-        log(`本次重點：強行綁定高機率同時出現之碼號`);
-        log(`目前 2★ 回測達成率: ${winP}%`);
+        log(`[策略升級：6碼 100% 命中導向]`);
+        log(`主要邏輯：核心尾數 + 跨度分佈`);
+        log(`回測期間：最近 ${testCount} 期`);
+        log(`2★ 命中次數：${winCount} 次`);
+        log(`--------------------------------`);
+        log(`系統建議：此 6 碼可組成 15 組二星單`);
     }
 </script>
 </body>
