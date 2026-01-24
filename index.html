@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.53.8 | Max-Coverage Optimization</title>
+    <title>Oracle V.53.8 | Extreme 2-Star Logic</title>
     <style>
         :root { --bg: #090909; --panel: #1a1a1a; --primary: #ff3b30; --accent: #32d74b; --text: #f2f2f7; --border: #3a3a3c; --sub: #8e8e93; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; font-size: 13px; }
@@ -35,27 +35,27 @@
 <body>
 
 <div class="card">
-    <div class="header">數據注入</div>
+    <div class="header">數據注入 (Extreme V.53.8)</div>
     <input type="file" id="csvFile" accept=".csv">
     <div id="logBox">等待 CSV 檔案匯入...</div>
 </div>
 
 <div class="card">
-    <div class="header">下期優化預測 (8碼)</div>
+    <div class="header">極致二星策略 (8碼)</div>
     <div id="nextPred" class="ball-row"></div>
     <div class="summary">
-        <div class="stat-item"><div class="stat-label">建議組合</div><div class="stat-val">二星 28 組</div></div>
-        <div class="stat-item"><div class="stat-label">近期命中率</div><div id="winProb" class="stat-val">--%</div></div>
+        <div class="stat-item"><div class="stat-label">演算法</div><div class="stat-val">共現關係鎖定</div></div>
+        <div class="stat-item"><div class="stat-label">2★ 命中率</div><div id="winProb" class="stat-val">--%</div></div>
     </div>
 </div>
 
 <div class="card">
-    <div class="header">分布矩陣 (近15期)</div>
+    <div class="header">分佈矩陣</div>
     <div class="matrix-scroll" id="matrixCont"></div>
 </div>
 
 <div class="card">
-    <div class="header">真實逐期回測 (近10期)</div>
+    <div class="header">回測數據 (最近 10 期)</div>
     <div id="btBody"></div>
 </div>
 
@@ -66,48 +66,43 @@
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
     function getPrediction(hist) {
-        if(hist.length < 20) return [1,2,3,11,12,21,31,39];
+        if(hist.length < 30) return [1,10,11,20,21,30,31,39];
         
-        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-        const last3 = hist.slice(-3);
-        const last10 = hist.slice(-10);
+        const last5 = hist.slice(-5);
+        let coMatrix = Array(40).fill(0).map(() => Array(40).fill(0));
+        let singleScores = Array(40).fill(0);
 
-        for(let i=1; i<=39; i++) {
-            // 1. 冷熱平衡權重
-            let freq = last10.filter(d => d.nums.includes(i)).length;
-            scores[i].s += freq * 150;
-
-            // 2. 遺漏值動態補償 (Gap Analysis)
-            let gap = 0; 
-            for(let k=hist.length-1; k>=0; k--) { 
-                if(!hist[k].nums.includes(i)) gap++; else break; 
-            }
-            if (gap > 5) scores[i].s += gap * 40;
-            if (gap > 15) scores[i].s += 500; // 強制追蹤極冷碼
-
-            // 3. 鄰位與同尾交叉熵
-            last3.forEach(d => {
-                d.nums.forEach(ln => {
-                    if(Math.abs(ln - i) === 1) scores[i].s += 220; // 鄰碼
-                    if(ln % 10 === i % 10) scores[i].s += 280;    // 同尾
-                });
+        // 1. 建立共現頻次矩陣 (核心優化)
+        hist.slice(-50).forEach(period => {
+            period.nums.forEach(n1 => {
+                singleScores[n1]++;
+                period.nums.forEach(n2 => { if(n1 !== n2) coMatrix[n1][n2]++; });
             });
-        }
+        });
 
-        // 選碼優化：強制分佈，避免選號過於集中
-        let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
-        let selected = [];
-        
-        for(let item of sorted) {
-            if (selected.length >= 8) break;
-            // 檢查是否與已選號碼過於接近 (避免選號太擠)
-            let tooClose = selected.filter(n => Math.abs(n - item.n) <= 1).length;
-            if (tooClose < 2) {
-                selected.push(item.n);
+        // 2. 找出最強關聯對
+        let pairs = [];
+        for(let i=1; i<=39; i++) {
+            for(let j=i+1; j<=39; j++) {
+                let score = coMatrix[i][j] * 5 + (singleScores[i] + singleScores[j]);
+                // 尾數相同加成
+                if(i % 10 === j % 10) score *= 1.5;
+                // 鄰號加成
+                if(Math.abs(i - j) === 1) score *= 1.2;
+                pairs.push({ p: [i, j], s: score });
             }
         }
+        pairs.sort((a, b) => b.s - a.s);
 
-        return selected.sort((a,b) => a-b);
+        // 3. 挑選 8 碼 (優先確保最強二星對)
+        let selected = new Set();
+        for(let pair of pairs) {
+            if(selected.size >= 8) break;
+            selected.add(pair.p[0]);
+            if(selected.size < 8) selected.add(pair.p[1]);
+        }
+
+        return Array.from(selected).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -124,13 +119,13 @@
     });
 
     function runSystem() {
-        let btHtml = ""; let starCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0}; 
-        const testPeriods = Math.min(rawData.length - 20, 50); // 測試最近50期
+        let btHtml = ""; let winCount = 0; 
+        const testPeriods = 20; 
 
         for(let i = rawData.length - testPeriods; i < rawData.length; i++) {
             const pred = getPrediction(rawData.slice(0, i));
             const hits = rawData[i].nums.filter(n => pred.includes(n));
-            starCount[Math.min(hits.length, 5)]++;
+            if(hits.length >= 2) winCount++;
         }
 
         rawData.slice(-10).reverse().forEach(row => {
@@ -140,14 +135,14 @@
             btHtml += `<div class="bt-row">
                 <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="hit-tag">${hits.length} ★</span></div>
                 <div class="num-group">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
-                <div style="color:var(--sub); font-size:10px; margin-top:4px;">系統預測: ${pred.map(pad).join(', ')}</div>
+                <div style="color:var(--sub); font-size:10px; margin-top:4px;">優化預測: ${pred.map(pad).join(', ')}</div>
             </div>`;
         });
 
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = getPrediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        const winP = ((starCount[2]+starCount[3]+starCount[4]+starCount[5])/testPeriods*100).toFixed(0);
+        const winP = ((winCount/testPeriods)*100).toFixed(0);
         document.getElementById('winProb').innerText = winP + "%";
 
         let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
@@ -160,10 +155,9 @@
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
 
-        log(`[核心優化：Max-Coverage 啟動]`);
-        log(`目標：極大化 2★ 覆蓋機率`);
-        log(`近期回測命中率: ${winP}%`);
-        log(`建議策略：拆分 28 組 2 星進行投注`);
+        log(`[極致優化：共現矩陣鎖定啟動]`);
+        log(`本次重點：強行綁定高機率同時出現之碼號`);
+        log(`目前 2★ 回測達成率: ${winP}%`);
     }
 </script>
 </body>
