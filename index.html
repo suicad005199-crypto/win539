@@ -2,24 +2,43 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle V.53.9 | 6-Code Optimization</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Oracle V.53.8 | Cross-Entropy Slim</title>
     <style>
-        :root { --bg: #090909; --panel: #1a1a1a; --primary: #007aff; --accent: #32d74b; --text: #f2f2f7; --border: #3a3a3c; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        :root { --bg: #090909; --panel: #1a1a1a; --primary: #ff3b30; --accent: #32d74b; --text: #f2f2f7; --border: #3a3a3c; --sub: #8e8e93; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; font-size: 13px; }
         .card { background: var(--panel); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .header { color: var(--primary); font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .header { color: var(--primary); font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .header::before { content: ''; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        
+        /* 預測球體 */
         .ball-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
-        .ball { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--primary); }
-        .bt-row { font-size: 12px; padding: 8px 0; border-bottom: 1px solid #2c2c2e; display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; }
-        .hit-tag { background: var(--accent); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-align: center; }
-        #logBox { font-family: monospace; font-size: 11px; background: #000; padding: 10px; border-radius: 6px; height: 130px; overflow-y: auto; color: #32d74b; line-height: 1.5; border: 1px solid #2c2c2e; }
-        input[type="file"] { margin: 10px 0; color: #8e8e93; }
-        .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .ball { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--primary); font-size: 16px; }
+        
+        /* 統計資訊 */
+        .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
         .stat-item { background: #2c2c2e; padding: 8px; border-radius: 6px; text-align: center; }
-        .stat-label { font-size: 10px; color: #8e8e93; }
+        .stat-label { font-size: 10px; color: var(--sub); }
         .stat-val { font-size: 14px; font-weight: bold; color: var(--accent); }
+
+        /* 回測明細 */
+        .bt-row { font-size: 12px; padding: 10px 0; border-bottom: 1px solid #2c2c2e; }
+        .bt-meta { display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--sub); }
+        .num-group { display: flex; gap: 4px; align-items: center; margin-top: 4px; }
+        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
+        .n-box.hit { background: var(--accent); color: #000; }
+        .hit-tag { background: var(--primary); color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+
+        /* 分布矩陣 */
+        .matrix-scroll { overflow-x: auto; border-radius: 8px; background: #000; margin-top: 5px; }
+        .m-table { border-collapse: collapse; width: 100%; }
+        .m-table td, .m-table th { border: 1px solid #222; min-width: 20px; height: 20px; text-align: center; font-size: 9px; }
+        .m-head { background: #1a1a1a; color: var(--primary); position: sticky; top: 0; }
+        .m-date { background: #1a1a1a; color: var(--sub); position: sticky; left: 0; padding: 0 5px; }
+        .m-ball { background: var(--primary); border-radius: 50%; width: 10px; height: 10px; display: inline-block; }
+
+        #logBox { font-family: monospace; font-size: 11px; background: #000; padding: 10px; border-radius: 8px; height: 120px; overflow-y: auto; color: var(--accent); line-height: 1.5; border: 1px solid var(--border); }
+        input[type="file"] { margin: 10px 0; color: var(--sub); width: 100%; }
     </style>
 </head>
 <body>
@@ -27,94 +46,123 @@
 <div class="card">
     <div class="header">數據注入</div>
     <input type="file" id="csvFile" accept=".csv">
-    <div id="logBox">等待 CSV 檔案匯入並執行回測...</div>
+    <div id="logBox">等待 CSV 檔案匯入...</div>
 </div>
 
 <div class="card">
-    <div class="header">下期優化精選 (6碼)</div>
+    <div class="header">下期優化預測 (8碼)</div>
     <div id="nextPred" class="ball-row"></div>
     <div class="summary">
-        <div class="stat-item"><div class="stat-label">建議組合</div><div class="stat-val">二星 15 組</div></div>
-        <div class="stat-item"><div class="stat-label">策略版本</div><div class="stat-val">V.53.9 Slim</div></div>
+        <div class="stat-item"><div class="stat-label">建議組合</div><div class="stat-val">二星 28 組</div></div>
+        <div class="stat-item"><div class="stat-label">勝率評估 (2★+)</div><div id="winProb" class="stat-val">--%</div></div>
     </div>
+</div>
+
+<div class="card">
+    <div class="header">分布矩陣 (近15期)</div>
+    <div class="matrix-scroll" id="matrixCont"></div>
 </div>
 
 <div class="card">
     <div class="header">真實逐期回測 (近10期)</div>
-    <div id="btHeader" class="bt-row" style="color:#8e8e93; font-weight:bold;">
-        <div>日期</div><div>預測組合</div><div>結果</div>
-    </div>
     <div id="btBody"></div>
 </div>
 
 <script>
+    let rawData = [];
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
+    const pad = (n) => n.toString().padStart(2, '0');
+    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-    function get6CodePrediction(hist) {
-        if (hist.length < 20) return [1, 11, 21, 31, 10, 20];
-        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-        const last10 = hist.slice(-10);
-        const lastRow = hist[hist.length - 1].nums;
-        for (let i = 1; i <= 39; i++) {
-            if ([1, 11, 21, 31, 10, 20, 30].includes(i)) scores[i].s += 500;
-            last10.forEach(d => { if (d.nums.includes(i)) scores[i].s += 150; });
-            lastRow.forEach(ln => { if (Math.abs(ln - i) === 1) scores[i].s += 200; });
+    function getPrediction(hist) {
+        if(hist.length < 30) return [1,2,11,12,21,22,31,32];
+        const lastRow = hist[hist.length-1].nums;
+        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0, gap: 0 }));
+
+        for(let i=1; i<=39; i++) {
+            let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            scores[i].gap = gap;
+            if(gap >= 18 && gap <= 32) scores[i].s += 800;
+            let hot = 0; hist.slice(-10).forEach(d => { if(d.nums.includes(i)) hot++; });
+            scores[i].s += hot * 210;
+            lastRow.forEach(ln => { 
+                if(Math.abs(ln - i) === 1) scores[i].s += 310; 
+                if(ln % 10 === i % 10) scores[i].s += 320;
+            });
         }
-        return scores.slice(1).sort((a, b) => b.s - a.s).slice(0, 6).map(x => x.n).sort((a, b) => a - b);
+
+        let final = new Set();
+        let coldCandidates = [...scores].sort((a,b)=>b.gap - a.gap).slice(0, 12).sort((a,b)=>b.s - a.s);
+        final.add(coldCandidates[0].n);
+        [coldCandidates[0].n-1, coldCandidates[0].n+1, (coldCandidates[0].n+10)%40].filter(n=>n>0&&n<40).forEach(n=>{ if(final.size < 4) final.add(n); });
+
+        let hotCandidates = [...scores].sort((a,b)=>b.s - a.s);
+        for(let x of hotCandidates) {
+            if(!final.has(x.n) && ![...final].some(fn => Math.abs(fn-x.n) < 3)) {
+                final.add(x.n);
+                let tailMatch = hotCandidates.find(h => h.n !== x.n && h.n%10 === x.n%10 && !final.has(h.n));
+                if(tailMatch) final.add(tailMatch.n);
+                if(final.size >= 8) break;
+            }
+        }
+        if(final.size < 8) hotCandidates.forEach(h => { if(final.size < 8) final.add(h.n); });
+        return Array.from(final).slice(0, 8).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
-            const data = reader.result.trim().split('\n').map(l => {
+            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
                 const c = l.split(',');
-                return { date: c[0], nums: c.slice(1, 6).map(x => parseInt(x)).sort((a, b) => a - b) };
-            }).filter(r => !isNaN(r.nums[0]));
+                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
+            }).filter(r => r.nums.length === 5);
             document.getElementById('logBox').innerHTML = "";
-            runBacktest(data);
+            runSystem();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function runBacktest(data) {
-        let btHtml = "";
-        let totalHits = 0;
-        let winCount = 0;
-        const testRounds = 10;
+    function runSystem() {
+        let btHtml = ""; let starCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0}; let totalHits = 0;
+        const totalPeriods = rawData.length - 30;
 
-        // 生成最新預測
-        const next = get6CodePrediction(data);
-        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${n.toString().padStart(2, '0')}</div>`).join('');
+        for(let i = 30; i < rawData.length; i++) {
+            const pred = getPrediction(rawData.slice(0, i));
+            const hits = rawData[i].nums.filter(n => pred.includes(n));
+            starCount[Math.min(hits.length, 5)]++; totalHits += hits.length;
+        }
 
-        // 回測執行
-        const testData = data.slice(-testRounds).reverse();
-        testData.forEach((row, idx) => {
-            const currentIdx = data.length - 1 - idx;
-            const histSnapshot = data.slice(0, currentIdx);
-            const pred = get6CodePrediction(histSnapshot);
+        rawData.slice(-10).reverse().forEach(row => {
+            const idx = rawData.indexOf(row);
+            const pred = getPrediction(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
-            
-            totalHits += hits.length;
-            if(hits.length >= 2) winCount++;
-
             btHtml += `<div class="bt-row">
-                <div>${row.date.split('/').slice(1).join('/')}</div>
-                <div style="color:#8e8e93">${pred.map(n=>n.toString().padStart(2,'0')).join(',')}</div>
-                <div class="${hits.length >= 2 ? 'hit-tag' : ''}">${hits.length}★</div>
+                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="hit-tag">${hits.length} ★</span></div>
+                <div class="num-group">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
+                <div style="color:var(--sub); font-size:10px; margin-top:4px;">預測: ${pred.map(pad).join(', ')}</div>
             </div>`;
         });
 
-        const avgHits = (totalHits / testRounds).toFixed(2);
-        const winProb = (winCount / testRounds * 100).toFixed(0);
-
         document.getElementById('btBody').innerHTML = btHtml;
+        document.getElementById('nextPred').innerHTML = getPrediction(rawData).map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        log(`[系統分析完成]`);
-        log(`歷史數據總計: ${data.length} 期`);
-        log(`每期平均命中: ${avgHits} 星`);
-        log(`--------------------------------`);
-        log(`下期命中 2星(含)以上機率: ${winProb}%`);
-        log(`(基於近 ${testRounds} 期真實回測結果)`);
+        const winP = ((starCount[2]+starCount[3]+starCount[4]+starCount[5])/totalPeriods*100).toFixed(0);
+        document.getElementById('winProb').innerText = winP + "%";
+
+        let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
+        for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
+        mHtml += `</tr></thead><tbody>`;
+        rawData.slice(-15).reverse().forEach(row => {
+            mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
+            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<span class="m-ball"></span>' : ''}</td>`;
+            mHtml += `</tr>`;
+        });
+        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
+
+        log(`[V.53.8 交叉熵優化啟動]`);
+        log(`全量數據: ${rawData.length} 期`);
+        log(`2★以上總占比: ${winP}%`);
+        log(`期望值: ${(totalHits / totalPeriods).toFixed(2)} 碼/期`);
     }
 </script>
 </body>
