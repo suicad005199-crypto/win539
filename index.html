@@ -2,132 +2,95 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Oracle V.61.0 - Space-Time Fold</title>
+    <title>Oracle V.62.0 - Zone Defense</title>
     <style>
-        :root { --accent: #00ff41; --bg: #030303; --gold: #ffd700; }
-        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; padding: 20px; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; border: 2px solid var(--accent); padding: 30px; box-shadow: 0 0 20px var(--accent); border-radius: 10px; }
-        h1 { color: var(--accent); text-align: center; text-transform: uppercase; letter-spacing: 3px; border-bottom: 1px solid var(--accent); padding-bottom: 10px; }
-        .upload-area { border: 2px dashed #444; padding: 20px; text-align: center; margin-bottom: 30px; transition: 0.3s; }
-        .upload-area:hover { border-color: var(--accent); background: rgba(0,255,65,0.05); }
-        .ball-row { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; }
-        .ball { width: 60px; height: 60px; border: 3px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: var(--gold); background: #000; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
-        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
-        .stat-card { background: #111; padding: 15px; border-radius: 5px; text-align: center; border: 1px solid #333; }
-        .stat-card span { display: block; font-size: 24px; font-weight: bold; color: var(--accent); }
-        .hint { color: #888; font-size: 12px; margin-top: 20px; text-align: center; }
-        #log { margin-top: 20px; font-size: 12px; color: #008f11; height: 60px; overflow-y: auto; border: 1px solid #222; padding: 5px; }
+        :root { --accent: #00e5ff; --bg: #0a0a0a; --gold: #ffd700; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; border: 1px solid var(--accent); padding: 25px; border-radius: 15px; background: rgba(0,0,0,0.8); }
+        h1 { color: var(--accent); text-align: center; letter-spacing: 2px; text-shadow: 0 0 10px var(--accent); }
+        input[type="file"] { width: 100%; padding: 15px; border: 1px dashed var(--accent); margin: 20px 0; color: var(--accent); }
+        .ball-row { display: flex; justify-content: center; gap: 12px; margin: 25px 0; flex-wrap: wrap; }
+        .ball { width: 55px; height: 55px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--gold); box-shadow: 0 0 15px rgba(255,215,0,0.2); }
+        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .card { background: #1a1a1a; padding: 15px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--accent); }
+        .val { display: block; font-size: 22px; font-weight: bold; margin-bottom: 5px; }
+        #log { font-size: 12px; color: #666; margin-top: 15px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Oracle V.61.0 Ultimate</h1>
-    
-    <div class="upload-area">
-        <p>請拖入 CSV (建議維持 18-25 筆數據)</p>
-        <input type="file" id="csvFile">
+    <h1>V.62.0 區間防禦系統</h1>
+    <input type="file" id="csvFile" accept=".csv">
+    <div id="nextPred" class="ball-row"></div>
+    <div class="metrics">
+        <div class="card"><span id="r0" class="val">--</span>0星壓制</div>
+        <div class="card"><span id="r1" class="val">--</span>1星率</div>
+        <div class="card"><span id="r2" class="val" style="color:var(--accent)">--</span>2星地板</div>
+        <div class="card"><span id="r3" class="val" style="color:var(--gold)">--</span>3星天花板</div>
     </div>
-
-    <div id="nextPred" class="ball-row">
-        </div>
-
-    <div class="stats">
-        <div class="stat-card"><span id="r0">--</span>0星率</div>
-        <div class="stat-card"><span id="r1">--</span>1星率</div>
-        <div class="stat-card"><span id="r2">--</span>2星爆發</div>
-        <div class="stat-card" style="border-color: var(--gold);"><span id="r3" style="color:var(--gold)">--</span>3星天花板</div>
-    </div>
-
-    <div id="log">系統就緒：等待數據輸入...</div>
-    <p class="hint">建議數據範圍：2026/01/01 至 1/24 (目前手感最穩定)</p>
+    <div id="log">系統就緒。請上傳 1 月份數據。</div>
 </div>
 
 <script>
     function getPrediction(hist) {
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
         const lastRow = hist[hist.length-1].nums;
-        const lastTails = lastRow.map(n => n % 10);
 
         for(let i=1; i<=39; i++) {
-            // A. 時空折疊：鄰號連動 (核心加權)
-            lastRow.forEach(ln => {
-                if(Math.abs(ln - i) === 1) scores[i].s += 4000; 
-                if(ln === i) scores[i].s -= 1000; // 降低連莊率，追求跳號
-            });
+            // 權重 1: 遺漏值深度 (針對斷層盤)
+            let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            if(gap >= 4 && gap <= 10) scores[i].s += 3000;
+            
+            // 權重 2: 鄰號輻射 (適度保留)
+            lastRow.forEach(ln => { if(Math.abs(ln - i) === 1) scores[i].s += 1500; });
 
-            // B. 時空折疊：同尾共振 (核心加權)
-            if(lastTails.includes(i % 10)) scores[i].s += 3500;
-
-            // C. 遺漏加速度 (近 20 期最有效)
-            let gap = 0; 
-            for(let k=hist.length-1; k>=0; k--) { 
-                if(!hist[k].nums.includes(i)) gap++; else break; 
-            }
-            if(gap >= 3 && gap <= 8) scores[i].s += 2000; // 黃金回歸區
+            // 權重 3: 區間冷熱平衡
+            let count = 0; hist.slice(-10).forEach(h => { if(h.nums.includes(i)) count++; });
+            scores[i].s += (count * 500);
         }
 
         let final = new Set();
         let sorted = [...scores].sort((a,b) => b.s - a.s);
 
-        // 究極配對算法：強迫群聚
-        for(let i=0; final.size < 8 && i < sorted.length; i++) {
-            let n = sorted[i].n;
-            if(n === 0 || final.has(n)) continue;
-            final.add(n);
-            
-            // 立即尋找該號碼的「折疊夥伴」(鄰號或同尾)
-            let partner = sorted.find(x => x.n !== n && !final.has(x.n) && 
-                (Math.abs(x.n - n) === 1 || x.n % 10 === n % 10));
-            
-            if(partner && final.size < 8) {
-                final.add(partner.n);
+        // [核心修正] 強制區間分配：1-10, 11-20, 21-30, 31-39 各選 2 碼
+        const zones = [[1,10], [11,20], [21,30], [31,39]];
+        zones.forEach(z => {
+            let zoneNums = sorted.filter(x => x.n >= z[0] && x.n <= z[1]);
+            if(zoneNums.length >= 2) {
+                final.add(zoneNums[0].n);
+                final.add(zoneNums[1].n);
             }
-        }
-
-        // 補足至 8 碼 (防禦性)
-        let idx = 0;
-        while(final.size < 8) {
-            if(sorted[idx].n > 0) final.add(sorted[idx].n);
-            idx++;
-        }
+        });
 
         return Array.from(final).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
-        const log = document.getElementById('log');
         reader.onload = () => {
-            try {
-                const data = reader.result.trim().split('\n').map(l => {
-                    const c = l.split(',');
-                    return { date: c[0], nums: c.slice(1, 6).map(x => parseInt(x)).sort((a,b)=>a-b) };
-                }).filter(r => r.nums.length === 5 && !isNaN(r.nums[0]));
-                
-                log.innerText = `成功讀取 ${data.length} 期數據。執行 V.61.0 盲測...`;
-
-                let s = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0};
-                const testRange = Math.min(data.length - 10, 15); // 回測近 15 期
-                
-                for(let i = data.length - testRange; i < data.length; i++) {
-                    const pred = getPrediction(data.slice(0, i));
-                    const hits = data[i].nums.filter(n => pred.includes(n)).length;
-                    s[Math.min(hits, 5)]++;
-                }
-
-                const total = testRange;
-                document.getElementById('r0').innerText = (s[0]/total*100).toFixed(1) + '%';
-                document.getElementById('r1').innerText = (s[1]/total*100).toFixed(1) + '%';
-                document.getElementById('r2').innerText = ((s[2]+s[3]+s[4]+s[5])/total*100).toFixed(1) + '%';
-                document.getElementById('r3').innerText = ((s[3]+s[4]+s[5])/total*100).toFixed(1) + '%';
-                
-                const next = getPrediction(data);
-                document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${n.toString().padStart(2,'0')}</div>`).join('');
-                log.innerText += `\n預測完成。1/26 究極 8 碼已鎖定。`;
-            } catch(err) {
-                log.innerText = "錯誤：檔案格式不正確。請確保 CSV 格式為：日期,1,2,3,4,5";
+            const lines = reader.result.trim().split('\n');
+            const data = lines.slice(1).map(l => {
+                const c = l.split(',');
+                return { nums: c.slice(1, 6).map(x => parseInt(x)).sort((a,b)=>a-b) };
+            }).filter(r => r.nums.length === 5 && !isNaN(r.nums[0]));
+            
+            let s = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0};
+            for(let i = data.length - 10; i < data.length; i++) {
+                const pred = getPrediction(data.slice(0, i));
+                const hits = data[i].nums.filter(n => pred.includes(n)).length;
+                s[Math.min(hits, 5)]++;
             }
+
+            const total = 10;
+            document.getElementById('r0').innerText = (s[0]/total*100).toFixed(0) + '%';
+            document.getElementById('r1').innerText = (s[1]/total*100).toFixed(0) + '%';
+            document.getElementById('r2').innerText = ((total-s[0]-s[1])/total*100).toFixed(0) + '%';
+            document.getElementById('r3').innerText = ((s[3]+s[4]+s[5])/total*100).toFixed(0) + '%';
+            
+            const next = getPrediction(data);
+            document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${n.toString().padStart(2,'0')}</div>`).join('');
+            document.getElementById('log').innerText = "V.62.0 分析完畢，區間防禦已部署。";
         };
         reader.readAsText(e.target.files[0]);
     });
