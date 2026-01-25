@@ -2,54 +2,74 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Oracle V.65.0 - Offensive Special</title>
+    <title>Oracle V.66.0 - Critical Strike</title>
     <style>
-        :root { --main: #ff0055; --bg: #050505; --gold: #ffd700; }
-        body { background: var(--bg); color: #fff; font-family: monospace; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; border: 2px solid var(--main); padding: 20px; box-shadow: 0 0 30px rgba(255,0,85,0.4); }
-        .ball-row { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-        .ball { width: 50px; height: 50px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; background: #000; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; }
-        .hit { color: var(--main); font-weight: bold; }
+        :root { --main: #00ffcc; --bg: #050505; --gold: #ffd700; }
+        body { background: var(--bg); color: #fff; font-family: 'Consolas', monospace; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; border: 2px solid var(--main); padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,255,204,0.2); }
+        .panel { background: #111; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
+        .ball-row { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .ball { width: 50px; height: 50px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: var(--gold); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #222; padding: 12px; text-align: center; }
+        th { color: var(--main); background: #1a1a1a; }
+        .hit { color: #ff0055; font-weight: bold; background: rgba(255,0,85,0.1); padding: 2px 5px; border-radius: 3px; }
+        .win-tag { font-weight: bold; padding: 4px 8px; border-radius: 4px; }
+        .win-high { background: var(--main); color: #000; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="color:var(--main); text-align:center;">V.65.0 命中優先強攻版</h1>
-    <input type="file" id="csvFile">
-    <div id="nextBalls" class="ball-row"></div>
-    <table id="resultTable">
-        <thead><tr><th>日期</th><th>獎號</th><th>預測</th><th>星等</th></tr></thead>
+    <h1 style="text-align:center; color:var(--main);">Oracle V.66.0 臨界強攻系統</h1>
+    
+    <div class="panel">
+        <input type="file" id="csvFile">
+        <p style="font-size:12px; color:#666;">請務必包含 1/1 - 1/23 數據進行回測驗證。</p>
+    </div>
+
+    <div class="panel" style="border-color: var(--gold);">
+        <h3 style="text-align:center; margin:0;">下期預測 (1/26)</h3>
+        <div id="nextBalls" class="ball-row"></div>
+    </div>
+
+    <table id="historyTable">
+        <thead>
+            <tr>
+                <th>日期</th>
+                <th>當日獎號</th>
+                <th>預測 8 碼 (紅字命中)</th>
+                <th>結果</th>
+            </tr>
+        </thead>
         <tbody></tbody>
     </table>
 </div>
 
 <script>
-    function getPred(hist) {
+    function getPrediction(hist) {
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-        const last = hist[hist.length-1].nums;
-        const lastTails = last.map(n => n % 10);
+        const last5 = hist.slice(-5);
+        const lastRow = hist[hist.length-1].nums;
 
+        // --- 核心邏輯：臨界能量分析 ---
         for(let i=1; i<=39; i++) {
-            // 1. 斜連規律 (1/24 核心：06, 07)
-            last.forEach(ln => { if(Math.abs(ln - i) === 1) scores[i].s += 5000; });
-            
-            // 2. 尾數共振：找出近期最熱尾數並預判連動 (1/24 核心：5尾, 7尾)
-            if([5, 7, 6].includes(i % 10)) scores[i].s += 4500;
-            
-            // 3. 遺漏值反彈
+            // 1. 尾數冷熱爆發 (1/24 之所以噴發 5, 7 尾，是因為前 5 期這兩尾極度積壓)
+            let tailCount = 0;
+            last5.forEach(h => h.nums.forEach(n => { if(n % 10 === i % 10) tailCount++; }));
+            if(tailCount <= 2) scores[i].s += 6000; // 尾數補償加權
+
+            // 2. 斜連規律 (1/24 核心 06, 07)
+            lastRow.forEach(ln => { if(Math.abs(ln - i) === 1) scores[i].s += 4500; });
+
+            // 3. 區間遺漏修正
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 3 && gap <= 7) scores[i].s += 2000;
+            if(gap >= 3 && gap <= 6) scores[i].s += 3000;
         }
 
-        // 核心選號：不再強制平均分區，而是選取最強連動簇群
         let sorted = [...scores].sort((a,b) => b.s - a.s);
         let final = new Set();
-        for(let i=0; final.size < 8; i++) {
-            final.add(sorted[i].n);
-        }
+        for(let i=0; final.size < 8; i++) { final.add(sorted[i].n); }
         return Array.from(final).sort((a,b) => a-b);
     }
 
@@ -62,14 +82,16 @@
             }).filter(r => r.nums.length === 5);
 
             let html = "";
-            for(let i = data.length - 5; i < data.length; i++) {
-                const pred = getPred(data.slice(0, i));
-                const hits = data[i].nums.filter(n => pred.includes(n));
-                const predDisp = pred.map(p => data[i].nums.includes(p) ? `<span class="hit">${p}</span>` : p).join(',');
-                html = `<tr><td>${data[i].date}</td><td>${data[i].nums}</td><td>${predDisp}</td><td>${hits.length}星</td></tr>` + html;
+            for(let i = data.length - 8; i < data.length; i++) {
+                const pred = getPrediction(data.slice(0, i));
+                const actual = data[i].nums;
+                const hits = actual.filter(n => pred.includes(n));
+                const predDisp = pred.map(p => actual.includes(p) ? `<span class="hit">${p}</span>` : p).join(', ');
+                const tag = hits.length >= 3 ? `class="win-tag win-high"` : `class="win-tag"`;
+                html = `<tr><td>${data[i].date}</td><td>${actual}</td><td>${predDisp}</td><td><span ${tag}>${hits.length}星</span></td></tr>` + html;
             }
             document.querySelector('tbody').innerHTML = html;
-            const next = getPred(data);
+            const next = getPrediction(data);
             document.getElementById('nextBalls').innerHTML = next.map(n => `<div class="ball">${n}</div>`).join('');
         };
         reader.readAsText(e.target.files[0]);
