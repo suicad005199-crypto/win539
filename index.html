@@ -2,95 +2,132 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Oracle V.62.0 - Zone Defense</title>
+    <title>Oracle V.63.0 - Backtest Panel</title>
     <style>
-        :root { --accent: #00e5ff; --bg: #0a0a0a; --gold: #ffd700; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; border: 1px solid var(--accent); padding: 25px; border-radius: 15px; background: rgba(0,0,0,0.8); }
-        h1 { color: var(--accent); text-align: center; letter-spacing: 2px; text-shadow: 0 0 10px var(--accent); }
-        input[type="file"] { width: 100%; padding: 15px; border: 1px dashed var(--accent); margin: 20px 0; color: var(--accent); }
-        .ball-row { display: flex; justify-content: center; gap: 12px; margin: 25px 0; flex-wrap: wrap; }
-        .ball { width: 55px; height: 55px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--gold); box-shadow: 0 0 15px rgba(255,215,0,0.2); }
-        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .card { background: #1a1a1a; padding: 15px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--accent); }
-        .val { display: block; font-size: 22px; font-weight: bold; margin-bottom: 5px; }
-        #log { font-size: 12px; color: #666; margin-top: 15px; text-align: center; }
+        :root { --accent: #00ff88; --bg: #0d0d0d; --gold: #ffd700; --fail: #ff4444; }
+        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; border: 1px solid #333; padding: 20px; border-radius: 12px; }
+        h1 { color: var(--accent); text-align: center; font-size: 24px; border-bottom: 2px solid #222; padding-bottom: 10px; }
+        
+        .upload-section { margin: 20px 0; text-align: center; border: 2px dashed #333; padding: 20px; }
+        
+        .result-panel { display: flex; justify-content: space-around; margin-bottom: 30px; background: #1a1a1a; padding: 15px; border-radius: 8px; }
+        .stat-item { text-align: center; }
+        .stat-item div { font-size: 24px; font-weight: bold; color: var(--accent); }
+
+        .prediction-box { text-align: center; margin: 30px 0; padding: 20px; border: 1px solid var(--gold); border-radius: 10px; background: rgba(255,215,0,0.05); }
+        .ball-row { display: flex; justify-content: center; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+        .ball { width: 45px; height: 45px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        .history-table th, .history-table td { padding: 10px; border: 1px solid #222; text-align: center; }
+        .history-table th { background: #1a1a1a; color: var(--accent); }
+        .hit-num { color: var(--fail); font-weight: bold; text-decoration: underline; }
+        .stars { font-weight: bold; padding: 2px 8px; border-radius: 4px; }
+        .s-high { background: #d4af37; color: #000; }
+        .s-low { background: #333; color: #888; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>V.62.0 區間防禦系統</h1>
-    <input type="file" id="csvFile" accept=".csv">
-    <div id="nextPred" class="ball-row"></div>
-    <div class="metrics">
-        <div class="card"><span id="r0" class="val">--</span>0星壓制</div>
-        <div class="card"><span id="r1" class="val">--</span>1星率</div>
-        <div class="card"><span id="r2" class="val" style="color:var(--accent)">--</span>2星地板</div>
-        <div class="card"><span id="r3" class="val" style="color:var(--gold)">--</span>3星天花板</div>
+    <h1>Oracle V.63.0 究極回測系統</h1>
+
+    <div class="upload-section">
+        <input type="file" id="csvFile">
+        <p style="font-size: 12px; color: #666;">請上傳格式：日期,1,2,3,4,5 的 CSV</p>
     </div>
-    <div id="log">系統就緒。請上傳 1 月份數據。</div>
+
+    <div id="summary" class="result-panel">
+        <div class="stat-item"><div id="win-rate">--</div>2星以上率</div>
+        <div class="stat-item"><div id="avg-stars">--</div>平均命中</div>
+        <div class="stat-item"><div id="zero-rate">--</div>0星壓制</div>
+    </div>
+
+    <div class="prediction-box">
+        <h3>下期預測 (1/26)</h3>
+        <div id="nextBalls" class="ball-row"></div>
+    </div>
+
+    <h3>歷史預測記錄 (最近 10 期真實對獎)</h3>
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th>日期</th>
+                <th>當日獎號</th>
+                <th>預測號碼 (命中標紅)</th>
+                <th>星等</th>
+            </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+    </table>
 </div>
 
 <script>
-    function getPrediction(hist) {
+    function getPred(hist) {
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-        const lastRow = hist[hist.length-1].nums;
-
+        const last = hist[hist.length-1].nums;
+        
         for(let i=1; i<=39; i++) {
-            // 權重 1: 遺漏值深度 (針對斷層盤)
+            // 1. 遺漏權重：鎖定 4-10 期的黃金補償區 (佔 50%)
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
             if(gap >= 4 && gap <= 10) scores[i].s += 3000;
             
-            // 權重 2: 鄰號輻射 (適度保留)
-            lastRow.forEach(ln => { if(Math.abs(ln - i) === 1) scores[i].s += 1500; });
-
-            // 權重 3: 區間冷熱平衡
-            let count = 0; hist.slice(-10).forEach(h => { if(h.nums.includes(i)) count++; });
-            scores[i].s += (count * 500);
+            // 2. 鄰號權重：降級，防止斷層盤失靈 (佔 20%)
+            last.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 1200; });
+            
+            // 3. 區間補償 (佔 30%)
+            let counts = 0; hist.slice(-15).forEach(h => { if(h.nums.includes(i)) counts++; });
+            scores[i].s += (counts * 400);
         }
 
-        let final = new Set();
         let sorted = [...scores].sort((a,b) => b.s - a.s);
-
-        // [核心修正] 強制區間分配：1-10, 11-20, 21-30, 31-39 各選 2 碼
-        const zones = [[1,10], [11,20], [21,30], [31,39]];
-        zones.forEach(z => {
-            let zoneNums = sorted.filter(x => x.n >= z[0] && x.n <= z[1]);
-            if(zoneNums.length >= 2) {
-                final.add(zoneNums[0].n);
-                final.add(zoneNums[1].n);
-            }
+        let final = new Set();
+        // 強制區間均勻分佈 (1-10, 11-20, 21-30, 31-39)
+        [[1,10],[11,20],[21,30],[31,39]].forEach(z => {
+            let matches = sorted.filter(x => x.n >= z[0] && x.n <= z[1]);
+            final.add(matches[0].n);
+            final.add(matches[1].n);
         });
-
         return Array.from(final).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
         const reader = new FileReader();
         reader.onload = () => {
-            const lines = reader.result.trim().split('\n');
-            const data = lines.slice(1).map(l => {
+            const data = reader.result.trim().split('\n').slice(1).map(l => {
                 const c = l.split(',');
-                return { nums: c.slice(1, 6).map(x => parseInt(x)).sort((a,b)=>a-b) };
-            }).filter(r => r.nums.length === 5 && !isNaN(r.nums[0]));
-            
-            let s = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0};
-            for(let i = data.length - 10; i < data.length; i++) {
-                const pred = getPrediction(data.slice(0, i));
-                const hits = data[i].nums.filter(n => pred.includes(n)).length;
-                s[Math.min(hits, 5)]++;
+                return { date: c[0], nums: c.slice(1, 6).map(Number).sort((a,b)=>a-b) };
+            }).filter(r => r.nums.length === 5);
+
+            let logHtml = "";
+            let sCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0};
+            let backtestLen = Math.min(data.length - 10, 10);
+
+            for(let i = data.length - backtestLen; i < data.length; i++) {
+                const history = data.slice(0, i);
+                const actual = data[i].nums;
+                const pred = getPred(history);
+                const hits = actual.filter(n => pred.includes(n));
+                sCount[hits.length]++;
+
+                let predDisp = pred.map(p => actual.includes(p) ? `<span class="hit-num">${p}</span>` : p).join(', ');
+                let starClass = hits.length >= 2 ? 's-high' : 's-low';
+                logHtml = `<tr>
+                    <td>${data[i].date}</td>
+                    <td>${actual.join(',')}</td>
+                    <td>${predDisp}</td>
+                    <td><span class="stars ${starClass}">${hits.length}星</span></td>
+                </tr>` + logHtml;
             }
 
-            const total = 10;
-            document.getElementById('r0').innerText = (s[0]/total*100).toFixed(0) + '%';
-            document.getElementById('r1').innerText = (s[1]/total*100).toFixed(0) + '%';
-            document.getElementById('r2').innerText = ((total-s[0]-s[1])/total*100).toFixed(0) + '%';
-            document.getElementById('r3').innerText = ((s[3]+s[4]+s[5])/total*100).toFixed(0) + '%';
+            document.getElementById('historyBody').innerHTML = logHtml;
+            document.getElementById('win-rate').innerText = (((backtestLen-sCount[0]-sCount[1])/backtestLen)*100).toFixed(0) + "%";
+            document.getElementById('avg-stars').innerText = ((Object.keys(sCount).reduce((a,b)=>a+b*sCount[b],0))/backtestLen).toFixed(1);
+            document.getElementById('zero-rate').innerText = (100 - (sCount[0]/backtestLen*100)).toFixed(0) + "%";
             
-            const next = getPrediction(data);
-            document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${n.toString().padStart(2,'0')}</div>`).join('');
-            document.getElementById('log').innerText = "V.62.0 分析完畢，區間防禦已部署。";
+            const next = getPred(data);
+            document.getElementById('nextBalls').innerHTML = next.map(n => `<div class="ball">${n}</div>`).join('');
         };
         reader.readAsText(e.target.files[0]);
     });
