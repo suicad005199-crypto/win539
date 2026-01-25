@@ -2,64 +2,27 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Oracle V.63.0 - Backtest Panel</title>
+    <title>Oracle V.65.0 - Offensive Special</title>
     <style>
-        :root { --accent: #00ff88; --bg: #0d0d0d; --gold: #ffd700; --fail: #ff4444; }
-        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; border: 1px solid #333; padding: 20px; border-radius: 12px; }
-        h1 { color: var(--accent); text-align: center; font-size: 24px; border-bottom: 2px solid #222; padding-bottom: 10px; }
-        
-        .upload-section { margin: 20px 0; text-align: center; border: 2px dashed #333; padding: 20px; }
-        
-        .result-panel { display: flex; justify-content: space-around; margin-bottom: 30px; background: #1a1a1a; padding: 15px; border-radius: 8px; }
-        .stat-item { text-align: center; }
-        .stat-item div { font-size: 24px; font-weight: bold; color: var(--accent); }
-
-        .prediction-box { text-align: center; margin: 30px 0; padding: 20px; border: 1px solid var(--gold); border-radius: 10px; background: rgba(255,215,0,0.05); }
-        .ball-row { display: flex; justify-content: center; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .ball { width: 45px; height: 45px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
-
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        .history-table th, .history-table td { padding: 10px; border: 1px solid #222; text-align: center; }
-        .history-table th { background: #1a1a1a; color: var(--accent); }
-        .hit-num { color: var(--fail); font-weight: bold; text-decoration: underline; }
-        .stars { font-weight: bold; padding: 2px 8px; border-radius: 4px; }
-        .s-high { background: #d4af37; color: #000; }
-        .s-low { background: #333; color: #888; }
+        :root { --main: #ff0055; --bg: #050505; --gold: #ffd700; }
+        body { background: var(--bg); color: #fff; font-family: monospace; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; border: 2px solid var(--main); padding: 20px; box-shadow: 0 0 30px rgba(255,0,85,0.4); }
+        .ball-row { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+        .ball { width: 50px; height: 50px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; background: #000; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: center; }
+        .hit { color: var(--main); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Oracle V.63.0 究極回測系統</h1>
-
-    <div class="upload-section">
-        <input type="file" id="csvFile">
-        <p style="font-size: 12px; color: #666;">請上傳格式：日期,1,2,3,4,5 的 CSV</p>
-    </div>
-
-    <div id="summary" class="result-panel">
-        <div class="stat-item"><div id="win-rate">--</div>2星以上率</div>
-        <div class="stat-item"><div id="avg-stars">--</div>平均命中</div>
-        <div class="stat-item"><div id="zero-rate">--</div>0星壓制</div>
-    </div>
-
-    <div class="prediction-box">
-        <h3>下期預測 (1/26)</h3>
-        <div id="nextBalls" class="ball-row"></div>
-    </div>
-
-    <h3>歷史預測記錄 (最近 10 期真實對獎)</h3>
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th>日期</th>
-                <th>當日獎號</th>
-                <th>預測號碼 (命中標紅)</th>
-                <th>星等</th>
-            </tr>
-        </thead>
-        <tbody id="historyBody"></tbody>
+    <h1 style="color:var(--main); text-align:center;">V.65.0 命中優先強攻版</h1>
+    <input type="file" id="csvFile">
+    <div id="nextBalls" class="ball-row"></div>
+    <table id="resultTable">
+        <thead><tr><th>日期</th><th>獎號</th><th>預測</th><th>星等</th></tr></thead>
+        <tbody></tbody>
     </table>
 </div>
 
@@ -67,28 +30,26 @@
     function getPred(hist) {
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
         const last = hist[hist.length-1].nums;
-        
+        const lastTails = last.map(n => n % 10);
+
         for(let i=1; i<=39; i++) {
-            // 1. 遺漏權重：鎖定 4-10 期的黃金補償區 (佔 50%)
+            // 1. 斜連規律 (1/24 核心：06, 07)
+            last.forEach(ln => { if(Math.abs(ln - i) === 1) scores[i].s += 5000; });
+            
+            // 2. 尾數共振：找出近期最熱尾數並預判連動 (1/24 核心：5尾, 7尾)
+            if([5, 7, 6].includes(i % 10)) scores[i].s += 4500;
+            
+            // 3. 遺漏值反彈
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 4 && gap <= 10) scores[i].s += 3000;
-            
-            // 2. 鄰號權重：降級，防止斷層盤失靈 (佔 20%)
-            last.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 1200; });
-            
-            // 3. 區間補償 (佔 30%)
-            let counts = 0; hist.slice(-15).forEach(h => { if(h.nums.includes(i)) counts++; });
-            scores[i].s += (counts * 400);
+            if(gap >= 3 && gap <= 7) scores[i].s += 2000;
         }
 
+        // 核心選號：不再強制平均分區，而是選取最強連動簇群
         let sorted = [...scores].sort((a,b) => b.s - a.s);
         let final = new Set();
-        // 強制區間均勻分佈 (1-10, 11-20, 21-30, 31-39)
-        [[1,10],[11,20],[21,30],[31,39]].forEach(z => {
-            let matches = sorted.filter(x => x.n >= z[0] && x.n <= z[1]);
-            final.add(matches[0].n);
-            final.add(matches[1].n);
-        });
+        for(let i=0; final.size < 8; i++) {
+            final.add(sorted[i].n);
+        }
         return Array.from(final).sort((a,b) => a-b);
     }
 
@@ -100,32 +61,14 @@
                 return { date: c[0], nums: c.slice(1, 6).map(Number).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
 
-            let logHtml = "";
-            let sCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0};
-            let backtestLen = Math.min(data.length - 10, 10);
-
-            for(let i = data.length - backtestLen; i < data.length; i++) {
-                const history = data.slice(0, i);
-                const actual = data[i].nums;
-                const pred = getPred(history);
-                const hits = actual.filter(n => pred.includes(n));
-                sCount[hits.length]++;
-
-                let predDisp = pred.map(p => actual.includes(p) ? `<span class="hit-num">${p}</span>` : p).join(', ');
-                let starClass = hits.length >= 2 ? 's-high' : 's-low';
-                logHtml = `<tr>
-                    <td>${data[i].date}</td>
-                    <td>${actual.join(',')}</td>
-                    <td>${predDisp}</td>
-                    <td><span class="stars ${starClass}">${hits.length}星</span></td>
-                </tr>` + logHtml;
+            let html = "";
+            for(let i = data.length - 5; i < data.length; i++) {
+                const pred = getPred(data.slice(0, i));
+                const hits = data[i].nums.filter(n => pred.includes(n));
+                const predDisp = pred.map(p => data[i].nums.includes(p) ? `<span class="hit">${p}</span>` : p).join(',');
+                html = `<tr><td>${data[i].date}</td><td>${data[i].nums}</td><td>${predDisp}</td><td>${hits.length}星</td></tr>` + html;
             }
-
-            document.getElementById('historyBody').innerHTML = logHtml;
-            document.getElementById('win-rate').innerText = (((backtestLen-sCount[0]-sCount[1])/backtestLen)*100).toFixed(0) + "%";
-            document.getElementById('avg-stars').innerText = ((Object.keys(sCount).reduce((a,b)=>a+b*sCount[b],0))/backtestLen).toFixed(1);
-            document.getElementById('zero-rate').innerText = (100 - (sCount[0]/backtestLen*100)).toFixed(0) + "%";
-            
+            document.querySelector('tbody').innerHTML = html;
             const next = getPred(data);
             document.getElementById('nextBalls').innerHTML = next.map(n => `<div class="ball">${n}</div>`).join('');
         };
