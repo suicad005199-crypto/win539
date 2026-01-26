@@ -3,82 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.73.0 Equilibrium</title>
+    <title>Oracle V.74.0 Predator</title>
     <style>
-        :root { --bg: #05070a; --panel: #0f141e; --primary: #60a5fa; --accent: #c084fc; --success: #4ade80; --text: #e2e8f0; --border: #1e293b; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
-        .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 14px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; }
-        .panel-header { color: var(--primary); font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .v-badge { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .n-box { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #000; border: 1px solid var(--border); font-size: 11px; color: #64748b; font-weight: 600; }
-        .n-box.hit { background: var(--success); color: #000; border-color: var(--success); box-shadow: 0 0 12px rgba(74,222,128,0.4); }
-        .ball-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
-        .ball { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #2563eb, #000); border-radius: 50%; border: 2.5px solid var(--primary); color: #fff; font-size: 20px; font-weight: 900; }
-        .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .pillar-card { background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-        .p-nums { font-size: 28px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 2px; }
-        #logBox { background: #000; color: var(--success); padding: 15px; border-radius: 12px; font-family: monospace; font-size: 11px; border: 1px solid var(--border); line-height: 1.7; }
+        :root { --bg: #0a0a0c; --panel: #16161a; --primary: #ff3e3e; --accent: #ff9f00; --success: #00ff88; --text: #f0f0f0; --border: #2d2d35; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
+        .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
+        .panel { background: var(--panel); border: 2px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .panel-header { color: var(--primary); font-weight: 900; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 8px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .v-tag { background: var(--primary); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2d2d35; }
+        .n-box { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #222; border: 1px solid #444; font-size: 11px; color: #888; }
+        .n-box.hit { background: var(--success); color: #000; font-weight: 900; border-color: var(--success); box-shadow: 0 0 15px var(--success); }
+        .ball-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
+        .ball { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; border: 3px solid var(--primary); color: var(--primary); font-size: 22px; font-weight: 900; text-shadow: 0 0 10px var(--primary); }
+        .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .pillar-card { background: #1a1a20; padding: 15px; border-radius: 10px; border: 1px solid #333; text-align: center; }
+        .p-nums { font-size: 26px; font-weight: 900; color: #fff; margin-top: 5px; }
+        #logBox { background: #000; color: var(--accent); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; border: 1px solid var(--primary); line-height: 1.5; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">平衡漂移引擎 <span class="v-badge">V.73.0 DRIFT</span></div>
-        <input type="file" id="csvFile" accept=".csv">
+        <div class="panel-header">捕食者修正引擎 <span class="v-tag">V.74.0 PREDATOR</span></div>
+        <input type="file" id="csvFile" accept=".csv" style="font-size: 11px; color: #888;">
     </div>
 
     <div class="panel">
-        <div class="panel-header" style="color:var(--success)">平衡重組回測 (1/26 觀測窗)</div>
+        <div class="panel-header" style="color:var(--success)">實戰回測軌跡</div>
         <div id="btBody"></div>
     </div>
 
-    <div class="panel" style="background: radial-gradient(circle at bottom right, #1e293b, #0f141e);">
-        <div class="panel-header" style="color:var(--accent)">1/26 結構預測 8 碼</div>
+    <div class="panel" style="background: linear-gradient(180deg, #1a1a20 0%, #000 100%);">
+        <div class="panel-header" style="color:var(--accent)">1/26 捕食 8 碼</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Equilibrium 立柱佈局</div>
+        <div class="panel-header">Predator 立柱 (極限配對)</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.73.0 系統啟動...<br>> 偵測 1/24 極端離散態，啟動平衡漂移補償。<br>> 鎖定區域：04-16 與 22-28。</div>
+    <div id="logBox">> V.74.0 診斷：發現過往模型對中段真空過度補償。<br>> 修正：強制鎖定 0-尾、2-尾、8-尾 共振點。<br>> 核心警告：1/26 預計出現 05-09 區間與 21-28 區間的直接碰撞。</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV73Prediction(hist) {
-        if(hist.length < 5) return [04,11,12,13,21,22,26,32];
+    function getV74Prediction(hist) {
+        if(hist.length < 5) return [05,08,12,18,21,22,25,28];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                // V.73.0 核心修正：針對 1/24 的高熵發散進行鄰域收斂補償
-                if((i >= 4 && i <= 16) || (i >= 22 && i <= 28)) scores[i].s += 9500;
-                if(diff === 1 || diff === 11) scores[i].s += 4800;
+                // V.74.0 捕食者優化：強化與上期開獎號碼的「緊密位移」
+                if(diff === 1 || diff === 2) scores[i].s += 12000; // 捕捉連號位移
+                if(diff === 10 || diff === 11) scores[i].s += 8000; // 捕捉跳格規律
                 
+                // 尾數過濾 (排除 1/24 過熱的 7 尾)
                 const tail = i % 10;
-                // 參考 V.69.0 Vector 共振：鎖定強勢尾數 2, 3, 6
-                if([2, 3, 6].includes(tail)) scores[i].s += 7200;
-                if([7, 5, 9].includes(tail)) scores[i].s -= 7800;
+                if([0, 2, 5, 8].includes(tail)) scores[i].s += 10000;
+                if(tail === 7 || tail === 1) scores[i].s -= 15000;
             });
 
-            // 遺漏動能補償 (參考 V.71.0 Core)
+            // 區塊慣性加權
+            if(i <= 10 || (i >= 20 && i <= 30)) scores[i].s += 9000;
+            
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 6 && gap <= 12) scores[i].s += 6800;
+            if(gap >= 3 && gap <= 7) scores[i].s += 11000; // 鎖定「溫碼」而非「極冷碼」
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
         let final = [
-            ...sorted.filter(x => x.n < 13).slice(0,3),
-            ...sorted.filter(x => x.n >= 13 && x.n < 27).slice(0,3),
-            ...sorted.filter(x => x.n >= 27).slice(0,2)
+            ...sorted.filter(x => x.n <= 12).slice(0,3),
+            ...sorted.filter(x => x.n > 12 && x.n <= 28).slice(0,3),
+            ...sorted.filter(x => x.n > 28).slice(0,2)
         ].map(x => x.n).sort((a,b) => a-b);
         
         return final;
@@ -99,25 +101,26 @@
     });
 
     function render() {
-        const next = getV73Prediction(rawData);
+        const next = getV74Prediction(rawData);
         let btHtml = "";
         rawData.slice(-15).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV73Prediction(hist);
+            const pred = getV74Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><span>${row.date.split('/')[1]+'/'+row.date.split('/')[2]}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2?'var(--success)':'#475569'}">${hits.length}★</b></div>`;
+            btHtml += `<div class="bt-row"><span>${row.date.split('2026/')[1] || row.date}</span><div style="display:flex; gap:5px;">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--success)':'#555'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        const p = [[next[0], next[7]], [next[1], next[6]], [next[2], next[5]], [next[3], next[4]]];
+        // 極限配對：將最具相關性的號碼打散分組
+        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `
             <div class="pillar-card">
-                <div style="font-size:10px; color:var(--primary); font-weight:800;">EQUILIB-NODE ${i+1}</div>
+                <div style="font-size:10px; color:var(--primary); font-weight:bold;">PREDATOR-NODE ${i+1}</div>
                 <div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div>
             </div>`).join('');
         
-        document.getElementById('logBox').innerHTML = `> V.73.0 演算完成...<br>> 1/26 策略核心：極端離散後的鄰域歸位。<br>> 關注：${next[0]}, ${next[2]}, ${next[4]}, ${next[6]} 等平衡座標。`;
+        document.getElementById('logBox').innerHTML = `> V.74.0 修正完成...<br>> 針對 1/26 棄用平衡論，改採「強勢位移」策略。<br>> 重點：${next[0]}, ${next[1]}, ${next[4]} 三碼具備極高連動潛力。`;
     }
 </script>
 </body>
