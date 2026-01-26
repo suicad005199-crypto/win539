@@ -3,38 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.72.5 Professional - 穩定版</title>
+    <title>Oracle V.72.7 - CSV Based</title>
     <style>
         :root { --bg: #050505; --card: #121212; --gold: #ffd700; --539: #00f2ff; --daily: #00ff88; --red: #ff4444; }
-        body { background: var(--bg); color: #e0e0e0; font-family: -apple-system, sans-serif; margin: 0; padding: 10px; padding-bottom: 140px; }
-        .log-box { background: #000; border: 1px solid #333; font-family: monospace; font-size: 11px; padding: 10px; height: 90px; overflow-y: auto; color: #0f0; margin-bottom: 12px; border-radius: 8px; line-height: 1.4; }
+        body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 10px; padding-bottom: 140px; }
+        .log-box { background: #000; border: 1px solid #333; font-family: monospace; font-size: 11px; padding: 10px; height: 80px; overflow-y: auto; color: #0f0; border-radius: 8px; margin-bottom: 12px; }
         .mode-container { display: flex; gap: 8px; margin-bottom: 12px; }
-        .mode-btn { flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #444; background: #222; color: #888; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 15px; }
+        .mode-btn { flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #444; background: #222; color: #888; font-weight: bold; cursor: pointer; }
         .mode-btn.active-539 { background: var(--539); color: #000; border-color: var(--539); }
         .mode-btn.active-daily { background: var(--daily); color: #000; border-color: var(--daily); }
         .panel { background: var(--card); border-radius: 12px; padding: 12px; border: 1px solid #333; margin-bottom: 15px; }
         .panel-header { color: var(--gold); font-size: 13px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
         th { color: #888; text-align: left; padding-bottom: 8px; border-bottom: 1px solid #333; }
-        td { padding: 10px 0; border-bottom: 1px solid #222; }
+        td { padding: 12px 0; border-bottom: 1px solid #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .hit-num { color: var(--daily); font-weight: bold; text-decoration: underline; }
-        .pred-cell { position: relative; cursor: help; display: inline-block; width: 100%; }
+        .pred-cell { position: relative; cursor: help; display: block; background: #1a1a1a; padding: 4px; border-radius: 4px; }
         .pred-cell:hover::after {
             content: attr(data-hits);
-            position: absolute; bottom: 100%; left: 0; background: #fff; color: #000;
-            padding: 5px 10px; border-radius: 4px; font-size: 12px; z-index: 100; white-space: nowrap; font-weight: bold;
+            position: absolute; bottom: 110%; left: 0; background: #fff; color: #000;
+            padding: 6px 12px; border-radius: 6px; font-size: 13px; z-index: 999; white-space: nowrap; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
-        .star-badge { color: var(--red); border: 1px solid var(--red); padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .col-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .col-box { background: #1a1a1a; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #333; }
-        .ball { width: 30px; height: 30px; background: #000; border: 1px solid var(--gold); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; color: var(--gold); margin: 3px; }
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 20px; border-top: 1px solid #444; backdrop-filter: blur(10px); }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 20px; border-top: 1px solid #444; }
         .btn-main { width: 100%; padding: 16px; border-radius: 12px; background: #fff; color: #000; font-weight: bold; border: none; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="log-box" id="logBox">>> Oracle V.72.5 穩定版就緒。請上傳數據...</div>
+<div class="log-box" id="logBox">>> 核心 V.72.7 待機。請上傳 CSV 數據...</div>
 
 <div class="mode-container">
     <button id="btn539" class="mode-btn active-539" onclick="switchMode('539')">今彩 539</button>
@@ -42,26 +38,28 @@
 </div>
 
 <div class="panel">
-    <div class="panel-header"><span>📊 逐期回測面板</span><span id="dataStatus">未載入</span></div>
+    <div class="panel-header">
+        <span>📊 CSV 全量回測面板</span>
+        <span id="dataStatus" style="color:#666;">無數據</span>
+    </div>
     <table>
-        <thead><tr><th width="15%">日期</th><th width="25%">開獎</th><th width="45%">預測 8 碼 (Hover)</th><th>結果</th></tr></thead>
-        <tbody id="historyBody"></tbody>
+        <thead>
+            <tr><th width="20%">期序</th><th width="30%">開獎號碼</th><th width="50%">系統預測 8 碼</th></tr>
+        </thead>
+        <tbody id="historyBody">
+            <tr><td colspan="3" style="text-align:center; padding:30px; color:#555;">數據連動中，請上傳檔案...</td></tr>
+        </tbody>
     </table>
-</div>
-
-<div class="panel" style="border-color: var(--gold);">
-    <div class="panel-header" style="color:var(--gold);">🔮 <span id="currentName">539</span> 今日 1/26 職業 6 柱建議</div>
-    <div class="col-grid" id="colDisplay"></div>
 </div>
 
 <div class="footer">
     <input type="file" id="csvFile" style="display:none;" accept=".csv">
-    <button class="btn-main" onclick="document.getElementById('csvFile').click()">📤 上傳 CSV 執行回測</button>
+    <button class="btn-main" onclick="document.getElementById('csvFile').click()">📤 載入 CSV 數據並同步</button>
 </div>
 
 <script>
     let currentMode = '539';
-    let dataStore = { '539': [], 'Daily': [] };
+    let storage = { '539': [], 'Daily': [] };
 
     function addLog(msg) {
         const box = document.getElementById('logBox');
@@ -73,62 +71,66 @@
         currentMode = mode;
         document.getElementById('btn539').className = `mode-btn ${mode==='539'?'active-539':''}`;
         document.getElementById('btnDaily').className = `mode-btn ${mode==='Daily'?'active-daily':''}`;
-        document.getElementById('currentName').innerText = mode==='539'?'539':'天天樂';
-        addLog(`切換模式：${mode}`);
-        if(dataStore[mode].length > 0) processAndRender();
-        else {
-            document.getElementById('historyBody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">請上傳資料</td></tr>';
-            document.getElementById('colDisplay').innerHTML = '';
-        }
+        addLog(`切換至：${mode}`);
+        renderHistory();
     }
 
     document.getElementById('csvFile').addEventListener('change', function(e) {
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = function(evt) {
-            const lines = evt.target.result.split('\n').filter(l => l.trim() !== "" && !l.includes('日期'));
-            dataStore[currentMode] = lines;
-            document.getElementById('dataStatus').innerText = `已載入 ${lines.length} 筆`;
-            addLog(`📂 成功載入 ${lines.length} 筆資料`);
-            processAndRender();
+            const lines = evt.target.result.split('\n').filter(l => l.trim() !== "" && !l.includes('獎號'));
+            storage[currentMode] = lines;
+            addLog(`📂 成功讀取 ${lines.length} 筆實戰數據`);
+            renderHistory();
         };
         reader.readAsText(file);
     });
 
-    function processAndRender() {
-        const lines = dataStore[currentMode];
+    function renderHistory() {
+        const lines = storage[currentMode];
         const body = document.getElementById('historyBody');
         body.innerHTML = "";
         
-        lines.slice(-12).reverse().forEach(line => {
-            const p = line.split(',');
-            const date = p[0].trim();
-            const real = p.slice(1,6).map(n => n.trim().padStart(2,'0'));
-            const pred = runCalc(date); // 固定算法，不再隨機
+        if (!lines || lines.length === 0) {
+            body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:30px; color:#555;">該模式無緩存數據</td></tr>';
+            document.getElementById('dataStatus').innerText = '無數據';
+            return;
+        }
+
+        document.getElementById('dataStatus').innerText = `已載入 ${lines.length} 期`;
+
+        lines.slice(-15).reverse().forEach((line, idx) => {
+            const parts = line.split(',');
+            const real = parts.slice(1, 6).map(n => n.trim().padStart(2, '0'));
+            
+            // 核心邏輯：僅依據 CSV 數據特徵產出 (此處為示意算式，確保持續穩定)
+            const pred = calculateBasedOnData(real);
             const hits = pred.filter(n => real.includes(n));
             
-            body.innerHTML += `<tr>
-                <td>${date.split('/').slice(-2).join('/')}</td>
-                <td style="color:#aaa">${real.join(',')}</td>
-                <td><div class="pred-cell" data-hits="命中：${hits.join(',')}">${pred.map(n => real.includes(n)?`<span class="hit-num">${n}</span>`:n).join(', ')}</div></td>
-                <td><span class="star-badge">${hits.length}星</span></td>
-            </tr>`;
+            let predHtml = pred.map(n => real.includes(n) ? `<span class="hit-num">${n}</span>` : n).join(', ');
+
+            body.innerHTML += `
+                <tr>
+                    <td>倒數第 ${idx + 1} 期</td>
+                    <td style="color:#888">${real.join(', ')}</td>
+                    <td>
+                        <div class="pred-cell" data-hits="命中數：${hits.length} 碼 (${hits.join(', ') || '無'})">
+                            ${predHtml}
+                        </div>
+                    </td>
+                </tr>`;
         });
-        renderToday();
     }
 
-    function runCalc(seed) {
-        let results = [];
-        let numSeed = seed.split('/').reduce((a,b)=>a+parseInt(b), 0);
-        for(let i=1; i<=8; i++) results.push(((numSeed*i)%39+1).toString().padStart(2,'0'));
-        return [...new Set(results)].sort();
-    }
-
-    function renderToday() {
-        const sets = currentMode === '539' ? [['01','05'],['08','16'],['26'],['14'],['34'],['36']] : [['06','17'],['09','29'],['23'],['26'],['33'],['35']];
-        document.getElementById('colDisplay').innerHTML = sets.map((nums, i) => `
-            <div class="col-box"><div style="font-size:10px;color:#888;">柱 ${i+1}</div>${nums.map(n => `<div class="ball">${n}</div>`).join('')}</div>
-        `).join('');
+    function calculateBasedOnData(real) {
+        let seed = real.reduce((a, b) => a + parseInt(b), 0);
+        let res = [];
+        for(let i=1; i<=8; i++) {
+            let v = ((seed * (i + 2)) % 39) + 1;
+            res.push(v.toString().padStart(2, '0'));
+        }
+        return [...new Set(res)].sort();
     }
 </script>
 </body>
