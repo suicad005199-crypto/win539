@@ -1,301 +1,153 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>預測系統 Pro</title>
-<style>
-  :root { 
-    --primary: #1d3557; 
-    --accent: #e63946; 
-    --success: #2a9d8f; 
-    --bg: #f4f7f9; 
-    --card-bg: #ffffff;
-  }
-  
-  body { 
-    font-family: -apple-system, "Noto Sans TC", sans-serif; 
-    background: var(--bg); 
-    margin: 0; 
-    padding: 12px; 
-    color: #333;
-  }
-
-  #container { max-width: 700px; margin: auto; }
-
-  /* 卡片設計 */
-  .panel { 
-    background: var(--card-bg); 
-    margin-bottom: 16px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-    overflow: hidden; 
-    border: 1px solid #e1e8ed;
-  }
-
-  .panel h2 { 
-    margin: 0; 
-    padding: 12px 16px; 
-    background: var(--primary); 
-    color: #fff; 
-    font-size: 16px; 
-    display: flex;
-    align-items: center;
-    cursor: grab;
-  }
-
-  .panel h2::before { content: '⋮⋮'; margin-right: 10px; opacity: 0.6; }
-
-  /* 上傳區塊 */
-  .upload-group { padding: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-  input[type="file"] { font-size: 14px; flex: 1; }
-  select { padding: 6px; border-radius: 6px; border: 1px solid #ccc; }
-
-  /* 預測球體 */
-  #prediction8 { 
-    padding: 25px 15px; 
-    text-align: center; 
-    display: flex; 
-    justify-content: center; 
-    flex-wrap: wrap; 
-    gap: 8px;
-  }
-  .number-card { 
-    min-width: 40px; height: 40px; 
-    line-height: 40px; 
-    background: var(--success); 
-    color: #fff; 
-    border-radius: 50%; 
-    font-weight: bold; 
-    font-size: 18px;
-    box-shadow: 0 3px 6px rgba(42, 157, 143, 0.3);
-    text-align: center;
-    padding: 0 6px;
-  }
-
-  /* 表格優化 */
-  .table-scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 400px; }
-  th { background: #f8f9fa; padding: 12px; font-size: 13px; color: #666; border-bottom: 2px solid #edf2f7; }
-  td { padding: 12px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 14px; }
-  
-  .highlight { color: var(--accent); font-weight: bold; text-decoration: underline; }
-  .hit-badge { 
-    background: #f1f1f1; padding: 2px 8px; border-radius: 10px; font-size: 12px; 
-  }
-  .hit-win { background: var(--accent); color: #fff; font-weight: bold; }
-
-  /* 日誌區 */
-  #logbox { 
-    padding: 15px; 
-    background: #264653; 
-    color: #e9c46a; 
-    font-family: 'Courier New', monospace; 
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  @media (max-width: 480px) {
-    .number-card { min-width: 34px; height: 34px; line-height: 34px; font-size: 16px; }
-    td, th { padding: 8px 4px; font-size: 13px; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Oracle V.53.8 Cross-Entropy (Pillar Mode)</title>
+    <style>
+        :root { --bg: #000; --panel: #141414; --primary: #ff3b30; --border: #2c2c2e; --text: #fff; --sub: #8e8e93; --hit: #ffd60a; }
+        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
+        .container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: auto; }
+        .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
+        .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+        .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
+        .num-group { display: flex; gap: 4px; align-items: center; }
+        .num-label { font-size: 10px; color: var(--sub); width: 30px; flex-shrink: 0; }
+        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
+        .n-box.hit { background: var(--hit); color: #000; box-shadow: 0 0 8px var(--hit); }
+        .star-tag { background: var(--primary); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
+        .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: #000; }
+        .m-table { border-collapse: collapse; white-space: nowrap; width: 100%; }
+        .m-table td, .m-table th { border: 1px solid #222; width: 20px; height: 20px; text-align: center; font-size: 10px; }
+        .m-head { background: #1a1a1a; color: var(--primary); position: sticky; top: 0; }
+        .m-date { background: #1a1a1a; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
+        .m-ball { background: var(--primary); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
+        #logBox { background: #000; color: #32d74b; padding: 10px; height: 120px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); border-radius: 8px; line-height: 1.6; }
+        .ball-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .ball { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #1a1a1a; border-radius: 50%; font-weight: bold; border: 2px solid var(--primary); color: var(--primary); font-size: 18px; }
+        /* 立柱容器樣式 */
+        .pillar-item { border: 1px solid var(--border); padding: 6px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; min-width: 45px; }
+        .pillar-label { font-size: 10px; color: var(--sub); margin-bottom: 4px; }
+    </style>
 </head>
 <body>
-
-<div id="container">
-  <div class="panel" id="panel1">
-    <h2>數據導入</h2>
-    <div class="upload-group">
-      <input type="file" id="csvFile" accept=".csv">
-      <select id="lotteryType">
-        <option value="539">今彩539</option>
-        <option value="tt">天天樂</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="panel" id="panel3">
-    <h2>下期號碼預測 (8碼 → 6柱)</h2>
-    <div id="prediction8"></div>
-  </div>
-
-  <div class="panel" id="panel2">
-    <h2>逐期回報歷史</h2>
-    <div class="table-scroll">
-      <table id="resultTable">
-        <thead>
-          <tr><th>日期</th><th>開獎號</th><th>預測建議</th><th>命中</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="panel" id="panel4">
-    <h2>系統狀態摘要</h2>
-    <div id="logbox">請上傳 CSV 資料開始分析...</div>
-  </div>
+<div class="container">
+    <div class="panel"><div class="panel-header">P1: 數據注入</div><input type="file" id="csvFile" accept=".csv" style="color: #8e8e93;"></div>
+    <div class="panel"><div class="panel-header">P2: 深度回測 (近 10 期明細)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">P3: 下期預測 (8碼 6柱 1-1-1-1-2-2)</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div class="panel-header">P4: 分布矩陣</div><div class="matrix-scroll" id="matrixCont"></div></div>
+    <div class="panel"><div class="panel-header">CONSOLE: 統計分析</div><div id="logBox">等待 CSV 匯入...</div></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-let rawData = [];
-let results = [];
+    let rawData = [];
+    const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
+    const pad = (n) => n.toString().padStart(2, '0');
+    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
-// CSV 解析
-function parseCSV(file, callback){
-  const reader = new FileReader();
-  reader.onload = e => { 
-    const text = e.target.result;
-    const lines = text.trim().split('\n');
-    const header = lines[0].split(/[\t,]/).map(h => h.trim());
-    const data = lines.slice(1).map(line => {
-      const items = line.split(/[\t,]/);
-      let obj = {};
-      header.forEach((h,i)=>{
-        if(h.includes("開獎日期")) obj[h] = items[i];
-        else obj[h] = isNaN(parseInt(items[i])) ? undefined : parseInt(items[i]);
-      });
-      return obj;
-    });
-    callback(data);
-  };
-  reader.readAsText(file);
-}
+    function getPrediction(hist) {
+        if(hist.length < 30) return [1,2,11,12,21,22,31,32];
+        const lastRow = hist[hist.length-1].nums;
+        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0, gap: 0 }));
 
-// 預測策略 (8碼 → 6柱分配)
-function multiStrategy(data){
-  let predList = [];
-  let hitList = [];
+        for(let i=1; i<=39; i++) {
+            let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            scores[i].gap = gap;
+            if(gap >= 18 && gap <= 32) scores[i].s += 800;
+            let hot = 0; hist.slice(-10).forEach(d => { if(d.nums.includes(i)) hot++; });
+            scores[i].s += hot * 210;
+            lastRow.forEach(ln => { 
+                if(Math.abs(ln - i) === 1) scores[i].s += 310; 
+                if(ln % 10 === i % 10) scores[i].s += 320; 
+            });
+        }
 
-  for(let i=0;i<data.length;i++){
-    if(i===0){
-      predList.push([1,2,3,4,5,6,7,8]);
-      hitList.push(null);
-    } else {
-      // 過去號碼統計
-      let past=[];
-      for(let j=0;j<i;j++){
-        past.push(data[j]['獎號1'],data[j]['獎號2'],data[j]['獎號3'],data[j]['獎號4'],data[j]['獎號5']);
-      }
-      past = past.filter(n=>n!==undefined);
+        let final = new Set();
+        let hotCandidates = [...scores].sort((a,b)=>b.s - a.s);
+        
+        // 依照原始權重選取 8 碼，不重複
+        for(let x of hotCandidates) {
+            if(x.n === 0) continue;
+            if(final.size < 8) final.add(x.n);
+            else break;
+        }
 
-      let freqMap={};
-      past.forEach(n=> freqMap[n]=(freqMap[n]||0)+1);
-      let top5 = Object.keys(freqMap).sort((a,b)=> freqMap[b]-freqMap[a]).slice(0,5).map(Number);
-
-      let allNumbers = Array.from({length:39},(_,k)=>k+1);
-      let remaining = allNumbers.filter(n=>!top5.includes(n));
-      let cold = remaining.filter(n=>!past.slice(-8).includes(n)).slice(0,3);
-      if(cold.length<3) cold = cold.concat(remaining.filter(n=>!top5.includes(n)).slice(0,3-cold.length));
-
-      let candidate8 = top5.concat(cold).filter(n=>!isNaN(n));
-      while(candidate8.length<8){
-        let extra = allNumbers.find(n=>!candidate8.includes(n));
-        candidate8.push(extra);
-      }
-
-      predList.push(candidate8);
-
-      let current = [data[i]['獎號1'],data[i]['獎號2'],data[i]['獎號3'],data[i]['獎號4'],data[i]['獎號5']].filter(n=>n!==undefined);
-      let hit = candidate8.filter(n=>current.includes(n)).length;
-      hitList.push(hit);
+        return Array.from(final).slice(0, 8); // 返回未經排序的原生權重順序，便於立柱分配
     }
-  }
 
-  return {predList, hitList};
-}
+    // 將 8 碼分配至 6 柱 (1-1-1-1-2-2)
+    function distributePillars(codes) {
+        return [
+            [codes[0]], [codes[1]], [codes[2]], [codes[3]],
+            [codes[4], codes[5]], [codes[6], codes[7]]
+        ];
+    }
 
-// 渲染歷史表格
-function renderPanel2(){
-  const tbody = document.querySelector('#resultTable tbody');
-  tbody.innerHTML='';
-  results.slice().reverse().forEach(row=>{
-    let tr = document.createElement('tr');
-    let dateParts = row['開獎日期'] ? row['開獎日期'].toString().split('/') : ['?','?','?'];
-    let shortDate = dateParts.length>=3 ? `${dateParts[1]}/${dateParts[2]}` : 'N/A';
+    document.getElementById('csvFile').addEventListener('change', e => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            rawData = reader.result.replace(/\r/g, "").trim().split('\n').map(l => {
+                const c = l.split(',');
+                return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
+            }).filter(r => r.nums.length === 5);
+            document.getElementById('logBox').innerHTML = "";
+            runGlobalScan();
+        };
+        reader.readAsText(e.target.files[0]);
+    });
 
-    let currentNums = [row['獎號1'],row['獎號2'],row['獎號3'],row['獎號4'],row['獎號5']];
-    let predNums = (row['預測8碼']||[]).filter(n=>!isNaN(n));
+    function runGlobalScan() {
+        let btHtml = ""; let starCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0}; let totalHits = 0;
+        const totalPeriods = rawData.length - 30;
 
-    let predHtml = predNums.map(n=>{
-      return currentNums.includes(n) ? `<span class="highlight">${n}</span>` : n;
-    }).join(', ');
+        for(let i = 30; i < rawData.length; i++) {
+            const hist = rawData.slice(0, i);
+            const pred = getPrediction(hist);
+            const hits = rawData[i].nums.filter(n => pred.includes(n));
+            starCount[Math.min(hits.length, 5)]++; totalHits += hits.length;
+        }
 
-    let hitVal = row['命中星數']||0;
-    tr.innerHTML = `
-      <td>${shortDate}</td>
-      <td><small>${currentNums.join(',')}</small></td>
-      <td>${predHtml}</td>
-      <td><span class="hit-badge ${hitVal>=2?'hit-win':''}">${hitVal}</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+        rawData.slice(-10).reverse().forEach(row => {
+            const hist = rawData.slice(0, rawData.indexOf(row));
+            const pred = getPrediction(hist);
+            const hits = row.nums.filter(n => pred.includes(n));
+            btHtml += `<div class="bt-row">
+                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
+                <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
+                <div class="num-group"><span class="num-label">預測</span>${pred.sort((a,b)=>a-b).map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--hit)':'#666'}">${pad(n)}</div>`).join('')}</div>
+            </div>`;
+        });
 
-// 渲染下期預測 8碼 → 6柱
-function renderPanel3(){
-  const div = document.getElementById('prediction8');
-  div.innerHTML='';
-  if(results.length===0) return;
+        document.getElementById('btBody').innerHTML = btHtml;
 
-  let lastPred = results[results.length-1]['預測8碼'].filter(n=>!isNaN(n));
-  if(lastPred.length<8) return;
+        // 下期立柱預測顯示
+        const nextPred8 = getPrediction(rawData);
+        const pillars = distributePillars(nextPred8);
+        document.getElementById('nextPred').innerHTML = pillars.map((p, idx) => `
+            <div class="pillar-item">
+                <div class="pillar-label">柱 ${idx+1}</div>
+                <div style="display:flex; gap:4px;">
+                    ${p.map(n => `<div class="ball" style="width:32px; height:32px; font-size:15px;">${pad(n)}</div>`).join('')}
+                </div>
+            </div>
+        `).join('');
 
-  let config = Math.random()<0.5 ? [2,2,1,1,1,1] : [2,1,1,1,1,2];
-  let idx=0;
-  const colors=['#2a9d8f','#e76f51','#264653','#f4a261','#e9c46a','#8ac926'];
+        let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
+        for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
+        mHtml += `</tr></thead><tbody>`;
+        rawData.slice(-15).reverse().forEach(row => {
+            mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
+            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<span class="m-ball"></span>' : ''}</td>`;
+            mHtml += `</tr>`;
+        });
+        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
 
-  for(let i=0;i<6;i++){
-    let count = config[i];
-    let nums = lastPred.slice(idx, idx+count).join(',');
-    idx += count;
-
-    let span = document.createElement('span');
-    span.className='number-card';
-    span.style.backgroundColor = colors[i%colors.length];
-    span.textContent = nums;
-    div.appendChild(span);
-  }
-}
-
-// 渲染統計日誌
-function renderLogBox(){
-  const log = document.getElementById('logbox');
-  if(results.length<2){ log.textContent='數據量不足以計算分析'; return; }
-
-  let last10 = results.slice(-10);
-  let winCount = last10.filter(r=>r['命中星數']>=2).length;
-  let avgHit = (last10.reduce((a,r)=>a+(r['命中星數']||0),0)/last10.length).toFixed(2);
-
-  log.innerHTML=`⚡ 分析報告 (近 ${last10.length} 期)<br>────────────────<br>
-  勝率 (2星以上): ${winCount*(100/last10.length)}%<br>
-  平均命中期望值: ${avgHit} 碼`;
-}
-
-// CSV 上傳事件
-document.getElementById('csvFile').addEventListener('change', e=>{
-  if(!e.target.files[0]) return;
-  parseCSV(e.target.files[0], data=>{
-    rawData = data;
-    let {predList, hitList} = multiStrategy(rawData);
-    results = rawData.map((d,i)=>({...d,'預測8碼':predList[i],'命中星數':hitList[i]}));
-    renderPanel2();
-    renderPanel3();
-    renderLogBox();
-  });
-});
-
-// 面板排序
-Sortable.create(document.getElementById('container'),{
-  handle:'h2',
-  animation:150,
-  store:{
-    get:()=> JSON.parse(localStorage.getItem('panelOrder')||'[]'),
-    set: (sortable)=> localStorage.setItem('panelOrder',JSON.stringify(sortable.toArray()))
-  }
-});
+        log(`[V.53.8 交叉熵-立柱模式啟動]`);
+        log(`配置：8碼 6柱 (1,1,1,1,2,2)`);
+        log(`期望值：${(totalHits / totalPeriods).toFixed(2)} 碼/期`);
+        log(`2★以上占比: ${((starCount[2]+starCount[3]+starCount[4]+starCount[5])/totalPeriods*100).toFixed(1)}%`);
+    }
 </script>
 </body>
 </html>
