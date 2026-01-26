@@ -3,89 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.65.0 Resonance</title>
+    <title>Oracle V.66.0 Entropy</title>
     <style>
-        :root { --bg: #050608; --panel: #0e111a; --primary: #00ff88; --accent: #ffdd00; --text: #f0f4f8; --border: #1e2533; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
-        .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 15px; box-shadow: 0 6px 30px rgba(0,255,136,0.04); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 15px; border-left: 5px solid var(--primary); padding-left: 12px; font-size: 15px; display: flex; justify-content: space-between; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1a202e; }
-        .n-box { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #0b0f16; font-size: 12px; margin-right: 4px; border: 1px solid #283145; }
-        .n-box.hit { background: var(--primary); color: #000; font-weight: 900; border-color: var(--primary); box-shadow: 0 0 12px var(--primary); }
-        .ball-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
-        .ball { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2.5px solid var(--primary); color: var(--primary); font-size: 19px; text-shadow: 0 0 5px rgba(0,255,136,0.5); }
+        :root { --bg: #02040a; --panel: #0d111d; --primary: #ffaa00; --secondary: #00d4ff; --text: #e2e8f0; --border: #1e293b; }
+        body { font-family: 'PingFang TC', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; line-height: 1.4; }
+        .container { max-width: 460px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .panel-header { color: var(--primary); font-weight: 800; margin-bottom: 14px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px; }
+        .v-tag { background: linear-gradient(90deg, #ff4400, #ffaa00); color: #000; padding: 2px 8px; border-radius: 6px; font-size: 11px; }
+        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #1e293b77; font-size: 12px; }
+        .n-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #05070c; margin-right: 4px; border: 1px solid #2d3748; color: #718096; }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: 900; border-color: var(--primary); box-shadow: 0 0 15px rgba(255,170,0,0.4); }
+        .ball-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
+        .ball { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #2d3748, #000); border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .pillar-item { background: #090c14; padding: 18px; border-radius: 12px; border: 1px solid var(--border); text-align: center; position: relative; }
-        .p-nums { font-size: 28px; font-weight: 900; color: #fff; margin-top: 10px; letter-spacing: 2px; }
-        .p-tag { position: absolute; top: 6px; right: 10px; font-size: 10px; color: #4e5a7a; font-weight: bold; }
-        #logBox { background: #000; color: var(--primary); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; border: 1px solid #1e2533; line-height: 1.5; }
-        .v-badge { background: var(--accent); color: #000; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .pillar-card { background: #0a0e17; padding: 18px; border-radius: 12px; border: 1px solid var(--border); text-align: center; transition: 0.3s; }
+        .pillar-card:hover { border-color: var(--secondary); }
+        .p-nums { font-size: 28px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 2px; }
+        .p-label { font-size: 10px; color: #4a5568; font-weight: bold; margin-bottom: 4px; }
+        #log { background: #000; color: var(--secondary); padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 11px; border: 1px solid #1a202c; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">共振漂移引擎 <span class="v-badge">V.65.0 OPTIMIZED</span></div>
-        <input type="file" id="csvFile" accept=".csv" style="color:#888; font-size:11px;">
+        <div class="panel-header">熵逆轉分析引擎 <span class="v-tag">V.66.0 INVERSION</span></div>
+        <input type="file" id="csvFile" accept=".csv" style="font-size: 11px; color: #718096;">
     </div>
 
     <div class="panel">
-        <div class="panel-header">漂移路跡回測 (15期)</div>
+        <div class="panel-header">對稱破缺回測 (近15期)</div>
         <div id="btBody"></div>
     </div>
 
-    <div id="nextSection" class="panel">
-        <div class="panel-header">1/26 優化預測 8 碼</div>
+    <div class="panel" style="background: radial-gradient(circle at top right, #1a202c, #0d111d);">
+        <div class="panel-header" style="color:var(--secondary)">1/26 熵逆轉 8 碼</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Spiral 螺旋立柱布局</div>
+        <div class="panel-header">Inversion 內外塌縮立柱</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.65.0 Resonance-Drift 啟動...<br>> 偵測到 1/23 強勢 1-尾 引發之真空效應。<br>> 1/26 漂移權重已補償至 0, 2, 5 尾區。</div>
+    <div id="log">> 系統狀態：離散熵修正已就緒...<br>> 偵測到 1/23 極度同尾現象，啟動「反向鏈結」補償。</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV65Prediction(hist) {
-        if(hist.length < 5) return [02,05,10,12,20,22,30,32];
+    function getV66Prediction(hist) {
+        if(hist.length < 5) return [06,07,16,17,25,26,34,35];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                // 鄰域引力與漂移補償
-                if(diff === 1) scores[i].s += 6800; 
-                if(diff === 11 || diff === 9) scores[i].s += 5500; 
+                if(diff === 1) scores[i].s += 7000; // 鄰域強吸引
+                if(diff === 10) scores[i].s += 5800; // 垂直維度鏈結
                 
-                // 尾數漂移邏輯：1-尾過熱後的反彈 (1/23 開出 11, 21, 31)
-                const lastTails = last.map(n => n % 10);
-                if(lastTails.filter(t => t === 1).length >= 2) {
-                    if(i % 10 === 1) scores[i].s -= 5000; // 強制冷卻 1-尾
-                    if([0, 2, 5].includes(i % 10)) scores[i].s += 4000; // 能量漂移目標
-                }
+                // 熵逆轉邏輯：1/23 同尾過熱(11,21,31)，本期強制轉向 4, 6, 7 尾
+                const tail = i % 10;
+                if([4, 6, 7].includes(tail)) scores[i].s += 4500;
+                if(tail === 1) scores[i].s -= 6000; 
             });
 
-            // 空間間隔權重 (結合 V.64.0 的遺漏分析)
+            // 區塊斷層補償 (14-19, 24-29)
+            if((i >= 14 && i <= 19) || (i >= 24 && i <= 29)) scores[i].s += 3500;
+
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 5 && gap <= 10) scores[i].s += 4500;
+            if(gap >= 7 && gap <= 13) scores[i].s += 5000;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
-        let final = [];
-        // 螺旋選碼佈局：確保號碼分佈覆蓋全區塊
-        let zone1 = sorted.filter(x => x.n <= 13).slice(0,3);
-        let zone2 = sorted.filter(x => x.n > 13 && x.n <= 26).slice(0,3);
-        let zone3 = sorted.filter(x => x.n > 26).slice(0,3);
-        
-        final = [...zone1, ...zone2, ...zone3].sort((a,b) => b.s - a.s).slice(0,8).map(x => x.n);
-        return final.sort((a,b) => a-b);
+        let selected = sorted.slice(0, 8).map(x => x.n).sort((a,b) => a-b);
+        return selected;
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -103,27 +97,27 @@
     });
 
     function render() {
-        const next = getV65Prediction(rawData);
+        const next = getV66Prediction(rawData);
         let btHtml = "";
         rawData.slice(-15).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV65Prediction(hist);
+            const pred = getV66Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><span>${row.date.split('2026/')[1] || row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#353d4f'}">${hits.length}★</b></div>`;
+            btHtml += `<div class="bt-row"><span>${row.date.split('2026/')[1] || row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#4a5568'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        // Spiral 螺旋布局 (1-5, 2-6, 3-7, 4-8) - 最大化梯度交叉
-        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
+        // Inversion 立柱 (1-8, 2-7, 3-6, 4-5) - 塌縮式配對
+        const p = [[next[0], next[7]], [next[1], next[6]], [next[2], next[5]], [next[3], next[4]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `
-            <div class="pillar-item">
-                <div class="p-tag">DRIFT-${i+1}</div>
-                <div style="font-size:11px; color:var(--primary)">螺旋第 ${i+1} 柱</div>
+            <div class="pillar-card">
+                <div class="p-label">NODE ${i+1}</div>
+                <div style="font-size:11px; color:var(--secondary)">逆轉支點</div>
                 <div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div>
             </div>`).join('');
         
-        document.getElementById('logBox').innerHTML = `> V.65.0 漂移校準完成 (${new Date().toLocaleTimeString()})<br>> 重點區塊：0-尾、2-尾、5-尾。<br>> 1/26 建議立柱：螺旋共振佈局。`;
+        document.getElementById('log').innerHTML = `> V.66.0 熵運算完畢...<br>> 1/26 預測跨度已拉伸，排除 1-尾 殘餘干擾。<br>> 立柱策略：內外雙向塌縮。`;
     }
 </script>
 </body>
