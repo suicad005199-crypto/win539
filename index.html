@@ -3,92 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.64.0 Singularity</title>
+    <title>Oracle V.65.0 Resonance</title>
     <style>
-        :root { --bg: #010204; --panel: #0a0c12; --primary: #00e5ff; --accent: #ff0055; --text: #e0e6ed; --border: #1a1f2e; }
+        :root { --bg: #050608; --panel: #0e111a; --primary: #00ff88; --accent: #ffdd00; --text: #f0f4f8; --border: #1e2533; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 10px 40px rgba(0,229,255,0.05); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #141a26; }
-        .n-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #06080d; font-size: 11px; margin-right: 3px; border: 1px solid #232a3d; }
-        .n-box.hit { background: var(--primary); color: #000; font-weight: 900; border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
-        .ball-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
-        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 18px; position: relative; }
-        .ball::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 10px var(--primary); opacity: 0.3; }
-        .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .pillar-item { background: #05070a; padding: 16px; border-radius: 10px; border: 1px solid var(--border); text-align: center; position: relative; }
-        .p-nums { font-size: 26px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 2px; }
-        .p-tag { position: absolute; top: 4px; right: 8px; font-size: 9px; color: #3d4663; font-weight: bold; }
-        #logBox { background: #000; color: var(--primary); padding: 12px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 11px; border: 1px solid #1a1f2e; line-height: 1.6; }
-        .v-tag { background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 15px; box-shadow: 0 6px 30px rgba(0,255,136,0.04); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 15px; border-left: 5px solid var(--primary); padding-left: 12px; font-size: 15px; display: flex; justify-content: space-between; }
+        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1a202e; }
+        .n-box { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #0b0f16; font-size: 12px; margin-right: 4px; border: 1px solid #283145; }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: 900; border-color: var(--primary); box-shadow: 0 0 12px var(--primary); }
+        .ball-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
+        .ball { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2.5px solid var(--primary); color: var(--primary); font-size: 19px; text-shadow: 0 0 5px rgba(0,255,136,0.5); }
+        .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .pillar-item { background: #090c14; padding: 18px; border-radius: 12px; border: 1px solid var(--border); text-align: center; position: relative; }
+        .p-nums { font-size: 28px; font-weight: 900; color: #fff; margin-top: 10px; letter-spacing: 2px; }
+        .p-tag { position: absolute; top: 6px; right: 10px; font-size: 10px; color: #4e5a7a; font-weight: bold; }
+        #logBox { background: #000; color: var(--primary); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; border: 1px solid #1e2533; line-height: 1.5; }
+        .v-badge { background: var(--accent); color: #000; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">奇點塌縮引擎 <span class="v-tag">V.64.0 FINAL</span></div>
-        <input type="file" id="csvFile" accept=".csv">
+        <div class="panel-header">共振漂移引擎 <span class="v-badge">V.65.0 OPTIMIZED</span></div>
+        <input type="file" id="csvFile" accept=".csv" style="color:#888; font-size:11px;">
     </div>
 
     <div class="panel">
-        <div class="panel-header">全維度深度回測 (15期)</div>
+        <div class="panel-header">漂移路跡回測 (15期)</div>
         <div id="btBody"></div>
     </div>
 
-    <div class="panel">
-        <div class="panel-header">1/26 奇點預測 8 碼</div>
+    <div id="nextSection" class="panel">
+        <div class="panel-header">1/26 優化預測 8 碼</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Singularity 奇點立柱 (2-2-2-2)</div>
+        <div class="panel-header">Spiral 螺旋立柱布局</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.64.0 Singularity Core Initialized...<br>> 1-尾 能量塌縮預警：重心向 0、4、7 尾轉移。<br>> 1/26 空間膨脹系數：1.42 (高跨度預期)</div>
+    <div id="logBox">> V.65.0 Resonance-Drift 啟動...<br>> 偵測到 1/23 強勢 1-尾 引發之真空效應。<br>> 1/26 漂移權重已補償至 0, 2, 5 尾區。</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV64Prediction(hist) {
-        if(hist.length < 5) return [04,07,10,17,20,27,30,37];
+    function getV65Prediction(hist) {
+        if(hist.length < 5) return [02,05,10,12,20,22,30,32];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += 6500; 
-                if(diff === 9 || diff === 11) scores[i].s += 5200; 
+                // 鄰域引力與漂移補償
+                if(diff === 1) scores[i].s += 6800; 
+                if(diff === 11 || diff === 9) scores[i].s += 5500; 
                 
-                // 奇點塌縮：大幅扣除近期過熱尾數 (1-尾)
+                // 尾數漂移邏輯：1-尾過熱後的反彈 (1/23 開出 11, 21, 31)
                 const lastTails = last.map(n => n % 10);
-                if(lastTails.filter(t => t === (i % 10)).length >= 2) scores[i].s -= 4500;
-                // 補償特定冷點
-                if([0, 4, 7].includes(i % 10)) scores[i].s += 3500;
+                if(lastTails.filter(t => t === 1).length >= 2) {
+                    if(i % 10 === 1) scores[i].s -= 5000; // 強制冷卻 1-尾
+                    if([0, 2, 5].includes(i % 10)) scores[i].s += 4000; // 能量漂移目標
+                }
             });
 
-            // 支點鎖定
+            // 空間間隔權重 (結合 V.64.0 的遺漏分析)
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 6 && gap <= 12) scores[i].s += 4000;
+            if(gap >= 5 && gap <= 10) scores[i].s += 4500;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
-        let final = new Set();
+        let final = [];
+        // 螺旋選碼佈局：確保號碼分佈覆蓋全區塊
+        let zone1 = sorted.filter(x => x.n <= 13).slice(0,3);
+        let zone2 = sorted.filter(x => x.n > 13 && x.n <= 26).slice(0,3);
+        let zone3 = sorted.filter(x => x.n > 26).slice(0,3);
         
-        for(let x of sorted) {
-            if(final.size >= 8) break;
-            final.add(x.n);
-            // 奇點對稱碼 (Collapse Logic)
-            let mirror = 39 - x.n + 1;
-            if(mirror >= 1 && mirror <= 39 && final.size < 8 && !final.has(mirror)) {
-                final.add(mirror);
-            }
-        }
-        return Array.from(final).sort((a,b) => a-b);
+        final = [...zone1, ...zone2, ...zone3].sort((a,b) => b.s - a.s).slice(0,8).map(x => x.n);
+        return final.sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -106,27 +103,27 @@
     });
 
     function render() {
-        const next = getV64Prediction(rawData);
+        const next = getV65Prediction(rawData);
         let btHtml = "";
         rawData.slice(-15).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV64Prediction(hist);
+            const pred = getV65Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><span>${row.date.split('2026/')[1] || row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#31384a'}">${hits.length}★</b></div>`;
+            btHtml += `<div class="bt-row"><span>${row.date.split('2026/')[1] || row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#353d4f'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        // Singularity 立柱 (1,8), (2,7), (3,6), (4,5)
-        const p = [[next[0], next[7]], [next[1], next[6]], [next[2], next[5]], [next[3], next[4]]];
+        // Spiral 螺旋布局 (1-5, 2-6, 3-7, 4-8) - 最大化梯度交叉
+        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `
             <div class="pillar-item">
-                <div class="p-tag">COLLAPSE-${i+1}</div>
-                <div style="font-size:11px; color:var(--primary)">Pillar ${i+1}</div>
+                <div class="p-tag">DRIFT-${i+1}</div>
+                <div style="font-size:11px; color:var(--primary)">螺旋第 ${i+1} 柱</div>
                 <div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div>
             </div>`).join('');
         
-        document.getElementById('logBox').innerHTML = `> 奇點計算完成...<br>> 已識別 1/26 空間跳躍點。<br>> 立柱配置：極端對沖鎖定。`;
+        document.getElementById('logBox').innerHTML = `> V.65.0 漂移校準完成 (${new Date().toLocaleTimeString()})<br>> 重點區塊：0-尾、2-尾、5-尾。<br>> 1/26 建議立柱：螺旋共振佈局。`;
     }
 </script>
 </body>
