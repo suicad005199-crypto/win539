@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.56.2 Matrix-Sync</title>
+    <title>Oracle V.56.3 Matrix-Sync</title>
     <style>
         :root { --bg: #08080a; --panel: #141417; --primary: #ffd60a; --accent: #ff3b30; --text: #f2f2f7; --border: #2c2c2e; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -35,7 +35,7 @@
     </div>
 
     <div class="panel">
-        <div class="panel-header">1/27 矩陣同步 8 碼 <span class="tag">V.56.2</span></div>
+        <div class="panel-header">1/24 矩陣同步 8 碼 <span class="tag">V.56.3</span></div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
@@ -51,7 +51,7 @@
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV562Prediction(hist) {
+    function getV563Prediction(hist) {
         if(hist.length < 5) return [1,2,11,12,21,22,31,32];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
@@ -59,8 +59,8 @@
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += 3500; // 強連號熱鏈
-                if(diff === 10) scores[i].s += 1500; // 同尾同步
+                if(diff === 1) scores[i].s += 3500; 
+                if(diff === 10) scores[i].s += 1500; 
                 if(ln % 10 === i % 10) scores[i].s += 1200;
             });
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
@@ -70,7 +70,6 @@
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
         let final = new Set();
         
-        // 矩陣同步：選取核心熱鏈，並強制配對其關聯碼
         for(let x of sorted) {
             if(final.size >= 8) break;
             final.add(x.n);
@@ -98,19 +97,27 @@
 
     function render() {
         let btHtml = "";
-        rawData.slice(-12).reverse().forEach(row => {
+        // 尋找 1/24 之前的數據進行預測回測
+        const filteredData = rawData.filter(d => new Date(d.date) <= new Date("2026-01-24"));
+        
+        filteredData.slice(-12).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV562Prediction(hist);
+            const pred = getV563Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? '#ffd60a':'#444'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV562Prediction(rawData);
+
+        // 專門針對 1/24 當天的預測顯示
+        const targetDate = "2026-01-24";
+        const idx = rawData.findIndex(d => d.date === targetDate);
+        const histForNext = idx !== -1 ? rawData.slice(0, idx) : rawData;
+        
+        const next = getV563Prediction(histForNext);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        // Sync 交叉立柱：(1,3), (2,4), (5,7), (6,8)
         const p = [[next[0], next[2]], [next[1], next[3]], [next[4], next[6]], [next[5], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `<div class="pillar-item"><div>第 ${i+1} 柱</div><div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div></div>`).join('');
-        document.getElementById('logBox').innerHTML = "> 熱鏈矩陣同步完成...<br>> 已根據 1/26 盤路修正 1/27 碰撞權重";
+        document.getElementById('logBox').innerHTML = "> 已切換至 1/24 觀測模式...<br>> 熱鏈矩陣同步完成";
     }
 </script>
 </body>
