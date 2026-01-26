@@ -30,21 +30,21 @@
     </div>
 
     <div class="panel">
-        <div class="panel-header" style="color:var(--success)">平衡重組路跡 (近期回測)</div>
+        <div class="panel-header" style="color:var(--success)">平衡重組回測 (1/26 觀測窗)</div>
         <div id="btBody"></div>
     </div>
 
     <div class="panel" style="background: radial-gradient(circle at bottom right, #1e293b, #0f141e);">
-        <div class="panel-header" style="color:var(--accent)">1/26 平衡預測 8 碼</div>
+        <div class="panel-header" style="color:var(--accent)">1/26 結構預測 8 碼</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Equilibrium 立柱 (對稱佈局)</div>
+        <div class="panel-header">Equilibrium 立柱佈局</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.73.0 系統啟動...<br>> 基於 V.72.0 離散回測進行偏移補償。<br>> 鎖定重組向量：1/26 能量回填 04-16, 22-28 區間。</div>
+    <div id="logBox">> V.73.0 系統啟動...<br>> 偵測 1/24 極端離散態，啟動平衡漂移補償。<br>> 鎖定區域：04-16 與 22-28。</div>
 </div>
 
 <script>
@@ -52,28 +52,26 @@
     const pad = (n) => n.toString().padStart(2, '0');
 
     function getV73Prediction(hist) {
-        if(hist.length < 5) return [04,06,12,16,22,23,26,36];
+        if(hist.length < 5) return [04,11,12,13,21,22,26,32];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                // 強化 1/24 極端大跨度後的收斂區間
+                // V.73.0 核心修正：針對 1/24 的高熵發散進行鄰域收斂補償
                 if((i >= 4 && i <= 16) || (i >= 22 && i <= 28)) scores[i].s += 9500;
-                if(diff === 1 || diff === 10) scores[i].s += 4500;
+                if(diff === 1 || diff === 11) scores[i].s += 4800;
                 
                 const tail = i % 10;
-                // 尾數平衡：依據歷史冷熱動能調整
-                if([2, 3, 6].includes(tail)) scores[i].s += 7500;
-                if([7, 5, 1].includes(tail)) scores[i].s -= 8000;
+                // 參考 V.69.0 Vector 共振：鎖定強勢尾數 2, 3, 6
+                if([2, 3, 6].includes(tail)) scores[i].s += 7200;
+                if([7, 5, 9].includes(tail)) scores[i].s -= 7800;
             });
 
-            let gap = 0; 
-            for(let k=hist.length-1; k>=0; k--) { 
-                if(!hist[k].nums.includes(i)) gap++; else break; 
-            }
-            if(gap >= 5 && gap <= 13) scores[i].s += 6500;
+            // 遺漏動能補償 (參考 V.71.0 Core)
+            let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
+            if(gap >= 6 && gap <= 12) scores[i].s += 6800;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
@@ -107,7 +105,7 @@
             const hist = rawData.slice(0, rawData.indexOf(row));
             const pred = getV73Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b>${hits.length}★</b></div>`;
+            btHtml += `<div class="bt-row"><span>${row.date.split('/')[1]+'/'+row.date.split('/')[2]}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2?'var(--success)':'#475569'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
@@ -118,6 +116,8 @@
                 <div style="font-size:10px; color:var(--primary); font-weight:800;">EQUILIB-NODE ${i+1}</div>
                 <div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div>
             </div>`).join('');
+        
+        document.getElementById('logBox').innerHTML = `> V.73.0 演算完成...<br>> 1/26 策略核心：極端離散後的鄰域歸位。<br>> 關注：${next[0]}, ${next[2]}, ${next[4]}, ${next[6]} 等平衡座標。`;
     }
 </script>
 </body>
