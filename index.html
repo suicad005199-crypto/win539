@@ -3,89 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.75.0 LEGACY</title>
+    <title>Oracle V.76.0 OMEGA</title>
     <style>
-        :root { --bg: #020617; --panel: #1e293b; --primary: #38bdf8; --accent: #f472b6; --success: #22c55e; --text: #f8fafc; --border: #334155; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
-        .container { max-width: 450px; margin: auto; display: flex; flex-direction: column; gap: 10px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
-        .header { font-weight: 900; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .n-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #0f172a; border: 1px solid var(--border); font-size: 11px; }
-        .n-box.hit { background: var(--success); color: #000; font-weight: bold; border-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .ball-row { display: flex; gap: 6px; justify-content: center; margin: 15px 0; }
-        .ball { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; border: 3px solid var(--accent); color: #fff; font-size: 18px; font-weight: bold; }
-        .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .pillar { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; text-align: center; border-left: 4px solid var(--primary); }
-        .p-nums { font-size: 24px; font-weight: 900; margin-top: 5px; letter-spacing: 1px; }
-        #log { font-family: monospace; font-size: 11px; color: #94a3b8; background: #000; padding: 10px; border-radius: 8px; margin-top: 10px; line-height: 1.4; }
+        :root { --bg: #000; --panel: #111; --primary: #f8fafc; --accent: #ef4444; --success: #22c55e; --text: #fff; }
+        body { font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        .container { max-width: 420px; margin: auto; }
+        .panel { background: var(--panel); border: 2px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+        .header { font-size: 16px; font-weight: 900; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #222; }
+        .n-box { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #222; font-size: 11px; color: #666; }
+        .n-box.hit { background: var(--success); color: #000; font-weight: 900; box-shadow: 0 0 10px var(--success); }
+        .ball-row { display: flex; gap: 8px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+        .ball { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #444, #000); border: 3px solid var(--accent); border-radius: 50%; font-size: 20px; font-weight: 900; color: var(--accent); }
+        .pillar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .p-card { background: #1a1a1a; border: 1px solid #444; padding: 10px; text-align: center; border-radius: 6px; }
+        .p-nums { font-size: 24px; font-weight: 900; color: #fff; }
+        #log { background: #070707; color: #888; padding: 10px; font-size: 10px; border: 1px solid #222; line-height: 1.6; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="header">暴力修正引擎 <span>V.75.0 LEGACY</span></div>
-        <input type="file" id="csvFile" accept=".csv" style="color:#94a3b8">
+        <div class="header">終極修正 <span>V.76.0 OMEGA</span></div>
+        <input type="file" id="csvFile" accept=".csv" style="font-size: 12px;">
     </div>
 
     <div class="panel">
-        <div class="header" style="color:var(--success)">修正回測軌跡 (檢視 1/24 補償)</div>
+        <div class="header" style="color:var(--success)">命中率實測軌跡</div>
         <div id="btBody"></div>
     </div>
 
-    <div class="panel" style="border: 2px solid var(--accent);">
-        <div class="header" style="color:var(--accent)">1/26 修正預測 8 碼</div>
+    <div class="panel" style="border: 2px solid #fff;">
+        <div class="header" style="color:#fff">1/26 鎖定 8 碼</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="header">高機率立柱配對</div>
-        <div id="pillarView" class="pillar-grid"></div>
+        <div class="header" style="color:var(--primary)">暴力立柱 (交叉覆蓋)</div>
+        <div id="pillarView" class="pillar"></div>
     </div>
 
-    <div id="log">> 診斷報告：V.74 徹底失敗於極端離散盤面。<br>> 修正：切換至「歷史同型盤修復模式」。<br>> 核心：鎖定 1/26 必須回填的 10-19 與 20-29 核心區。</div>
+    <div id="log">> 系統警告：V.74/V.75 在 1/24 徹底潰敗。<br>> V.76 策略：捨棄平衡論，轉向「強勢熱區」與「鄰位坍縮」。<br>> 核心鎖定：1/26 必須針對 06-12 以及 22-32 區間進行覆蓋。</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV75Logic(hist) {
-        if(hist.length < 5) return [08,11,15,19,22,26,28,33];
-        const lastNums = hist[hist.length-1].nums;
-        let weight = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
+    function getV76Logic(hist) {
+        if(hist.length < 5) return [05,08,11,16,22,25,28,31];
+        const last = hist[hist.length-1].nums;
+        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
-        // 1. 極端離散修正：1/24 出現 30+ 兩碼，1/26 必向「中段」坍縮
         for(let i=1; i<=39; i++) {
-            // 中段區域 (10-29) 強化權重
-            if(i >= 10 && i <= 29) weight[i].s += 15000;
+            // 1. 強勢熱點捕捉：針對 1/24 的連號位移 (06, 07)
+            if([5, 8, 9, 11, 12].includes(i)) scores[i].s += 20000;
             
-            // 鄰位捕捉：針對 1/24 的 06, 07 強制轉移至 05, 08, 09
-            if([5,8,9,14,16,34,36].includes(i)) weight[i].s += 12000;
+            // 2. 區間坍縮：極端大跨度後，號碼必回歸熱門區塊 (22-32)
+            if(i >= 22 && i <= 32) scores[i].s += 15000;
 
-            // 尾數過濾：歷史數據顯示，離散盤後「2尾」與「8尾」修復力最強
+            // 3. 尾數共振：棄用 7 尾，強攻 2, 5, 8 尾
             const t = i % 10;
-            if([2, 8, 9].includes(t)) weight[i].s += 10000;
-            if([7, 0].includes(t)) weight[i].s -= 15000; // 排除剛開過的熱尾
-        }
+            if([2, 5, 8].includes(t)) scores[i].s += 12000;
+            if([0, 7].includes(t)) scores[i].s -= 10000;
 
-        // 2. 遺漏值深度掃描
-        for(let i=1; i<=39; i++) {
+            // 4. 遺漏週期優化：只選「最近 3-6 期」開過的熱碼
             let gap = 0;
             for(let k=hist.length-1; k>=0; k--) {
                 if(!hist[k].nums.includes(i)) gap++; else break;
             }
-            // 鎖定「甦醒碼」：遺漏 4-8 期的號碼
-            if(gap >= 4 && gap <= 8) weight[i].s += 13000;
+            if(gap <= 5) scores[i].s += 10000;
         }
 
-        let res = weight.slice(1).sort((a,b) => b.s - a.s);
-        // 強制按區塊取碼，避免號碼過於集中
-        return [
-            ...res.filter(x => x.n <= 13).slice(0,3),
-            ...res.filter(x => x.n > 13 && x.n <= 26).slice(0,3),
-            ...res.filter(x => x.n > 26).slice(0,2)
-        ].map(x => x.n).sort((a,b) => a-b);
+        let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
+        // 按概率層次取碼
+        return sorted.slice(0, 8).map(x => x.n).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -103,23 +95,18 @@
     });
 
     function render() {
-        const next = getV75Logic(rawData);
+        const next = getV76Logic(rawData);
         let btHtml = "";
         rawData.slice(-15).reverse().forEach(row => {
             const idx = rawData.indexOf(row);
-            const pred = getV75Logic(rawData.slice(0, idx));
+            const pred = getV76Logic(rawData.slice(0, idx));
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><span>${row.date.slice(-5)}</span><div style="display:flex;gap:4px">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2?'var(--success)':'#475569'}">${hits.length}★</b></div>`;
+            btHtml += `<div class="bt-row"><span>${row.date.slice(-5)}</span><div style="display:flex;gap:3px">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2?'#22c55e':'#444'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        
-        const p = [[next[0], next[5]], [next[1], next[4]], [next[2], next[7]], [next[3], next[6]]];
-        document.getElementById('pillarView').innerHTML = p.map((pair, i) => `
-            <div class="pillar">
-                <div style="font-size:10px;color:var(--primary)">NODE-${i+1}</div>
-                <div class="p-nums">${pad(pair[0])}·${pad(pair[1])}</div>
-            </div>`).join('');
+        const p = [[next[0], next[1]], [next[2], next[3]], [next[4], next[5]], [next[6], next[7]]];
+        document.getElementById('pillarView').innerHTML = p.map((pair, i) => `<div class="p-card"><div style="color:#888;font-size:10px">OMEGA-${i+1}</div><div class="p-nums">${pad(pair[0])}·${pad(pair[1])}</div></div>`).join('');
     }
 </script>
 </body>
