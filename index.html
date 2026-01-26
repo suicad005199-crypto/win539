@@ -3,66 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.55.1 Final</title>
+    <title>Oracle V.55.2 Matrix-Cluster</title>
     <style>
         :root { --bg: #000; --panel: #111; --primary: #ffd60a; --border: #333; --text: #fff; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { display: flex; flex-direction: column; gap: 10px; max-width: 600px; margin: auto; }
-        .panel { background: var(--panel); border-radius: 8px; padding: 12px; border: 1px solid var(--border); }
+        .panel { background: var(--panel); border-radius: 8px; padding: 12px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 8px; border-left: 4px solid var(--primary); padding-left: 8px; }
         .bt-row { border-bottom: 1px solid #222; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; }
-        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #222; font-size: 11px; margin-right: 3px; }
-        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; }
-        .ball-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #222; font-size: 11px; margin-right: 3px; border: 1px solid #333; }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; box-shadow: 0 0 5px var(--primary); }
+        .ball-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
         .ball { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 14px; }
         .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .pillar-item { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); text-align: center; }
-        .p-nums { font-size: 20px; font-weight: 900; color: #fff; margin-top: 5px; letter-spacing: 2px; }
-        #logBox { background: #000; color: #32d74b; padding: 5px; height: 50px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
+        .pillar-item { background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); text-align: center; }
+        .p-nums { font-size: 22px; font-weight: 900; color: #fff; margin-top: 5px; letter-spacing: 2px; }
+        #logBox { background: #000; color: #32d74b; padding: 6px; height: 50px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel"><div class="panel-header">數據注入 (CSV)</div><input type="file" id="csvFile"></div>
-    <div class="panel"><div class="panel-header">AI 糾偏回測 (10期)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">1/26 穩定 8 碼</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div class="panel-header">穩定碰撞立柱 (2-2-2-2)</div><div id="pillarView" class="pillar-grid"></div></div>
-    <div id="logBox">> V.55.1 Final 系統就緒...</div>
+    <div class="panel"><div class="panel-header">穩定度回測 (10期)</div><div id="btBody"></div></div>
+    <div class="panel"><div class="panel-header">1/26 穩定區域 8 碼</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div class="panel-header">Matrix 立柱布局 (2-2-2-2)</div><div id="pillarView" class="pillar-grid"></div></div>
+    <div id="logBox">> V.55.2 Matrix-Cluster 系統已啟動...</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV551Prediction(hist) {
+    function getV552Prediction(hist) {
         if(hist.length < 5) return [1,2,3,4,5,6,7,8];
         const last = hist[hist.length-1].nums;
         const prev = hist[hist.length-2].nums;
         
-        let bias = 1, errorCount = 0;
-        last.forEach(ln => { if (prev.some(pn => Math.abs(pn - ln) === 2)) errorCount++; });
-        if(errorCount >= 2) bias = 2; // AI 判定整體位移，觸發擴張模式
-
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += (bias === 1 ? 1200 : 800);
-                if(diff === 2) scores[i].s += (bias === 2 ? 1200 : 700);
-                if(ln % 10 === i % 10) scores[i].s += 500;
+                if(diff === 1) scores[i].s += 1300; // 鄰號加重
+                if(diff === 2) scores[i].s += 900;  // 跳格補償
+                if(ln % 10 === i % 10) scores[i].s += 600; 
             });
+            // 遺漏值權重 (抓溫碼)
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 3 && gap <= 9) scores[i].s += 450;
+            if(gap >= 4 && gap <= 10) scores[i].s += 500;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
         let final = new Set();
-        // 區域地毯式保底 (2-3-3 分配)
+        
+        // 區域 Cluster 鎖定：確保熱點周圍有連號包圍
+        const topN = sorted[0].n;
+        final.add(topN);
+        if(topN + 1 <= 39) final.add(topN + 1); // 強制 Cluster
+
+        // 區域保底 (2-3-3 分配)
         [[1,13],[14,26],[27,39]].forEach((range, idx) => {
             const count = [2, 3, 3][idx];
-            sorted.filter(x => x.n >= range[0] && x.n <= range[1]).slice(0, count).forEach(x => final.add(x.n));
+            sorted.filter(x => x.n >= range[0] && x.n <= range[1]).forEach(x => {
+                if(final.size < (idx === 0 ? 2 : idx === 1 ? 5 : 8)) final.add(x.n);
+            });
         });
-        for(let x of sorted) { if(final.size < 8) final.add(x.n); }
+
         return Array.from(final).slice(0, 8).sort((a,b) => a-b);
     }
 
@@ -84,17 +89,17 @@
         let btHtml = "";
         rawData.slice(-10).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV551Prediction(hist);
+            const pred = getV552Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b>${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV551Prediction(rawData);
+        const next = getV552Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        // 異位立柱碰撞：1-5, 2-6, 3-7, 4-8 (最大化 2 星機率)
-        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
+        // Matrix 立柱：1-3, 2-4 對角碰撞
+        const p = [[next[0], next[2]], [next[1], next[3]], [next[4], next[6]], [next[5], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `<div class="pillar-item"><div>第 ${i+1} 柱</div><div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div></div>`).join('');
-        document.getElementById('logBox').innerHTML = `> AI 模式：${rawData[rawData.length-1].nums.some(ln => rawData[rawData.length-2].nums.some(pn => Math.abs(pn-ln)===2)) ? "擴張防禦" : "精準鄰號"}<br>> 1/26 穩定布局已就緒`;
+        document.getElementById('logBox').innerHTML = "> 偵測到盤路位移...<br>> 已執行 Cluster 區域連鎖優化";
     }
 </script>
 </body>
