@@ -61,7 +61,7 @@
     gap: 8px;
   }
   .number-card { 
-    width: 40px; height: 40px; 
+    min-width: 40px; height: 40px; 
     line-height: 40px; 
     background: var(--success); 
     color: #fff; 
@@ -69,6 +69,8 @@
     font-weight: bold; 
     font-size: 18px;
     box-shadow: 0 3px 6px rgba(42, 157, 143, 0.3);
+    text-align: center;
+    padding: 0 6px;
   }
 
   /* 表格優化 */
@@ -94,7 +96,7 @@
   }
 
   @media (max-width: 480px) {
-    .number-card { width: 34px; height: 34px; line-height: 34px; font-size: 16px; }
+    .number-card { min-width: 34px; height: 34px; line-height: 34px; font-size: 16px; }
     td, th { padding: 8px 4px; font-size: 13px; }
   }
 </style>
@@ -114,7 +116,7 @@
   </div>
 
   <div class="panel" id="panel3">
-    <h2>下期號碼預測 (前 6 柱)</h2>
+    <h2>下期號碼預測 (8碼 → 6柱)</h2>
     <div id="prediction8"></div>
   </div>
 
@@ -141,7 +143,7 @@
 let rawData = [];
 let results = [];
 
-// CSV 解析邏輯
+// CSV 解析
 function parseCSV(file, callback){
   const reader = new FileReader();
   reader.onload = e => { 
@@ -162,22 +164,24 @@ function parseCSV(file, callback){
   reader.readAsText(file);
 }
 
-// 原始預測策略
+// 預測策略 (8碼 → 6柱分配)
 function multiStrategy(data){
   let predList = [];
   let hitList = [];
-  for(let i=0; i<data.length; i++){
-    if(i===0){ 
-      predList.push([1,2,3,4,5,6,7,8]); 
-      hitList.push(null); 
+
+  for(let i=0;i<data.length;i++){
+    if(i===0){
+      predList.push([1,2,3,4,5,6,7,8]);
+      hitList.push(null);
     } else {
+      // 過去號碼統計
       let past=[];
-      for(let j=0; j<i; j++){
+      for(let j=0;j<i;j++){
         past.push(data[j]['獎號1'],data[j]['獎號2'],data[j]['獎號3'],data[j]['獎號4'],data[j]['獎號5']);
       }
       past = past.filter(n=>n!==undefined);
 
-      let freqMap = {};
+      let freqMap={};
       past.forEach(n=> freqMap[n]=(freqMap[n]||0)+1);
       let top5 = Object.keys(freqMap).sort((a,b)=> freqMap[b]-freqMap[a]).slice(0,5).map(Number);
 
@@ -191,6 +195,7 @@ function multiStrategy(data){
         let extra = allNumbers.find(n=>!candidate8.includes(n));
         candidate8.push(extra);
       }
+
       predList.push(candidate8);
 
       let current = [data[i]['獎號1'],data[i]['獎號2'],data[i]['獎號3'],data[i]['獎號4'],data[i]['獎號5']].filter(n=>n!==undefined);
@@ -198,17 +203,18 @@ function multiStrategy(data){
       hitList.push(hit);
     }
   }
+
   return {predList, hitList};
 }
 
-// 介面渲染：歷史列表
+// 渲染歷史表格
 function renderPanel2(){
   const tbody = document.querySelector('#resultTable tbody');
   tbody.innerHTML='';
-  results.slice().reverse().forEach((row)=>{
+  results.slice().reverse().forEach(row=>{
     let tr = document.createElement('tr');
     let dateParts = row['開獎日期'] ? row['開獎日期'].toString().split('/') : ['?','?','?'];
-    let shortDate = dateParts.length >= 3 ? `${dateParts[1]}/${dateParts[2]}` : 'N/A';
+    let shortDate = dateParts.length>=3 ? `${dateParts[1]}/${dateParts[2]}` : 'N/A';
 
     let currentNums = [row['獎號1'],row['獎號2'],row['獎號3'],row['獎號4'],row['獎號5']];
     let predNums = (row['預測8碼']||[]).filter(n=>!isNaN(n));
@@ -217,7 +223,7 @@ function renderPanel2(){
       return currentNums.includes(n) ? `<span class="highlight">${n}</span>` : n;
     }).join(', ');
 
-    let hitVal = row['命中星數'] || 0;
+    let hitVal = row['命中星數']||0;
     tr.innerHTML = `
       <td>${shortDate}</td>
       <td><small>${currentNums.join(',')}</small></td>
@@ -228,60 +234,49 @@ function renderPanel2(){
   });
 }
 
-// 介面渲染：預測球體
+// 渲染下期預測 8碼 → 6柱
 function renderPanel3(){
   const div = document.getElementById('prediction8');
   div.innerHTML='';
   if(results.length===0) return;
 
   let lastPred = results[results.length-1]['預測8碼'].filter(n=>!isNaN(n));
-  const colors = ['#2a9d8f','#e76f51','#264653','#f4a261','#e9c46a','#8ac926'];
-  for(let i=0; i<6; i++){
-    let val = lastPred[i] !== undefined ? lastPred[i] : '?';
+  if(lastPred.length<8) return;
+
+  let config = Math.random()<0.5 ? [2,2,1,1,1,1] : [2,1,1,1,1,2];
+  let idx=0;
+  const colors=['#2a9d8f','#e76f51','#264653','#f4a261','#e9c46a','#8ac926'];
+
+  for(let i=0;i<6;i++){
+    let count = config[i];
+    let nums = lastPred.slice(idx, idx+count).join(',');
+    idx += count;
+
     let span = document.createElement('span');
     span.className='number-card';
     span.style.backgroundColor = colors[i%colors.length];
-    span.textContent=val;
+    span.textContent = nums;
     div.appendChild(span);
   }
 }
 
-// 介面渲染：統計資訊
+// 渲染統計日誌
 function renderLogBox(){
   const log = document.getElementById('logbox');
-  if(results.length < 2) { log.textContent='數據量不足以計算分析'; return; }
-  
+  if(results.length<2){ log.textContent='數據量不足以計算分析'; return; }
+
   let last10 = results.slice(-10);
   let winCount = last10.filter(r=>r['命中星數']>=2).length;
   let avgHit = (last10.reduce((a,r)=>a+(r['命中星數']||0),0)/last10.length).toFixed(2);
-  
+
   log.innerHTML=`⚡ 分析報告 (近 ${last10.length} 期)<br>────────────────<br>
-  勝率 (2星以上): ${winCount * (100/last10.length)}%<br>
+  勝率 (2星以上): ${winCount*(100/last10.length)}%<br>
   平均命中期望值: ${avgHit} 碼`;
 }
 
-// 事件監聽
+// CSV 上傳事件
 document.getElementById('csvFile').addEventListener('change', e=>{
   if(!e.target.files[0]) return;
   parseCSV(e.target.files[0], data=>{
     rawData = data;
-    let {predList, hitList} = multiStrategy(rawData);
-    results = rawData.map((d,i)=> ({...d,'預測8碼':predList[i],'命中星數':hitList[i]}));
-    renderPanel2();
-    renderPanel3();
-    renderLogBox();
-  });
-});
-
-// 面板排序功能
-Sortable.create(document.getElementById('container'), {
-  handle:'h2', 
-  animation:150, 
-  store:{
-    get:()=> JSON.parse(localStorage.getItem('panelOrder')||'[]'),
-    set:(sortable)=> localStorage.setItem('panelOrder',JSON.stringify(sortable.toArray()))
-  }
-});
-</script>
-</body>
-</html>
+    let {predList, hitList} =
