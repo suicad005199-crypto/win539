@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.54.2 Ultra-Pillar</title>
+    <title>Oracle V.54.5 - 3★ Stability Mode</title>
     <style>
         :root { --bg: #000; --panel: #141414; --primary: #ff3b30; --border: #2c2c2e; --text: #fff; --sub: #8e8e93; --hit: #ffd60a; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -31,19 +31,16 @@
         <div class="panel-header">P1: 數據注入</div>
         <input type="file" id="csvFile" accept=".csv" style="color: #8e8e93;">
     </div>
-
     <div class="panel">
-        <div class="panel-header">CONSOLE: 終極版統計分析</div>
-        <div id="logBox">等待大數據匯入...</div>
+        <div class="panel-header">CONSOLE: 3★ 穩定型分析</div>
+        <div id="logBox">等待數據...</div>
     </div>
-
     <div class="panel">
-        <div class="panel-header">P2: 深度回測 (目標：4★ 捕捉)</div>
+        <div class="panel-header">P2: 回測明細</div>
         <div id="btBody"></div>
     </div>
-
     <div class="panel" id="finalResult">
-        <div class="panel-header">P3: 下期預測 (8碼 6柱 1-1-1-1-2-2)</div>
+        <div class="panel-header">P3: 8碼 6柱 預測</div>
         <div id="nextPred" class="pillar-row"></div>
     </div>
 </div>
@@ -58,32 +55,32 @@
         
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
         const lastRow = hist[hist.length-1].nums;
-        const secondLastRow = hist.length > 2 ? hist[hist.length-2].nums : [];
+        
+        // 統計熱門尾數
+        let tailMap = {};
+        hist.slice(-15).forEach(d => d.nums.forEach(n => {
+            let t = n % 10;
+            tailMap[t] = (tailMap[t] || 0) + 1;
+        }));
 
         for(let i=1; i<=39; i++) {
-            // 1. 連莊與鄰碼 (權重增加)
-            if(lastRow.includes(i)) scores[i].s += 500;
-            lastRow.forEach(n => { if(Math.abs(n-i) === 1) scores[i].s += 450; });
-
-            // 2. 跳島版路捕捉 (隔期規律)
-            if(secondLastRow.includes(i)) scores[i].s += 600;
-
-            // 3. 尾數熱度 (539 核心)
-            const tails = hist.slice(-10).flatMap(d => d.nums.map(n => n % 10));
-            const tailFreq = tails.filter(t => t === (i % 10)).length;
-            scores[i].s += tailFreq * 150;
-
-            // 4. 殺號機制 (剔除過久未出或極冷)
+            // A. 連莊權重
+            if(lastRow.includes(i)) scores[i].s += 600;
+            // B. 鄰碼權重
+            lastRow.forEach(n => { if(Math.abs(n-i) === 1) scores[i].s += 500; });
+            // C. 尾數權重 (3星關鍵)
+            scores[i].s += (tailMap[i % 10] || 0) * 180;
+            // D. 遺漏值過濾 (抓 3-7 期遺漏的熱回補碼)
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap > 35) scores[i].s -= 1000; // 殺掉僵屍號
-            if(gap === 0) scores[i].s += 200; // 追蹤連開
+            if(gap >= 3 && gap <= 7) scores[i].s += 400;
+            if(gap > 20) scores[i].s -= 800; // 殺掉長期冷碼
         }
 
-        // 5. 交叉過濾：選取分數最高的 8 碼
         return scores.slice(1).sort((a,b) => b.s - a.s).map(x => x.n).slice(0, 8);
     }
 
     function renderPillars(codes) {
+        // 1-1-1-1-2-2 分配
         const structure = [[codes[0]], [codes[1]], [codes[2]], [codes[3]], [codes[4], codes[5]], [codes[6], codes[7]]];
         return structure.map((p, i) => `
             <div class="pillar-card"><div class="pillar-id">柱 ${i+1}</div><div class="ball-group">
@@ -104,31 +101,31 @@
     });
 
     function runGlobalScan() {
-        let btHtml = ""; let stats = {4:0, 3:0, 2:0, total:0};
-        const startIdx = 15;
-        for(let i = startIdx; i < rawData.length; i++) {
+        let btHtml = ""; let stats = {3:0, 2:0, total:0};
+        for(let i = 15; i < rawData.length; i++) {
             const pred = getPrediction(rawData.slice(0, i));
             const hits = rawData[i].nums.filter(n => pred.includes(n)).length;
-            if(hits >= 2) stats[Math.min(hits, 4)]++;
+            if(hits >= 2) stats[Math.min(hits, 3)]++;
             stats.total++;
         }
         
         rawData.slice(-10).reverse().forEach(row => {
             const pred = getPrediction(rawData.slice(0, rawData.indexOf(row)));
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div>
+            btHtml += `<div class="bt-row">
+                <div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div>
                 <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
-                <div class="num-group"><span class="num-label">預測</span>${pred.slice().sort((a,b)=>a-b).map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--hit)':'#666'}">${pad(n)}</div>`).join('')}</div></div>`;
+                <div class="num-group"><span class="num-label">預測</span>${pred.slice().sort((a,b)=>a-b).map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--hit)':'#666'}">${pad(n)}</div>`).join('')}</div>
+            </div>`;
         });
 
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = renderPillars(getPrediction(rawData));
         
-        log(`[V.54.2 終極啟動]`);
-        log(`回測期數: ${stats.total} | 4★ 命中: ${stats[4]}`);
-        log(`3★ 以上占比: ${((stats[3]+stats[4])/stats.total*100).toFixed(1)}%`);
-        log(`2★ 以上占比: ${((stats[2]+stats[3]+stats[4])/stats.total*100).toFixed(1)}%`);
-        log(`警告：數據量低於 50 期時，4★ 穩定性極低。`);
+        log(`[V.54.5 穩定3星啟動]`);
+        log(`回測總期數: ${stats.total}`);
+        log(`3★ 命中占比: ${(stats[3]/stats.total*100).toFixed(1)}%`);
+        log(`2★ 命中占比: ${((stats[2]+stats[3])/stats.total*100).toFixed(1)}%`);
     }
 </script>
 </body>
