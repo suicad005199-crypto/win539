@@ -3,93 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.56.1 Synaptic</title>
+    <title>Oracle V.56.2 Matrix-Sync</title>
     <style>
-        :root { --bg: #08080a; --panel: #141417; --primary: #ffd60a; --accent: #ff3b30; --text: #fdfdfd; --border: #2c2c2e; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; font-size: 13px; }
+        :root { --bg: #08080a; --panel: #141417; --primary: #ffd60a; --accent: #ff3b30; --text: #f2f2f7; --border: #2c2c2e; }
+        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        .panel-header { color: var(--primary); font-weight: 800; margin-bottom: 12px; font-size: 15px; border-left: 5px solid var(--accent); padding-left: 12px; display: flex; justify-content: space-between; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #222; }
-        .n-box { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #1c1c1e; font-size: 12px; margin-right: 4px; border: 1px solid #333; }
-        .n-box.hit { background: var(--primary); color: #000; font-weight: 900; border-color: var(--primary); box-shadow: 0 0 10px rgba(255,214,10,0.5); }
-        .ball-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
-        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 17px; box-shadow: inset 0 0 8px rgba(255,214,10,0.2); }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 14px; display: flex; justify-content: space-between; }
+        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #222; }
+        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #1a1a1c; font-size: 11px; margin-right: 3px; border: 1px solid #333; }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); box-shadow: 0 0 10px rgba(255,214,10,0.3); }
+        .ball-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
+        .ball { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; }
         .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .pillar-item { background: #1a1a1f; padding: 16px; border-radius: 12px; border: 1px solid var(--border); text-align: center; position: relative; transition: 0.3s; }
-        .pillar-item:hover { border-color: var(--primary); }
-        .p-nums { font-size: 26px; font-weight: 900; color: #fff; margin-top: 10px; letter-spacing: 3px; }
-        #logBox { background: #000; color: #32d74b; padding: 12px; border-radius: 8px; font-family: 'SF Mono', monospace; font-size: 11px; min-height: 45px; border: 1px solid #222; }
+        .pillar-item { background: #0d0d0f; padding: 15px; border-radius: 10px; border: 1px solid var(--border); text-align: center; }
+        .p-nums { font-size: 24px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 2px; }
+        #logBox { background: #000; color: #32d74b; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; min-height: 35px; border: 1px solid #1a1a1a; }
+        .tag { font-size: 9px; background: var(--accent); color: #fff; padding: 1px 4px; border-radius: 3px; vertical-align: middle; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">數據注入 (CSV) <span style="font-size: 10px; color: #666;">SYNAPTIC-CORE</span></div>
+        <div class="panel-header">數據注入 <span>MATRIX DECODER</span></div>
         <input type="file" id="csvFile">
     </div>
 
     <div class="panel">
-        <div class="panel-header">神經突觸回測 (近15期)</div>
+        <div class="panel-header">熱鏈同步回測 (近15期)</div>
         <div id="btBody"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">1/27 突觸鏈接 8 碼</div>
+        <div class="panel-header">1/27 矩陣同步 8 碼 <span class="tag">V.56.2</span></div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Synaptic 立柱對位 (2-2-2-2)</div>
+        <div class="panel-header">Sync 立柱佈局 (2-2-2-2)</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.56.1 Synaptic-Link 核心載入...</div>
+    <div id="logBox">> Matrix-Sync 核心加載中...</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV561Prediction(hist) {
-        if(hist.length < 5) return [01,02,11,12,21,22,31,32];
+    function getV562Prediction(hist) {
+        if(hist.length < 5) return [1,2,11,12,21,22,31,32];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += 3200; // 強突觸(連號)
-                if(diff === 2) scores[i].s += 1500; // 跳格鏈接
-                if(ln % 10 === i % 10) scores[i].s += 1800; // 尾數同步鏈接
+                if(diff === 1) scores[i].s += 3500; // 強連號熱鏈
+                if(diff === 10) scores[i].s += 1500; // 同尾同步
+                if(ln % 10 === i % 10) scores[i].s += 1200;
             });
-            // 彈性張力：抓取遺漏 6-9 期的轉折碼
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 6 && gap <= 9) scores[i].s += 1000;
+            if(gap >= 3 && gap <= 7) scores[i].s += 1000;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
         let final = new Set();
         
-        // 核心：建立四組「突觸對」
-        // 第一對：全局最強
-        const core1 = sorted[0].n;
-        final.add(core1);
-        final.add(core1 + 1 > 39 ? core1 - 1 : core1 + 1);
-
-        // 第二對：次強且跨區
+        // 矩陣同步：選取核心熱鏈，並強制配對其關聯碼
         for(let x of sorted) {
-            if(final.size < 4 && !final.has(x.n) && Math.abs(x.n - core1) > 8) {
-                final.add(x.n);
-                let tailMatch = sorted.find(s => s.n % 10 === x.n % 10 && !final.has(s.n));
-                if(tailMatch) final.add(tailMatch.n);
-                else final.add(x.n + 1 > 39 ? x.n - 1 : x.n + 1);
-            }
-        }
-
-        // 補齊 8 碼
-        for(let x of sorted) {
-            if(final.size < 8 && !final.has(x.n)) final.add(x.n);
+            if(final.size >= 8) break;
+            final.add(x.n);
+            [x.n-1, x.n+1].forEach(n => {
+                if(n >= 1 && n <= 39 && final.size < 8) final.add(n);
+            });
         }
 
         return Array.from(final).sort((a,b) => a-b);
@@ -111,21 +98,19 @@
 
     function render() {
         let btHtml = "";
-        rawData.slice(-10).reverse().forEach(row => {
+        rawData.slice(-12).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV561Prediction(hist);
+            const pred = getV562Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? '#ffd60a':'#444'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV561Prediction(rawData);
+        const next = getV562Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        
-        // Synaptic 對位：強烈建議 (1,2), (3,4), (5,6), (7,8) 近鄰對撞
-        const p = [[next[0], next[1]], [next[2], next[3]], [next[4], next[5]], [next[6], next[7]]];
+        // Sync 交叉立柱：(1,3), (2,4), (5,7), (6,8)
+        const p = [[next[0], next[2]], [next[1], next[3]], [next[4], next[6]], [next[5], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `<div class="pillar-item"><div>第 ${i+1} 柱</div><div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div></div>`).join('');
-        
-        document.getElementById('logBox').innerHTML = "> 突觸鏈接鎖定成功...<br>> 已針對近期斷層執行補償分佈<br>> 1/27 核心連線期望值：2.45★";
+        document.getElementById('logBox').innerHTML = "> 熱鏈矩陣同步完成...<br>> 已根據 1/26 盤路修正 1/27 碰撞權重";
     }
 </script>
 </body>
