@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.53.8 Cross-Entropy (Pillar Mode)</title>
+    <title>Oracle V.53.8 Pillar Pro</title>
     <style>
         :root { --bg: #000; --panel: #141414; --primary: #ff3b30; --border: #2c2c2e; --text: #fff; --sub: #8e8e93; --hit: #ffd60a; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: auto; }
         .panel { background: var(--panel); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
         .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px; font-size: 14px; }
-        .bt-row { border-bottom: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+        .bt-row { border-bottom: 1px solid var(--border); padding: 8px 0; display: flex; flex-direction: column; gap: 6px; }
         .bt-meta { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; }
         .num-group { display: flex; gap: 4px; align-items: center; }
         .num-label { font-size: 10px; color: var(--sub); width: 30px; flex-shrink: 0; }
@@ -23,21 +23,42 @@
         .m-head { background: #1a1a1a; color: var(--primary); position: sticky; top: 0; }
         .m-date { background: #1a1a1a; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
         .m-ball { background: var(--primary); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
-        #logBox { background: #000; color: #32d74b; padding: 10px; height: 120px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); border-radius: 8px; line-height: 1.6; }
-        .ball-row { display: flex; flex-wrap: wrap; gap: 8px; }
-        .ball { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #1a1a1a; border-radius: 50%; font-weight: bold; border: 2px solid var(--primary); color: var(--primary); font-size: 18px; }
-        /* 立柱容器樣式 */
-        .pillar-item { border: 1px solid var(--border); padding: 6px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; min-width: 45px; }
-        .pillar-label { font-size: 10px; color: var(--sub); margin-bottom: 4px; }
+        #logBox { background: #000; color: #32d74b; padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); border-radius: 8px; }
+        
+        /* 立柱專用樣式 */
+        .pillar-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .pillar-card { background: #000; border: 1px solid var(--border); padding: 8px; border-radius: 8px; text-align: center; }
+        .pillar-id { font-size: 10px; color: var(--primary); margin-bottom: 5px; font-weight: bold; }
+        .ball-group { display: flex; justify-content: center; gap: 5px; }
+        .ball { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border-radius: 50%; font-weight: bold; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="panel"><div class="panel-header">P1: 數據注入</div><input type="file" id="csvFile" accept=".csv" style="color: #8e8e93;"></div>
-    <div class="panel"><div class="panel-header">P2: 深度回測 (近 10 期明細)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">P3: 下期預測 (8碼 6柱 1-1-1-1-2-2)</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div class="panel-header">P4: 分布矩陣</div><div class="matrix-scroll" id="matrixCont"></div></div>
-    <div class="panel"><div class="panel-header">CONSOLE: 統計分析</div><div id="logBox">等待 CSV 匯入...</div></div>
+    <div class="panel">
+        <div class="panel-header">P1: 數據注入</div>
+        <input type="file" id="csvFile" accept=".csv" style="color: #8e8e93;">
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">CONSOLE: 統計分析</div>
+        <div id="logBox">等待 CSV 匯入分析...</div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">P2: 深度回測 (近 10 期)</div>
+        <div id="btBody"></div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">P3: 分布矩陣</div>
+        <div class="matrix-scroll" id="matrixCont"></div>
+    </div>
+
+    <div class="panel" id="finalResult">
+        <div class="panel-header">P4: 下期立柱預測 (8碼 6柱 1-1-1-1-2-2)</div>
+        <div id="nextPred" class="pillar-row"></div>
+    </div>
 </div>
 
 <script>
@@ -47,41 +68,36 @@
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
     function getPrediction(hist) {
-        if(hist.length < 30) return [1,2,11,12,21,22,31,32];
+        if(hist.length < 30) return [1,2,3,4,5,6,7,8];
         const lastRow = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0, gap: 0 }));
 
         for(let i=1; i<=39; i++) {
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
             scores[i].gap = gap;
-            if(gap >= 18 && gap <= 32) scores[i].s += 800;
-            let hot = 0; hist.slice(-10).forEach(d => { if(d.nums.includes(i)) hot++; });
-            scores[i].s += hot * 210;
+            // 權重演算：虛空遺漏(800) + 近期熱度(210) + 連莊/鄰碼(310) + 同尾優化(320)
+            if(gap >= 15 && gap <= 28) scores[i].s += 850;
+            let hot = 0; hist.slice(-12).forEach(d => { if(d.nums.includes(i)) hot++; });
+            scores[i].s += hot * 220;
             lastRow.forEach(ln => { 
                 if(Math.abs(ln - i) === 1) scores[i].s += 310; 
-                if(ln % 10 === i % 10) scores[i].s += 320; 
+                if(ln % 10 === i % 10) scores[i].s += 350; 
             });
         }
-
-        let final = new Set();
-        let hotCandidates = [...scores].sort((a,b)=>b.s - a.s);
-        
-        // 依照原始權重選取 8 碼，不重複
-        for(let x of hotCandidates) {
-            if(x.n === 0) continue;
-            if(final.size < 8) final.add(x.n);
-            else break;
-        }
-
-        return Array.from(final).slice(0, 8); // 返回未經排序的原生權重順序，便於立柱分配
+        // 排除 0，按分數降序排序
+        return scores.slice(1).sort((a,b) => b.s - a.s).map(x => x.n).slice(0, 8);
     }
 
-    // 將 8 碼分配至 6 柱 (1-1-1-1-2-2)
-    function distributePillars(codes) {
-        return [
-            [codes[0]], [codes[1]], [codes[2]], [codes[3]],
-            [codes[4], codes[5]], [codes[6], codes[7]]
-        ];
+    function renderPillars(codes) {
+        const structure = [[codes[0]], [codes[1]], [codes[2]], [codes[3]], [codes[4], codes[5]], [codes[6], codes[7]]];
+        return structure.map((p, i) => `
+            <div class="pillar-card">
+                <div class="pillar-id">第 ${i+1} 柱</div>
+                <div class="ball-group">
+                    ${p.map(n => `<div class="ball">${pad(n)}</div>`).join('')}
+                </div>
+            </div>
+        `).join('');
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -93,6 +109,7 @@
             }).filter(r => r.nums.length === 5);
             document.getElementById('logBox').innerHTML = "";
             runGlobalScan();
+            document.getElementById('finalResult').scrollIntoView({ behavior: 'smooth' });
         };
         reader.readAsText(e.target.files[0]);
     });
@@ -115,23 +132,12 @@
             btHtml += `<div class="bt-row">
                 <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
                 <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
-                <div class="num-group"><span class="num-label">預測</span>${pred.sort((a,b)=>a-b).map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--hit)':'#666'}">${pad(n)}</div>`).join('')}</div>
+                <div class="num-group"><span class="num-label">預測</span>${pred.slice().sort((a,b)=>a-b).map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--hit)':'#666'}">${pad(n)}</div>`).join('')}</div>
             </div>`;
         });
 
         document.getElementById('btBody').innerHTML = btHtml;
-
-        // 下期立柱預測顯示
-        const nextPred8 = getPrediction(rawData);
-        const pillars = distributePillars(nextPred8);
-        document.getElementById('nextPred').innerHTML = pillars.map((p, idx) => `
-            <div class="pillar-item">
-                <div class="pillar-label">柱 ${idx+1}</div>
-                <div style="display:flex; gap:4px;">
-                    ${p.map(n => `<div class="ball" style="width:32px; height:32px; font-size:15px;">${pad(n)}</div>`).join('')}
-                </div>
-            </div>
-        `).join('');
+        document.getElementById('nextPred').innerHTML = renderPillars(getPrediction(rawData));
 
         let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
         for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
@@ -143,10 +149,10 @@
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
 
-        log(`[V.53.8 交叉熵-立柱模式啟動]`);
-        log(`配置：8碼 6柱 (1,1,1,1,2,2)`);
-        log(`期望值：${(totalHits / totalPeriods).toFixed(2)} 碼/期`);
-        log(`2★以上占比: ${((starCount[2]+starCount[3]+starCount[4]+starCount[5])/totalPeriods*100).toFixed(1)}%`);
+        log(`核心: V.53.8 Cross-Entropy`);
+        log(`回測: ${totalPeriods} 期 | 均中: ${(totalHits / totalPeriods).toFixed(2)} 碼`);
+        log(`命中率: 2★+ (${((starCount[2]+starCount[3]+starCount[4]+starCount[5])/totalPeriods*100).toFixed(1)}%)`);
+        log(`狀態: 立柱配置已就緒`);
     }
 </script>
 </body>
