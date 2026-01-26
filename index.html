@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.55.4 Kinetic</title>
+    <title>Oracle V.55.5 Resonance</title>
     <style>
         :root { --bg: #000; --panel: #111; --primary: #ffd60a; --border: #333; --text: #fff; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { display: flex; flex-direction: column; gap: 10px; max-width: 600px; margin: auto; }
-        .panel { background: var(--panel); border-radius: 8px; padding: 12px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+        .panel { background: var(--panel); border-radius: 8px; padding: 12px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.9); }
         .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 8px; border-left: 4px solid var(--primary); padding-left: 8px; }
         .bt-row { border-bottom: 1px solid #222; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; }
         .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #222; font-size: 11px; margin-right: 3px; }
@@ -25,48 +25,38 @@
 <div class="container">
     <div class="panel"><div class="panel-header">數據注入 (CSV)</div><input type="file" id="csvFile"></div>
     <div class="panel"><div class="panel-header">穩定度回測 (15期)</div><div id="btBody"></div></div>
-    <div class="panel"><div class="panel-header">1/26 飽和動能 8 碼</div><div id="nextPred" class="ball-row"></div></div>
-    <div class="panel"><div class="panel-header">Kinetic 立柱 (2-2-2-2)</div><div id="pillarView" class="pillar-grid"></div></div>
-    <div id="logBox">> V.55.4 Kinetic 系統就緒...</div>
+    <div class="panel"><div class="panel-header">1/26 共振網格 8 碼</div><div id="nextPred" class="ball-row"></div></div>
+    <div class="panel"><div class="panel-header">Resonance 立柱 (2-2-2-2)</div><div id="pillarView" class="pillar-grid"></div></div>
+    <div id="logBox">> V.55.5 Resonance 系統就緒...</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV554Prediction(hist) {
+    function getV555Prediction(hist) {
         if(hist.length < 5) return [1,2,3,4,5,6,7,8];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
-        // 1. 動能區域計算
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += 1600; // 強鄰號
-                if(diff === 0) scores[i].s += 400;  // 降低連莊權重防守
-                if(ln % 10 === i % 10) scores[i].s += 800; // 尾數連動
+                if(diff === 1) scores[i].s += 1800; // 共振鄰號
+                if(diff === 2) scores[i].s += 900;
+                if(ln % 10 === i % 10) scores[i].s += 750;
             });
-            // 2. 遺漏值動能補償
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 3 && gap <= 7) scores[i].s += 600;
+            if(gap >= 3 && gap <= 8) scores[i].s += 550;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
         let final = new Set();
         
-        // 3. 飽和圍堵策略：尋找最熱點並在其周邊實施密集群組
-        const pivot = sorted[0].n;
-        final.add(pivot);
-        [pivot-1, pivot+1, pivot-2, pivot+2].forEach(n => {
-            if(n >= 1 && n <= 39) final.add(n);
+        // 核心策略：雙戰略區塊共振 (區間 1-19 與 20-39 各取前 4)
+        [[1,19],[20,39]].forEach(range => {
+            sorted.filter(x => x.n >= range[0] && x.n <= range[1]).slice(0, 4).forEach(x => final.add(x.n));
         });
-
-        // 4. 剩餘名額補強斷層區
-        for(let x of sorted) {
-            if(final.size < 8) final.add(x.n);
-            else break;
-        }
 
         return Array.from(final).slice(0, 8).sort((a,b) => a-b);
     }
@@ -89,17 +79,17 @@
         let btHtml = "";
         rawData.slice(-10).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV554Prediction(hist);
+            const pred = getV555Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b>${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
-        const next = getV554Prediction(rawData);
+        const next = getV555Prediction(rawData);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        // Kinetic 立柱交叉：(1,5), (2,6), (3,7), (4,8)
+        // Cross-Grid 對角碰撞：(1,5), (2,6), (3,7), (4,8)
         const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `<div class="pillar-item"><div>第 ${i+1} 柱</div><div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div></div>`).join('');
-        document.getElementById('logBox').innerHTML = "> 飽和動能模式啟動...<br>> 已針對熱點區域執行飽和圍堵";
+        document.getElementById('logBox').innerHTML = "> 共振雙區模式啟動...<br>> 1/26 網格布局已生成";
     }
 </script>
 </body>
