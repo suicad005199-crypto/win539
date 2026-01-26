@@ -3,68 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.56.7 Entropy</title>
+    <title>Oracle V.56.8 Synergetic</title>
     <style>
-        :root { --bg: #050508; --panel: #0f0f12; --primary: #00ff88; --accent: #ffd60a; --text: #e5e5e7; --border: #222228; }
+        :root { --bg: #040406; --panel: #0c0c0f; --primary: #00d4ff; --accent: #ff007a; --text: #e0e0e0; --border: #1a1a20; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 20px rgba(0,255,136,0.05); }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 25px rgba(0,212,255,0.08); }
         .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 14px; display: flex; justify-content: space-between; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #1a1a1d; }
-        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #18181b; font-size: 11px; margin-right: 3px; border: 1px solid #2a2a2e; }
+        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #16161a; }
+        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #151518; font-size: 11px; margin-right: 3px; border: 1px solid #25252b; }
         .n-box.hit { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
         .ball-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
         .ball { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; }
         .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .pillar-item { background: #0a0a0d; padding: 15px; border-radius: 10px; border: 1px solid var(--border); text-align: center; position: relative; }
+        .pillar-item { background: #08080a; padding: 15px; border-radius: 10px; border: 1px solid var(--border); text-align: center; position: relative; overflow: hidden; }
+        .pillar-item::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); }
         .p-nums { font-size: 24px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 2px; }
-        .p-tag { position: absolute; top: 4px; right: 8px; font-size: 8px; color: #555; }
+        .p-tag { position: absolute; top: 4px; right: 8px; font-size: 8px; color: #444; }
         #logBox { background: #000; color: var(--primary); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; min-height: 35px; border: 1px solid #1a1a1a; opacity: 0.9; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">穩定器注入 <span>ENTROPY SYNC</span></div>
+        <div class="panel-header">協同波律注入 <span>SYNERGY SYNC</span></div>
         <input type="file" id="csvFile">
     </div>
 
     <div class="panel">
-        <div class="panel-header">1/24 觀測窗 (Entropy 回測)</div>
+        <div class="panel-header">1/26 觀測窗 (V.56.8 回測)</div>
         <div id="btBody"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">1/24 穩定預測 8 碼 <span style="color:var(--accent)">V.56.7</span></div>
+        <div class="panel-header">1/26 協同預測 8 碼 <span style="color:var(--accent)">V.56.8</span></div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Hedge-Pillar 佈局 (2-2-2-2)</div>
+        <div class="panel-header">Cyclic 循環立柱 (2-2-2-2)</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.56.7 Entropy-Stabilizer 已就緒...</div>
+    <div id="logBox">> V.56.8 Synergetic-Wave 核心已掛載...</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV567Prediction(hist) {
-        if(hist.length < 5) return [02,03,11,12,13,21,22,23];
+    function getV568Prediction(hist) {
+        if(hist.length < 5) return [01,10,11,13,21,22,31,32];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += 4800; // 強化鄰號矩陣
-                if(diff === 10) scores[i].s += 2800; // 跨區對稱權重
-                if(ln % 10 === i % 10) scores[i].s += 2000;
+                // 區間飽和偵測與動態調權
+                if(diff === 1) scores[i].s += 5000; 
+                if(diff === 2) scores[i].s += 2200; // 擴散位移權重
+                if(diff === 10) scores[i].s += 3000; 
+                if(ln % 10 === i % 10) scores[i].s += 2200;
             });
+            // 長期遺漏偵測
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 2 && gap <= 5) scores[i].s += 1800;
+            if(gap >= 3 && gap <= 6) scores[i].s += 1600;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
@@ -73,9 +77,9 @@
         for(let x of sorted) {
             if(final.size >= 8) break;
             final.add(x.n);
-            // 穩定補償：自動平衡熱點區塊的延伸碼
-            let compensators = [x.n + 1, x.n + 10, x.n - 1];
-            for(let c of compensators) {
+            // 協同鎖定：自動補齊對應能量碼
+            let coLinks = [x.n + 11, x.n - 11, x.n + 9, x.n - 9];
+            for(let c of coLinks) {
                 if(c >= 1 && c <= 39 && final.size < 8 && !final.has(c)) {
                     final.add(c);
                     break;
@@ -101,33 +105,30 @@
     });
 
     function render() {
-        const targetDate = "2026/1/24";
-        const targetIdx = rawData.findIndex(d => d.date.includes("1/24"));
-        const displayData = targetIdx !== -1 ? rawData.slice(0, targetIdx + 1) : rawData;
-
+        // 以 1/26 為預測基準
+        const next = getV568Prediction(rawData);
+        
         let btHtml = "";
-        displayData.slice(-12).reverse().forEach(row => {
+        rawData.slice(-12).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV567Prediction(hist);
+            const pred = getV568Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#444'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
 
-        const histFor124 = targetIdx !== -1 ? rawData.slice(0, targetIdx) : rawData;
-        const next = getV567Prediction(histFor124);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        // Hedge 立柱：核心-擴散對沖佈局
-        const p = [[next[2], next[4]], [next[3], next[5]], [next[0], next[6]], [next[1], next[7]]];
+        // Cyclic 循環立柱：(1,5), (2,6), (3,7), (4,8)
+        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `
             <div class="pillar-item">
-                <div class="p-tag">${i < 2 ? 'CORE' : 'EDGE'}</div>
+                <div class="p-tag">WAVE-${i+1}</div>
                 <div>第 ${i+1} 柱</div>
                 <div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div>
             </div>`).join('');
         
-        document.getElementById('logBox').innerHTML = "> 熵值穩定偏好修正完畢...<br>> 1/24 對沖立柱已生成";
+        document.getElementById('logBox').innerHTML = "> 協同波律修正完畢...<br>> 1/26 循環滲透立柱已生成";
     }
 </script>
 </body>
