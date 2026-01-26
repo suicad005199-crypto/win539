@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.53.8 Pillar Pro</title>
+    <title>Oracle V.53.8 Pillar Pro (Small Data Mode)</title>
     <style>
         :root { --bg: #000; --panel: #141414; --primary: #ff3b30; --border: #2c2c2e; --text: #fff; --sub: #8e8e93; --hit: #ffd60a; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -24,8 +24,6 @@
         .m-date { background: #1a1a1a; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
         .m-ball { background: var(--primary); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
         #logBox { background: #000; color: #32d74b; padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); border-radius: 8px; }
-        
-        /* 立柱專用樣式 */
         .pillar-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .pillar-card { background: #000; border: 1px solid var(--border); padding: 8px; border-radius: 8px; text-align: center; }
         .pillar-id { font-size: 10px; color: var(--primary); margin-bottom: 5px; font-weight: bold; }
@@ -68,23 +66,28 @@
     const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
     function getPrediction(hist) {
-        if(hist.length < 30) return [1,2,3,4,5,6,7,8];
+        // --- 門檻調降至 15 ---
+        if(hist.length < 15) return [1,2,3,4,5,6,7,8];
+        
         const lastRow = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0, gap: 0 }));
 
         for(let i=1; i<=39; i++) {
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
             scores[i].gap = gap;
-            // 權重演算：虛空遺漏(800) + 近期熱度(210) + 連莊/鄰碼(310) + 同尾優化(320)
-            if(gap >= 15 && gap <= 28) scores[i].s += 850;
-            let hot = 0; hist.slice(-12).forEach(d => { if(d.nums.includes(i)) hot++; });
-            scores[i].s += hot * 220;
+            
+            // 小樣本優化邏輯：強化熱度與鄰碼，弱化長期遺漏
+            let hot = 0; hist.slice(-8).forEach(d => { if(d.nums.includes(i)) hot++; });
+            scores[i].s += hot * 400; // 提高近期熱度權重
+            
             lastRow.forEach(ln => { 
-                if(Math.abs(ln - i) === 1) scores[i].s += 310; 
-                if(ln % 10 === i % 10) scores[i].s += 350; 
+                if(Math.abs(ln - i) === 1) scores[i].s += 350; 
+                if(ln % 10 === i % 10) scores[i].s += 450; // 強調同尾規律
             });
+            
+            // 修正小數據下的遺漏權重
+            if(gap >= 5 && gap <= 12) scores[i].s += 200; 
         }
-        // 排除 0，按分數降序排序
         return scores.slice(1).sort((a,b) => b.s - a.s).map(x => x.n).slice(0, 8);
     }
 
@@ -116,9 +119,9 @@
 
     function runGlobalScan() {
         let btHtml = ""; let starCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0}; let totalHits = 0;
-        const totalPeriods = rawData.length - 30;
+        const totalPeriods = Math.max(0, rawData.length - 15);
 
-        for(let i = 30; i < rawData.length; i++) {
+        for(let i = 15; i < rawData.length; i++) {
             const hist = rawData.slice(0, i);
             const pred = getPrediction(hist);
             const hits = rawData[i].nums.filter(n => pred.includes(n));
@@ -149,10 +152,11 @@
         });
         document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
 
-        log(`核心: V.53.8 Cross-Entropy`);
-        log(`回測: ${totalPeriods} 期 | 均中: ${(totalHits / totalPeriods).toFixed(2)} 碼`);
-        log(`命中率: 2★+ (${((starCount[2]+starCount[3]+starCount[4]+starCount[5])/totalPeriods*100).toFixed(1)}%)`);
-        log(`狀態: 立柱配置已就緒`);
+        log(`啟動：小樣本預測模式 (15期門檻)`);
+        log(`數據：已匯入 ${rawData.length} 期`);
+        if(totalPeriods > 0) {
+            log(`命中率: 2★+ (${((starCount[2]+starCount[3]+starCount[4]+starCount[5])/totalPeriods*100).toFixed(1)}%)`);
+        }
     }
 </script>
 </body>
