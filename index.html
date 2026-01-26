@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle V.72.3 Pro - 539跳日修正版</title>
+    <title>Oracle V.72.4 - 盲測對齊版</title>
     <style>
         :root { --bg: #050505; --card: #121212; --gold: #ffd700; --539: #00f2ff; --daily: #00ff88; }
         body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 10px; padding-bottom: 120px; }
@@ -12,7 +12,8 @@
         .mode-btn { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #888; font-weight: bold; cursor: pointer; }
         .mode-btn.active-539 { background: var(--539); color: #000; border-color: var(--539); }
         .mode-btn.active-daily { background: var(--daily); color: #000; border-color: var(--daily); }
-        .history-panel { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 15px; border: 1px solid #333; }
+        .panel { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 15px; border: 1px solid #333; }
+        .panel-title { color: var(--gold); font-size: 12px; margin-bottom: 10px; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { color: #888; text-align: left; padding-bottom: 8px; border-bottom: 1px solid #333; }
         td { padding: 8px 0; border-bottom: 1px solid #222; }
@@ -21,39 +22,39 @@
         .col-box { background: #222; border-radius: 8px; padding: 8px; text-align: center; border: 1px solid #444; }
         .ball { width: 26px; height: 26px; background: #000; border: 1px solid var(--gold); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; color: var(--gold); margin: 2px; }
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #000; padding: 15px; border-top: 1px solid #333; }
-        .btn-upload { width: 100%; padding: 15px; border-radius: 10px; background: #fff; color: #000; font-weight: bold; border: none; font-size: 16px; }
+        .btn-upload { width: 100%; padding: 15px; border-radius: 10px; background: #fff; color: #000; font-weight: bold; border: none; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="log-box" id="logBox">>> 系統 V.72.3 就緒。支援 539 週日休刊偵測...</div>
+<div class="log-box" id="logBox">>> 系統 V.72.4 就緒。請上傳 1/23 或 1/24 的 CSV 進行盲測...</div>
 
 <div class="mode-container">
     <button id="btn539" class="mode-btn active-539" onclick="switchMode('539')">今彩 539</button>
     <button id="btnDaily" class="mode-btn" onclick="switchMode('Daily')">天天樂</button>
 </div>
 
-<div class="history-panel">
-    <div style="color:var(--gold); font-size:12px; margin-bottom:10px;">📊 逐期回測 (對齊當期歷史規律)</div>
-    <table id="historyTable">
-        <thead><tr><th>日期</th><th>真實獎號</th><th>完整預測 8 碼</th><th>結果</th></tr></thead>
+<div class="panel">
+    <div class="panel-title">📊 逐期回測核對 (歷史數據比對)</div>
+    <table>
+        <thead><tr><th>日期</th><th>獎號</th><th>預測 8 碼</th><th>結果</th></tr></thead>
         <tbody id="historyBody"></tbody>
     </table>
 </div>
 
-<div class="history-panel" style="border-color: var(--gold);">
-    <div style="color:var(--gold); font-size:12px; margin-bottom:10px;">🔮 <span id="targetDateDisplay">--/--</span> <span id="modeName">539</span> 預測牌組</div>
+<div class="panel" style="border-color: var(--gold);">
+    <div class="panel-title">🔮 <span id="targetDate">--/--</span> <span id="modeLabel">539</span> 盲測預期牌組</div>
     <div class="col-grid" id="colDisplay"></div>
 </div>
 
 <div class="footer">
     <input type="file" id="csvFile" style="display:none;" accept=".csv">
-    <button class="btn-upload" onclick="document.getElementById('csvFile').click()">📤 讀取 CSV (同步跳日邏輯)</button>
+    <button class="btn-upload" onclick="document.getElementById('csvFile').click()">📤 上傳數據執行盲測</button>
 </div>
 
 <script>
     let currentMode = '539';
-    let dataCache = { '539': [], 'Daily': [] };
+    let dataStore = [];
 
     function addLog(msg) {
         const box = document.getElementById('logBox');
@@ -61,86 +62,91 @@
         box.scrollTop = box.scrollHeight;
     }
 
+    function switchMode(m) {
+        currentMode = m;
+        document.getElementById('btn539').className = `mode-btn ${m==='539'?'active-539':''}`;
+        document.getElementById('btnDaily').className = `mode-btn ${m==='Daily'?'active-daily':''}`;
+        document.getElementById('modeLabel').innerText = m==='539'?'539':'天天樂';
+        if(dataStore.length > 0) runAnalysis();
+    }
+
     document.getElementById('csvFile').addEventListener('change', function(e) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-            const lines = evt.target.result.split('\n').filter(l => l.trim() !== "" && !l.includes('日期'));
-            dataCache[currentMode] = lines;
-            syncTimeline(lines);
+            dataStore = evt.target.result.split('\n').filter(l => l.trim() !== "" && !l.includes('日期'));
+            addLog(`📂 數據讀取成功，共 ${dataStore.length} 筆。`);
+            runAnalysis();
         };
         reader.readAsText(e.target.files[0]);
     });
 
-    function syncTimeline(lines) {
-        const lastParts = lines[lines.length-1].split(',');
+    function runAnalysis() {
+        const lastParts = dataStore[dataStore.length-1].split(',');
         const lastDate = new Date(lastParts[0]);
         const nextDate = new Date(lastDate);
 
-        // 539 特殊跳日邏輯
-        if (currentMode === '539') {
-            if (lastDate.getDay() === 6) { // 週六
-                nextDate.setDate(lastDate.getDate() + 2); // 跳過週日，到週一
-                addLog(`📅 偵測為週六，539 自動跳過週日，目標：週一`);
-            } else {
-                nextDate.setDate(lastDate.getDate() + 1);
-            }
+        // 539 跳日邏輯
+        if (currentMode === '539' && lastDate.getDay() === 6) {
+            nextDate.setDate(lastDate.getDate() + 2);
+            addLog("📅 偵測到週六資料，自動跳過週日休息日。");
         } else {
-            nextDate.setDate(lastDate.getDate() + 1); // 天天樂天天開
+            nextDate.setDate(lastDate.getDate() + 1);
         }
 
-        document.getElementById('targetDateDisplay').innerText = (nextDate.getMonth()+1) + '/' + nextDate.getDate();
-        addLog(`🎯 讀取至 ${lastParts[0]}，產出目標：${nextDate.toLocaleDateString()}`);
+        document.getElementById('targetDate').innerText = (nextDate.getMonth()+1) + '/' + nextDate.getDate();
+        addLog(`🎯 最後數據日期：${lastParts[0]} -> 預測日期：${nextDate.toLocaleDateString()}`);
+
         renderHistory();
+        renderForecast(lastParts.slice(1,6));
     }
 
     function renderHistory() {
-        const lines = dataCache[currentMode];
         const body = document.getElementById('historyBody');
         body.innerHTML = "";
-
-        // 這裡確保回測號碼是基於「當期數據」生成的，結論不會重複
-        lines.slice(-8).reverse().forEach((line, idx) => {
+        dataStore.slice(-8).reverse().forEach((line, idx) => {
             const p = line.split(',');
             const date = p[0];
             const real = p.slice(1,6).map(n => n.trim().padStart(2,'0'));
-            
-            // 重要：模擬不同數據產出不同結論 (idx 用來區分每一期預測)
-            const pred = getLogicPred(real, idx); 
+            // 這裡模擬歷史每期「基於前一期」的預測號碼
+            const pred = getMockLogic(dataStore[dataStore.length - idx - 2] || line);
             const hits = pred.filter(n => real.includes(n));
             
             body.innerHTML += `<tr>
                 <td>${date.split('/').slice(1).join('/')}</td>
                 <td>${real.join(',')}</td>
-                <td>${pred.map(n => real.includes(n) ? `<span class="hit-num">${n}</span>` : n).join(', ')}</td>
+                <td>${pred.map(n => real.includes(n) ? `<span class="hit-num">${n}</span>` : n).join(',')}</td>
                 <td style="color:#ff4444; font-weight:bold;">${hits.length}星</td>
             </tr>`;
         });
-        renderColumns();
     }
 
-    function getLogicPred(real, idx) {
-        // 簡單模擬：基於當期獎號的前兩碼做位移，確保每一期結論不同
-        let offset = (parseInt(real[0]) + idx) % 5; 
-        return real.map(n => (parseInt(n) + offset).toString().padStart(2,'0')).concat(['08','18','28']).slice(0,8).sort();
-    }
-
-    function renderColumns() {
-        const lines = dataCache[currentMode];
-        const lastReal = lines[lines.length-1].split(',').slice(1,6);
-        // 今日 6 柱實戰內容 (根據最後一期獎號計算)
-        const colData = [[lastReal[0]], ['16','26'], [lastReal[2]], ['14'], ['34'], ['36']];
-        document.getElementById('colDisplay').innerHTML = colData.map((n, i) => `
-            <div class="col-box"><div style="font-size:10px;color:#888">柱${i+1}</div>${n.map(v=>`<div class="ball">${v}</div>`).join('')}</div>
+    function renderForecast(lastReal) {
+        // 核心：盲測預測邏輯 (基於上傳的最後一期數據)
+        const pred = getMockLogic(lastReal.join(','));
+        const container = document.getElementById('colDisplay');
+        
+        // 將 8 碼分配到 6 柱
+        const cols = [[pred[0], pred[1]], [pred[2], pred[3]], [pred[4]], [pred[5]], [pred[6]], [pred[7]]];
+        container.innerHTML = cols.map((n, i) => `
+            <div class="col-box"><div style="font-size:10px;color:#888">柱${i+1}</div>
+                ${n.map(v=>`<div class="ball">${v}</div>`).join('')}
+            </div>
         `).join('');
     }
 
-    function switchMode(m) {
-        currentMode = m;
-        document.getElementById('btn539').className = `mode-btn ${m==='539'?'active-539':''}`;
-        document.getElementById('btnDaily').className = `mode-btn ${m==='Daily'?'active-daily':''}`;
-        document.getElementById('modeName').innerText = m==='539'?'539':'天天樂';
-        if(dataCache[m].length > 0) syncTimeline(dataCache[m]);
+    function getMockLogic(inputStr) {
+        // 真實盲測運算：基於輸入號碼產出特定號碼，非隨機
+        const nums = inputStr.split(',').map(n => parseInt(n));
+        const res = new Set();
+        nums.forEach(n => {
+            res.add(pad(n + 1)); // 鄰號
+            res.add(pad(n % 10 + 10)); // 尾數位移
+        });
+        res.add("06"); res.add("15"); res.add("37");
+        return Array.from(res).sort().slice(0, 8);
     }
+
+    function pad(n) { return (n > 39 ? n-39 : (n <= 0 ? 39+n : n)).toString().padStart(2,'0'); }
 </script>
 </body>
 </html>
