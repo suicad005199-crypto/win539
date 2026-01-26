@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.53.8 Pillar Pro (Small Data Mode)</title>
+    <title>Oracle V.54.2 Ultra-Pillar</title>
     <style>
         :root { --bg: #000; --panel: #141414; --primary: #ff3b30; --border: #2c2c2e; --text: #fff; --sub: #8e8e93; --hit: #ffd60a; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -17,12 +17,6 @@
         .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #2c2c2e; font-size: 11px; font-weight: bold; }
         .n-box.hit { background: var(--hit); color: #000; box-shadow: 0 0 8px var(--hit); }
         .star-tag { background: var(--primary); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
-        .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: #000; }
-        .m-table { border-collapse: collapse; white-space: nowrap; width: 100%; }
-        .m-table td, .m-table th { border: 1px solid #222; width: 20px; height: 20px; text-align: center; font-size: 10px; }
-        .m-head { background: #1a1a1a; color: var(--primary); position: sticky; top: 0; }
-        .m-date { background: #1a1a1a; color: var(--sub); position: sticky; left: 0; width: 50px; z-index: 5; }
-        .m-ball { background: var(--primary); border-radius: 50%; width: 12px; height: 12px; display: inline-block; }
         #logBox { background: #000; color: #32d74b; padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid var(--border); border-radius: 8px; }
         .pillar-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .pillar-card { background: #000; border: 1px solid var(--border); padding: 8px; border-radius: 8px; text-align: center; }
@@ -39,22 +33,17 @@
     </div>
 
     <div class="panel">
-        <div class="panel-header">CONSOLE: 統計分析</div>
-        <div id="logBox">等待 CSV 匯入分析...</div>
+        <div class="panel-header">CONSOLE: 終極版統計分析</div>
+        <div id="logBox">等待大數據匯入...</div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">P2: 深度回測 (近 10 期)</div>
+        <div class="panel-header">P2: 深度回測 (目標：4★ 捕捉)</div>
         <div id="btBody"></div>
     </div>
 
-    <div class="panel">
-        <div class="panel-header">P3: 分布矩陣</div>
-        <div class="matrix-scroll" id="matrixCont"></div>
-    </div>
-
     <div class="panel" id="finalResult">
-        <div class="panel-header">P4: 下期立柱預測 (8碼 6柱 1-1-1-1-2-2)</div>
+        <div class="panel-header">P3: 下期預測 (8碼 6柱 1-1-1-1-2-2)</div>
         <div id="nextPred" class="pillar-row"></div>
     </div>
 </div>
@@ -63,44 +52,42 @@
     let rawData = [];
     const log = (m) => { const b = document.getElementById('logBox'); b.innerHTML += `> ${m}<br>`; b.scrollTop = b.scrollHeight; };
     const pad = (n) => n.toString().padStart(2, '0');
-    const formatDate = (s) => { const p = s.split(/[-/]/); return p.length >= 3 ? `${p[1]}/${p[2]}` : s; };
 
     function getPrediction(hist) {
-        // --- 門檻調降至 15 ---
         if(hist.length < 15) return [1,2,3,4,5,6,7,8];
         
+        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
         const lastRow = hist[hist.length-1].nums;
-        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0, gap: 0 }));
+        const secondLastRow = hist.length > 2 ? hist[hist.length-2].nums : [];
 
         for(let i=1; i<=39; i++) {
+            // 1. 連莊與鄰碼 (權重增加)
+            if(lastRow.includes(i)) scores[i].s += 500;
+            lastRow.forEach(n => { if(Math.abs(n-i) === 1) scores[i].s += 450; });
+
+            // 2. 跳島版路捕捉 (隔期規律)
+            if(secondLastRow.includes(i)) scores[i].s += 600;
+
+            // 3. 尾數熱度 (539 核心)
+            const tails = hist.slice(-10).flatMap(d => d.nums.map(n => n % 10));
+            const tailFreq = tails.filter(t => t === (i % 10)).length;
+            scores[i].s += tailFreq * 150;
+
+            // 4. 殺號機制 (剔除過久未出或極冷)
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            scores[i].gap = gap;
-            
-            // 小樣本優化邏輯：強化熱度與鄰碼，弱化長期遺漏
-            let hot = 0; hist.slice(-8).forEach(d => { if(d.nums.includes(i)) hot++; });
-            scores[i].s += hot * 400; // 提高近期熱度權重
-            
-            lastRow.forEach(ln => { 
-                if(Math.abs(ln - i) === 1) scores[i].s += 350; 
-                if(ln % 10 === i % 10) scores[i].s += 450; // 強調同尾規律
-            });
-            
-            // 修正小數據下的遺漏權重
-            if(gap >= 5 && gap <= 12) scores[i].s += 200; 
+            if(gap > 35) scores[i].s -= 1000; // 殺掉僵屍號
+            if(gap === 0) scores[i].s += 200; // 追蹤連開
         }
+
+        // 5. 交叉過濾：選取分數最高的 8 碼
         return scores.slice(1).sort((a,b) => b.s - a.s).map(x => x.n).slice(0, 8);
     }
 
     function renderPillars(codes) {
         const structure = [[codes[0]], [codes[1]], [codes[2]], [codes[3]], [codes[4], codes[5]], [codes[6], codes[7]]];
         return structure.map((p, i) => `
-            <div class="pillar-card">
-                <div class="pillar-id">第 ${i+1} 柱</div>
-                <div class="ball-group">
-                    ${p.map(n => `<div class="ball">${pad(n)}</div>`).join('')}
-                </div>
-            </div>
-        `).join('');
+            <div class="pillar-card"><div class="pillar-id">柱 ${i+1}</div><div class="ball-group">
+            ${p.map(n => `<div class="ball">${pad(n)}</div>`).join('')}</div></div>`).join('');
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -110,7 +97,6 @@
                 const c = l.split(',');
                 return { date: c[0].trim(), nums: c.slice(1, 6).map(x => parseInt(x.trim())).filter(x => !isNaN(x)).sort((a,b)=>a-b) };
             }).filter(r => r.nums.length === 5);
-            document.getElementById('logBox').innerHTML = "";
             runGlobalScan();
             document.getElementById('finalResult').scrollIntoView({ behavior: 'smooth' });
         };
@@ -118,45 +104,31 @@
     });
 
     function runGlobalScan() {
-        let btHtml = ""; let starCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0}; let totalHits = 0;
-        const totalPeriods = Math.max(0, rawData.length - 15);
-
-        for(let i = 15; i < rawData.length; i++) {
-            const hist = rawData.slice(0, i);
-            const pred = getPrediction(hist);
-            const hits = rawData[i].nums.filter(n => pred.includes(n));
-            starCount[Math.min(hits.length, 5)]++; totalHits += hits.length;
+        let btHtml = ""; let stats = {4:0, 3:0, 2:0, total:0};
+        const startIdx = 15;
+        for(let i = startIdx; i < rawData.length; i++) {
+            const pred = getPrediction(rawData.slice(0, i));
+            const hits = rawData[i].nums.filter(n => pred.includes(n)).length;
+            if(hits >= 2) stats[Math.min(hits, 4)]++;
+            stats.total++;
         }
-
+        
         rawData.slice(-10).reverse().forEach(row => {
-            const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getPrediction(hist);
+            const pred = getPrediction(rawData.slice(0, rawData.indexOf(row)));
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row">
-                <div class="bt-meta"><span>📅 ${formatDate(row.date)}</span> <span class="star-tag">${hits.length} ★</span></div>
+            btHtml += `<div class="bt-row"><div class="bt-meta"><span>📅 ${row.date}</span> <span class="star-tag">${hits.length} ★</span></div>
                 <div class="num-group"><span class="num-label">開獎</span>${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div>
-                <div class="num-group"><span class="num-label">預測</span>${pred.slice().sort((a,b)=>a-b).map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--hit)':'#666'}">${pad(n)}</div>`).join('')}</div>
-            </div>`;
+                <div class="num-group"><span class="num-label">預測</span>${pred.slice().sort((a,b)=>a-b).map(n => `<div class="n-box" style="color:${row.nums.includes(n)?'var(--hit)':'#666'}">${pad(n)}</div>`).join('')}</div></div>`;
         });
 
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = renderPillars(getPrediction(rawData));
-
-        let mHtml = `<table class="m-table"><thead><tr><th class="m-date">日</th>`;
-        for(let i=1; i<=39; i++) mHtml += `<th class="m-head">${pad(i)}</th>`;
-        mHtml += `</tr></thead><tbody>`;
-        rawData.slice(-15).reverse().forEach(row => {
-            mHtml += `<tr><td class="m-date">${formatDate(row.date)}</td>`;
-            for(let i=1; i<=39; i++) mHtml += `<td>${row.nums.includes(i) ? '<span class="m-ball"></span>' : ''}</td>`;
-            mHtml += `</tr>`;
-        });
-        document.getElementById('matrixCont').innerHTML = mHtml + `</tbody></table>`;
-
-        log(`啟動：小樣本預測模式 (15期門檻)`);
-        log(`數據：已匯入 ${rawData.length} 期`);
-        if(totalPeriods > 0) {
-            log(`命中率: 2★+ (${((starCount[2]+starCount[3]+starCount[4]+starCount[5])/totalPeriods*100).toFixed(1)}%)`);
-        }
+        
+        log(`[V.54.2 終極啟動]`);
+        log(`回測期數: ${stats.total} | 4★ 命中: ${stats[4]}`);
+        log(`3★ 以上占比: ${((stats[3]+stats[4])/stats.total*100).toFixed(1)}%`);
+        log(`2★ 以上占比: ${((stats[2]+stats[3]+stats[4])/stats.total*100).toFixed(1)}%`);
+        log(`警告：數據量低於 50 期時，4★ 穩定性極低。`);
     }
 </script>
 </body>
