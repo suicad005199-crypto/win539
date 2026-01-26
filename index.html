@@ -3,71 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.63.5 Gravity</title>
+    <title>Oracle V.63.5 Parabolic</title>
     <style>
-        :root { --bg: #040508; --panel: #0c0e14; --primary: #ff3e00; --accent: #00d4ff; --text: #e0e6ed; --border: #1d222d; }
-        body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
+        :root { --bg: #040508; --panel: #0c0e14; --primary: #f0f000; --accent: #ff3300; --text: #e0e0e6; --border: #1a1d26; }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 25px rgba(255,62,0,0.08); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 14px; display: flex; justify-content: space-between; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #1a1f2b; }
-        .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #121620; font-size: 11px; margin-right: 3px; border: 1px solid #262f3d; }
-        .n-box.hit { background: var(--primary); color: #fff; font-weight: bold; border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 8px 32px rgba(240,240,0,0.04); }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #161a24; }
+        .n-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #080a0f; font-size: 11px; margin-right: 3px; border: 1px solid #252b38; }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: 900; border-color: var(--primary); box-shadow: 0 0 10px rgba(240,240,0,0.5); }
         .ball-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
-        .ball { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; }
+        .ball { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 18px; box-shadow: inset 0 0 8px rgba(240,240,0,0.2); }
         .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .pillar-item { background: #080a0f; padding: 15px; border-radius: 10px; border: 1px solid var(--border); text-align: center; position: relative; }
-        .p-nums { font-size: 24px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 2px; }
-        .p-tag { position: absolute; top: 4px; right: 8px; font-size: 8px; color: #4b5563; }
-        #logBox { background: #000; color: var(--primary); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; min-height: 35px; border: 1px solid #1d222d; }
+        .pillar-item { background: #090b10; padding: 15px; border-radius: 10px; border: 1px solid var(--border); text-align: center; position: relative; overflow: hidden; }
+        .p-nums { font-size: 26px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .p-tag { position: absolute; top: 4px; right: 8px; font-size: 9px; color: #4a4d5e; font-weight: bold; }
+        #logBox { background: #000; color: var(--primary); padding: 10px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 11px; border: 1px solid #1a1e26; line-height: 1.5; }
+        .v-tag { background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">引力井模組注入 <span>GRAVITY SYNC</span></div>
-        <input type="file" id="csvFile">
+        <div class="panel-header">拋物線支點引擎 <span class="v-tag">V.63.5</span></div>
+        <input type="file" id="csvFile" accept=".csv">
     </div>
 
     <div class="panel">
-        <div class="panel-header">勢能匯聚回測 (V.63.5)</div>
+        <div class="panel-header">穩定度波律回測 (V.63.5)</div>
         <div id="btBody"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">1/26 預測 8 碼 <span style="color:var(--accent)">V.63.5</span></div>
+        <div class="panel-header">1/26 拋物線預測 8 碼</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Gravity 立柱佈局 (2-2-2-2)</div>
+        <div class="panel-header">Pivot 支點立柱布局 (2-2-2-2)</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.63.5 Gravity-Well 引擎準備就緒...</div>
+    <div id="logBox">> V.63.5 Parabolic-Pivot 系統就緒...<br>> 偵測到 1-尾 能量過載，準備疏散至對稱維度。</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV63Prediction(hist) {
-        if(hist.length < 5) return [02,10,12,20,22,30,32,38];
+    function getV635Prediction(hist) {
+        if(hist.length < 5) return [02,08,10,12,20,22,30,38];
         const last = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
             last.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1 || diff === 2) scores[i].s += 6500; // 強引力範圍
-                if(diff === 10) scores[i].s += 4000; // 跨維對稱
-                if(ln % 10 === i % 10) scores[i].s += 2000; // 尾數連鎖
+                if(diff === 1) scores[i].s += 6200; // 鄰域引力
+                if(diff === 10 || diff === 11) scores[i].s += 4800; // 跨維度對稱
+                
+                // 尾數疏散邏輯：若上期同尾過多，則降低該尾數權重
+                const lastTails = last.map(n => n % 10);
+                const currentTail = i % 10;
+                const tailCount = lastTails.filter(t => t === currentTail).length;
+                if(tailCount >= 2) scores[i].s -= 3000; 
+                else if(tailCount === 0) scores[i].s += 2000; // 補償冷尾
             });
-            // 勢能補償：針對 0-尾、2-尾 進行特定加權
-            if(i % 10 === 0 || i % 10 === 2) scores[i].s += 3500;
-            
+
+            // 拋物線極值權重：加強邊緣號碼 (01-05, 35-39)
+            if(i <= 5 || i >= 35) scores[i].s += 2500;
+
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 3 && gap <= 6) scores[i].s += 2800;
+            if(gap >= 5 && gap <= 9) scores[i].s += 3500;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
@@ -76,10 +84,10 @@
         for(let x of sorted) {
             if(final.size >= 8) break;
             final.add(x.n);
-            // 引力捕獲：加入相鄰高勢能點
-            let capt = x.n + (x.n % 2 === 0 ? -1 : 1);
-            if(capt >= 1 && capt <= 39 && final.size < 8 && !final.has(capt)) {
-                final.add(capt);
+            // 支點補償碼
+            let pivotPartner = 40 - x.n;
+            if(pivotPartner >= 1 && pivotPartner <= 39 && final.size < 8 && !final.has(pivotPartner)) {
+                final.add(pivotPartner);
             }
         }
         return Array.from(final).sort((a,b) => a-b);
@@ -100,28 +108,31 @@
     });
 
     function render() {
-        const next = getV63Prediction(rawData);
+        const next = getV635Prediction(rawData);
         let btHtml = "";
         rawData.slice(-12).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV63Prediction(hist);
+            const pred = getV63Prediction(hist); // 這裡改調用 V.63.5 邏輯
             const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#334'}">${hits.length}★</b></div>`;
+            btHtml += `<div class="bt-row"><span>${row.date.split('/').slice(1).join('/')}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#3e424b'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        // Well 立柱 (1,8), (2,7), (3,6), (4,5) - 塌縮式交叉
+        // Parabolic 立柱 (1,8), (2,7), (3,6), (4,5) - 極值交叉鎖定
         const p = [[next[0], next[7]], [next[1], next[6]], [next[2], next[5]], [next[3], next[4]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `
             <div class="pillar-item">
-                <div class="p-tag">WELL-${i+1}</div>
-                <div>第 ${i+1} 柱</div>
+                <div class="p-tag">PIVOT-${i+1}</div>
+                <div style="font-size:11px; color:var(--primary)">第 ${i+1} 柱</div>
                 <div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div>
             </div>`).join('');
         
-        document.getElementById('logBox').innerHTML = "> 引力中心計算完成...<br>> 1/26 勢能匯聚點已鎖定：0-尾與 2-尾";
+        document.getElementById('logBox').innerHTML = `> 拋物線支點計算完成 (${new Date().toLocaleTimeString()})<br>> 1/26 預期跨度擴散，立柱已執行極值對沖。`;
     }
+
+    // 內部別名兼容
+    function getV63Prediction(h) { return getV635Prediction(h); }
 </script>
 </body>
 </html>
