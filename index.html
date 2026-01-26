@@ -279,4 +279,23 @@ document.getElementById('csvFile').addEventListener('change', e=>{
   if(!e.target.files[0]) return;
   parseCSV(e.target.files[0], data=>{
     rawData = data;
-    let {predList, hitList} =
+    let {predList, hitList} = multiStrategy(rawData);
+    results = rawData.map((d,i)=>({...d,'預測8碼':predList[i],'命中星數':hitList[i]}));
+    renderPanel2();
+    renderPanel3();
+    renderLogBox();
+  });
+});
+
+// 面板排序
+Sortable.create(document.getElementById('container'),{
+  handle:'h2',
+  animation:150,
+  store:{
+    get:()=> JSON.parse(localStorage.getItem('panelOrder')||'[]'),
+    set: (sortable)=> localStorage.setItem('panelOrder',JSON.stringify(sortable.toArray()))
+  }
+});
+</script>
+</body>
+</html>
