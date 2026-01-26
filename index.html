@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>預測系統001 - 立柱版</title>
+<title>預測系統001</title>
 <style>
   body { font-family: Arial, sans-serif; margin:0; padding:0; }
   .panel { background: #f9f9f9; margin:8px 4px; border-radius:8px; padding:10px; }
@@ -14,9 +14,9 @@
   th, td { border:1px solid #ccc; padding:6px; text-align:center; font-size:14px; }
   th { background:#1d3557; color:#fff; }
   .highlight { color:#e63946; font-weight:bold; }
-  #logbox { background:#f0f0f0; padding:8px; max-height:140px; overflow-y:auto; font-size:14px; }
-  .number-card { display:inline-block; width:28px; height:28px; line-height:28px; margin:2px; background:#2a9d8f; color:#fff; border-radius:4px; text-align:center; }
-  .pillar { margin:4px 0; }
+  #logbox { background:#f0f0f0; padding:8px; max-height:120px; overflow-y:auto; font-size:14px; }
+  .number-card { display:inline-block; width:28px; height:28px; line-height:28px; margin:2px; color:#fff; border-radius:4px; text-align:center; }
+  #predictionColumns div { margin:4px; flex:1; text-align:center; }
   @media(max-width:480px){ table th, table td { font-size:12px; padding:4px; } .number-card{width:24px;height:24px;line-height:24px;} }
 </style>
 </head>
@@ -38,7 +38,7 @@
     <h2>逐期回報</h2>
     <table id="resultTable">
       <thead>
-        <tr><th>日期</th><th>獎號</th><th>預測8碼</th><th>6柱分配</th><th>命中星數</th></tr>
+        <tr><th>日期</th><th>獎號</th><th>預測8碼</th><th>命中星數</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -46,9 +46,8 @@
 
   <!-- Panel 3: 下期號碼預測 -->
   <div class="panel" id="panel3">
-    <h2>下期號碼預測</h2>
-    <div id="prediction8"></div>
-    <div id="pillarPreview"></div>
+    <h2>下期號碼預測 (6柱立柱)</h2>
+    <div id="predictionColumns" style="display:flex; flex-wrap:wrap; justify-content:space-around;"></div>
   </div>
 
   <!-- Panel 4: LogBox -->
@@ -80,15 +79,11 @@ function parseCSV(file, callback){
   reader.readAsText(file);
 }
 
-// 多策略 + 立柱分配
 function multiStrategy(data){
   let predList = [];
-  let pillarList = [];
   let hitList = [];
-
   for(let i=0;i<data.length;i++){
-    let candidate8 = [];
-    if(i===0){ candidate8=[1,2,3,4,5,6,7,8]; }
+    if(i===0){ predList.push([1,2,3,4,5,6,7,8]); hitList.push(null); }
     else{
       let past=[];
       for(let j=0;j<i;j++){
@@ -101,27 +96,14 @@ function multiStrategy(data){
       let remaining = allNumbers.filter(n=>!top5.includes(n));
       let cold = remaining.filter(n=>!past.slice(-8).includes(n)).slice(0,3);
       if(cold.length<3) cold = cold.concat(remaining.filter(n=>!top5.includes(n)).slice(0,3-cold.length));
-      candidate8 = top5.concat(cold);
+      let candidate8 = top5.concat(cold);
+      predList.push(candidate8);
+      let current = [data[i]['獎號1'],data[i]['獎號2'],data[i]['獎號3'],data[i]['獎號4'],data[i]['獎號5']];
+      let hit = candidate8.filter(n=>current.includes(n)).length;
+      hitList.push(hit);
     }
-    // 立柱分配（6柱）
-    let pillars = [
-      [candidate8[0], candidate8[1]], // 柱1
-      [candidate8[2], candidate8[3]], // 柱2
-      [candidate8[4]], // 柱3
-      [candidate8[5]], // 柱4
-      [candidate8[6]], // 柱5
-      [candidate8[7]]  // 柱6
-    ];
-
-    // 計算命中星數 (每柱)
-    let current = [data[i]['獎號1'],data[i]['獎號2'],data[i]['獎號3'],data[i]['獎號4'],data[i]['獎號5']];
-    let maxHit = Math.max(...pillars.map(p=>p.filter(n=>current.includes(n)).length));
-
-    predList.push(candidate8);
-    pillarList.push(pillars);
-    hitList.push(maxHit);
   }
-  return {predList,pillarList,hitList};
+  return {predList, hitList};
 }
 
 function renderPanel2(){
@@ -129,35 +111,42 @@ function renderPanel2(){
   tbody.innerHTML='';
   results.slice().reverse().forEach((row,i)=>{
     let tr = document.createElement('tr');
-    let nums = [row['獎號1'],row['獎號2'],row['獎號3'],row['獎號4'],row['獎號5']].join(',');
-    let pred = row['預測8碼'].join(',');
-    let pillarStr = row['6柱'].map(p=>p.join('-')).join(' | ');
-    tr.innerHTML=`<td>${row['開獎日期']}</td><td>${nums}</td><td>${pred}</td><td>${pillarStr}</td><td class='${row['命中星數']>=2?'highlight':''}'>${row['命中星數']}</td>`;
+    let currentNums = [row['獎號1'],row['獎號2'],row['獎號3'],row['獎號4'],row['獎號5']];
+    let predNums = row['預測8碼'];
+
+    let predHtml = predNums.map(n=>{
+      return currentNums.includes(n) ? `<span class='highlight'>${n}</span>` : n;
+    }).join(',');
+
+    let nums = currentNums.join(',');
+
+    tr.innerHTML=`<td>${row['開獎日期']}</td><td>${nums}</td><td>${predHtml}</td><td class='${row['命中星數']>=2?'highlight':''}'>${row['命中星數']}</td>`;
     tbody.appendChild(tr);
   });
 }
 
 function renderPanel3(){
-  const div = document.getElementById('prediction8');
-  div.innerHTML='';
-  const pDiv = document.getElementById('pillarPreview');
-  pDiv.innerHTML='';
+  const container = document.getElementById('predictionColumns');
+  container.innerHTML='';
   if(results.length===0) return;
   let lastPred = results[results.length-1]['預測8碼'];
-  lastPred.forEach(n=>{
-    let span = document.createElement('span');
-    span.className='number-card';
-    span.textContent=n;
-    div.appendChild(span);
-  });
-  let lastPillars = results[results.length-1]['6柱'];
-  lastPillars.forEach((p,i)=>{
-    let span = document.createElement('span');
-    span.className='number-card';
-    span.textContent = p.join(',');
-    pDiv.appendChild(document.createTextNode(`柱${i+1}: `));
-    pDiv.appendChild(span);
-    pDiv.appendChild(document.createElement('br'));
+
+  // 6柱分配
+  let columns = [[],[],[],[],[],[]];
+  columns[0] = lastPred.slice(0,2);
+  columns[1] = lastPred.slice(2,4);
+  for(let i=4;i<8;i++){
+    columns[i-2].push(lastPred[i]);
+  }
+
+  // 顏色組
+  const colors = ['#2a9d8f','#e76f51','#264653','#f4a261','#e9c46a','#8ac926'];
+
+  columns.forEach((col,i)=>{
+    const div = document.createElement('div');
+    div.innerHTML = `<div style="margin-bottom:4px; font-weight:bold;">柱${i+1}</div>` +
+      col.map(n=>`<span class="number-card" style="background:${colors[i]}">${n}</span>`).join('');
+    container.appendChild(div);
   });
 }
 
@@ -173,8 +162,8 @@ function renderLogBox(){
 document.getElementById('csvFile').addEventListener('change', e=>{
   parseCSV(e.target.files[0], data=>{
     rawData = data;
-    let {predList,pillarList,hitList} = multiStrategy(rawData);
-    results = rawData.map((d,i)=> ({...d,'預測8碼':predList[i],'6柱':pillarList[i],'命中星數':hitList[i]}));
+    let {predList,hitList} = multiStrategy(rawData);
+    results = rawData.map((d,i)=> ({...d,'預測8碼':predList[i],'命中星數':hitList[i]}));
     renderPanel2();
     renderPanel3();
     renderLogBox();
