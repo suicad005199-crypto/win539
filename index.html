@@ -61,6 +61,7 @@
 let rawData = [];
 let results = [];
 
+// CSV 解析
 function parseCSV(file, callback){
   const reader = new FileReader();
   reader.onload = e => { 
@@ -70,7 +71,10 @@ function parseCSV(file, callback){
     const data = lines.slice(1).map(line => {
       const items = line.split(/[\t,]/);
       let obj = {};
-      header.forEach((h,i)=> obj[h]=isNaN(parseInt(items[i])) ? undefined : parseInt(items[i]));
+      header.forEach((h,i)=>{
+        if(h.includes("開獎日期")) obj[h] = items[i]; // 日期保留字串
+        else obj[h] = isNaN(parseInt(items[i])) ? undefined : parseInt(items[i]);
+      });
       return obj;
     });
     callback(data);
@@ -78,6 +82,7 @@ function parseCSV(file, callback){
   reader.readAsText(file);
 }
 
+// 多策略預測
 function multiStrategy(data){
   let predList = [];
   let hitList = [];
@@ -85,8 +90,7 @@ function multiStrategy(data){
     if(i===0){ 
       predList.push([1,2,3,4,5,6,7,8]); 
       hitList.push(null); 
-    }
-    else{
+    } else {
       let past=[];
       for(let j=0;j<i;j++){
         past.push(data[j]['獎號1'],data[j]['獎號2'],data[j]['獎號3'],data[j]['獎號4'],data[j]['獎號5']);
@@ -103,8 +107,6 @@ function multiStrategy(data){
       if(cold.length<3) cold = cold.concat(remaining.filter(n=>!top5.includes(n)).slice(0,3-cold.length));
 
       let candidate8 = top5.concat(cold).filter(n=>!isNaN(n));
-
-      // 確保長度 8
       while(candidate8.length<8){
         let extra = allNumbers.find(n=>!candidate8.includes(n));
         candidate8.push(extra);
@@ -120,6 +122,7 @@ function multiStrategy(data){
   return {predList, hitList};
 }
 
+// Panel2 渲染
 function renderPanel2(){
   const tbody = document.querySelector('#resultTable tbody');
   tbody.innerHTML='';
@@ -130,8 +133,7 @@ function renderPanel2(){
     let dateParts = row['開獎日期'].toString().split('/');
     let shortDate = `${parseInt(dateParts[1])}/${parseInt(dateParts[2])}`;
 
-    let currentNums = [row['獎號1'],row['獎號2'],row['獎號3'],row['獎號4'],row['獎號5']].filter(n=>n!==undefined);
-
+    let currentNums = [row['獎號1'],row['獎號2'],row['獎號3'],row['獎號4'],row['獎號5']];
     let predNums = (row['預測8碼']||[]).filter(n=>!isNaN(n));
 
     let predHtml = predNums.map(n=>{
@@ -148,6 +150,7 @@ function renderPanel2(){
   });
 }
 
+// Panel3 渲染
 function renderPanel3(){
   const div = document.getElementById('prediction8');
   div.innerHTML='';
@@ -165,6 +168,7 @@ function renderPanel3(){
   }
 }
 
+// LogBox
 function renderLogBox(){
   const log = document.getElementById('logbox');
   if(results.length<10){ log.textContent='歷史不足10期'; return;}
@@ -174,6 +178,7 @@ function renderLogBox(){
   log.innerHTML=`近10期勝率: ${winCount*10}%<br>平均命中星數: ${avgHit}`;
 }
 
+// CSV 上傳事件
 document.getElementById('csvFile').addEventListener('change', e=>{
   parseCSV(e.target.files[0], data=>{
     rawData = data;
