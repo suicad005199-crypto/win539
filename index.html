@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.56.5 Quantum</title>
+    <title>Oracle V.56.6 Harmonic</title>
     <style>
         :root { --bg: #030305; --panel: #0d0d10; --primary: #00ffcc; --accent: #ffd60a; --text: #e0e0e0; --border: #1f1f23; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
@@ -25,33 +25,33 @@
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">量子數據注入 <span>CSV SYNC</span></div>
+        <div class="panel-header">數據注入 <span>HARMONIC SYNC</span></div>
         <input type="file" id="csvFile">
     </div>
 
     <div class="panel">
-        <div class="panel-header">糾纏度回測 (1/24 觀測窗)</div>
+        <div class="panel-header">諧振度回測 (1/24 觀測窗)</div>
         <div id="btBody"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">1/24 量子預測 8 碼 <span style="color:var(--accent)">V.56.5</span></div>
+        <div class="panel-header">1/24 諧振預測 8 碼 <span style="color:var(--accent)">V.56.6</span></div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Entanglement 立柱 (2-2-2-2)</div>
+        <div class="panel-header">Harmonic 立柱 (2-2-2-2)</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> V.56.5 Quantum-Entanglement 核心已掛載...</div>
+    <div id="logBox">> V.56.6 Harmonic-Resonance 核心已掛載...</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV565Prediction(hist) {
+    function getV566Prediction(hist) {
         if(hist.length < 5) return [11,12,13,21,22,23,31,32];
         const lastNums = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
@@ -59,27 +59,24 @@
         for(let i=1; i<=39; i++) {
             lastNums.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += 4000; // 高密度鄰號糾纏
-                if(diff === 10) scores[i].s += 2000; // 跨區對應糾纏
-                if(ln % 10 === i % 10) scores[i].s += 1500;
+                if(diff === 1) scores[i].s += 4500; 
+                if(diff === 10) scores[i].s += 2500; 
+                if(ln % 10 === i % 10) scores[i].s += 1800;
             });
-            // 修正 1/24 盤路偏態
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 2 && gap <= 5) scores[i].s += 1200;
+            if(gap >= 2 && gap <= 5) scores[i].s += 1500;
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
         let final = new Set();
         
-        // 核心邏輯：選取前 4 個熱點，並自動拉入其「糾纏對」
         for(let x of sorted) {
             if(final.size >= 8) break;
             final.add(x.n);
-            // 糾纏補償：若選了 11，嘗試加入 21 或 12
-            let pairs = [x.n + 1, x.n - 1, x.n + 10, x.n - 10];
-            for(let p of pairs) {
-                if(p >= 1 && p <= 39 && final.size < 8 && !final.has(p)) {
-                    final.add(p);
+            let harmonics = [x.n + 1, x.n - 1, x.n + 10, x.n - 10];
+            for(let h of harmonics) {
+                if(h >= 1 && h <= 39 && final.size < 8 && !final.has(h)) {
+                    final.add(h);
                     break; 
                 }
             }
@@ -110,18 +107,17 @@
         let btHtml = "";
         displayData.slice(-12).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV565Prediction(hist);
+            const pred = getV566Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? 'var(--primary)':'#444'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
 
         const histFor124 = targetIdx !== -1 ? rawData.slice(0, targetIdx) : rawData;
-        const next = getV565Prediction(histFor124);
+        const next = getV566Prediction(histFor124);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
         
-        // Entanglement 立柱：1-3 互補, 2-4 互補
-        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
+        const p = [[next[0], next[2]], [next[1], next[3]], [next[4], next[6]], [next[5], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `
             <div class="pillar-item">
                 <div class="p-tag">SYNC-${i+1}</div>
@@ -129,7 +125,7 @@
                 <div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div>
             </div>`).join('');
         
-        document.getElementById('logBox').innerHTML = "> 量子糾纏對鎖定成功...<br>> 已針對 1/24 執行跨區矩陣碰撞優化";
+        document.getElementById('logBox').innerHTML = "> 諧振同步鎖定成功...<br>> 已針對 1/24 執行連號能量平滑優化";
     }
 </script>
 </body>
