@@ -1,192 +1,160 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.8.4 - Pillar Mastery</title>
-    <style>
-        :root { --bg: #050505; --card: #121212; --gold: #ffd700; --539: #00f2ff; --daily: #00ff88; --red: #ff4444; --txt: #e0e0e0; }
-        body { background: var(--bg); color: var(--txt); font-family: -apple-system, sans-serif; margin: 0; padding: 12px; padding-bottom: 160px; }
-        
-        /* 1. Log Box Panel */
-        .log-box { background: #000; border: 1px solid #333; font-family: monospace; font-size: 11px; padding: 12px; height: 110px; overflow-y: auto; color: #0f0; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid var(--gold); line-height: 1.6; }
-
-        /* 2. Mode Toggle Panel */
-        .mode-container { display: flex; gap: 10px; margin-bottom: 15px; }
-        .mode-btn { flex: 1; padding: 16px; border-radius: 12px; border: 1px solid #444; background: #222; color: #888; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 15px; text-transform: uppercase; }
-        .mode-btn.active-539 { background: var(--539); color: #000; border-color: var(--539); box-shadow: 0 0 15px rgba(0, 242, 255, 0.4); }
-        .mode-btn.active-daily { background: var(--daily); color: #000; border-color: var(--daily); box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
-
-        /* 3. Backtest Panel (逐期回報) */
-        .panel { background: var(--card); border-radius: 15px; padding: 15px; border: 1px solid #333; margin-bottom: 15px; overflow: hidden; }
-        .panel-header { color: var(--gold); font-size: 14px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { color: #777; text-align: left; padding: 8px 0; border-bottom: 1px solid #333; }
-        td { padding: 12px 0; border-bottom: 1px solid #222; }
-        
-        .hit-high { color: var(--daily); font-weight: bold; text-decoration: underline; }
-        .star-tag { background: var(--red); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 11px; }
-
-        /* Hover Tooltip Logic */
-        .pred-wrap { position: relative; cursor: help; display: inline-block; background: #1a1a1a; padding: 4px 8px; border-radius: 5px; border: 1px solid #333; }
-        .pred-wrap:hover::after {
-            content: attr(data-hits);
-            position: absolute; bottom: 125%; left: 0; background: #fff; color: #000;
-            padding: 8px 12px; border-radius: 8px; font-size: 13px; z-index: 99; white-space: nowrap; font-weight: bold; box-shadow: 0 5px 20px #000;
-        }
-
-        /* 4. Next Pillar Panel */
-        .pillar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .pillar-box { background: #111; border: 1px solid #333; border-radius: 10px; padding: 12px; text-align: center; border-top: 3px solid var(--gold); }
-        .ball { display: inline-block; width: 28px; height: 28px; line-height: 28px; background: var(--gold); color: #000; border-radius: 50%; font-weight: bold; font-size: 14px; margin: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-
-        /* Footer Control */
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 20px; border-top: 1px solid #444; backdrop-filter: blur(10px); z-index: 100; }
-        .btn-upload { width: 100%; padding: 18px; border-radius: 15px; background: #fff; color: #000; font-weight: bold; border: none; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .btn-upload:active { transform: scale(0.98); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> 預測系統001 </title>
+<style>
+  body { font-family: Arial, sans-serif; margin:0; padding:0; }
+  .panel { background: #f9f9f9; margin:8px 4px; border-radius:8px; padding:10px; }
+  .panel h2 { margin:0; padding:8px; background:#e63946; color:#fff; border-radius:6px; cursor:grab; }
+  .panel h2:active { cursor:grabbing; }
+  button { padding:8px 12px; margin:4px; font-size:16px; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { border:1px solid #ccc; padding:6px; text-align:center; font-size:14px; }
+  th { background:#1d3557; color:#fff; }
+  .highlight { color:#e63946; font-weight:bold; }
+  #logbox { background:#f0f0f0; padding:8px; max-height:120px; overflow-y:auto; font-size:14px; }
+  .number-card { display:inline-block; width:28px; height:28px; line-height:28px; margin:2px; background:#2a9d8f; color:#fff; border-radius:4px; text-align:center; }
+  @media(max-width:480px){ table th, table td { font-size:12px; padding:4px; } .number-card{width:24px;height:24px;line-height:24px;} }
+</style>
 </head>
 <body>
 
-<div class="log-box" id="logBox">>> Oracle V.8.4 載入完畢...<br>>> 請上傳 CSV 檔案進行 539/天天樂 滾動分析。</div>
+<div id="container">
+  <!-- Panel 1: CSV 上傳 -->
+  <div class="panel" id="panel1">
+    <h2>CSV 上傳</h2>
+    <input type="file" id="csvFile" accept=".csv">
+    <select id="lotteryType">
+      <option value="539">今彩539</option>
+      <option value="tt">天天樂</option>
+    </select>
+  </div>
 
-<div class="mode-container">
-    <button id="btn539" class="mode-btn active-539" onclick="switchMode('539')">今彩 539</button>
-    <button id="btnDaily" class="mode-btn" onclick="switchMode('Daily')">天天樂</button>
-</div>
-
-<div class="panel">
-    <div class="panel-header">
-        <span>📊 逐期回報 (Rolling Report)</span>
-        <span id="winRateInfo" style="color:var(--daily);">4星勝率: --%</span>
-    </div>
-    <table>
-        <thead>
-            <tr><th width="12%">期序</th><th width="28%">獎號</th><th width="48%">預測(Hover看命中)</th><th width="12%">結果</th></tr>
-        </thead>
-        <tbody id="backtestBody">
-            <tr><td colspan="4" style="text-align:center; padding:30px; color:#555;">等待 CSV 資料輸入...</td></tr>
-        </tbody>
+  <!-- Panel 2: 逐期回報 -->
+  <div class="panel" id="panel2">
+    <h2>逐期回報</h2>
+    <table id="resultTable">
+      <thead>
+        <tr><th>日期</th><th>獎號</th><th>預測8碼</th><th>命中星數</th></tr>
+      </thead>
+      <tbody></tbody>
     </table>
+  </div>
+
+  <!-- Panel 3: 下期號碼預測 -->
+  <div class="panel" id="panel3">
+    <h2>下期號碼預測</h2>
+    <div id="prediction8"></div>
+  </div>
+
+  <!-- Panel 4: LogBox -->
+  <div class="panel" id="panel4">
+    <h2>LogBox</h2>
+    <div id="logbox"></div>
+  </div>
 </div>
 
-<div class="panel" id="nextPillarArea" style="display:none; border-color: var(--gold);">
-    <div class="panel-header">
-        <span>🔮 下期立柱配置建議</span>
-        <span id="nextProb" style="color:var(--red);">預估 4星率: 80%</span>
-    </div>
-    <div class="pillar-grid" id="pillarGrid"></div>
-</div>
-
-<div class="footer">
-    <input type="file" id="csvFile" style="display:none;" accept=".csv">
-    <button class="btn-upload" onclick="document.getElementById('csvFile').click()">📤 上傳 CSV 並執行一致化運算</button>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-    let currentMode = '539';
-    let storage = { '539': [], 'Daily': [] };
+let rawData = [];
+let results = [];
 
-    function addLog(msg) {
-        const box = document.getElementById('logBox');
-        box.innerHTML += `<div>>> ${msg}</div>`;
-        box.scrollTop = box.scrollHeight;
-    }
-
-    function switchMode(mode) {
-        currentMode = mode;
-        document.getElementById('btn539').className = `mode-btn ${mode==='539'?'active-539':''}`;
-        document.getElementById('btnDaily').className = `mode-btn ${mode==='Daily'?'active-daily':''}`;
-        addLog(`切換至模式：${mode === '539' ? '今彩 539' : '天天樂'}`);
-        if(storage[mode].length > 0) processCSVData();
-    }
-
-    document.getElementById('csvFile').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const lines = evt.target.result.split('\n').filter(l => l.trim() !== "" && !l.includes('日期'));
-            storage[currentMode] = lines;
-            addLog(`讀取資料：${file.name}`);
-            addLog(`總期數：${lines.length} 期`);
-            processCSVData();
-        };
-        reader.readAsText(file);
+function parseCSV(file, callback){
+  const reader = new FileReader();
+  reader.onload = e => { 
+    const text = e.target.result;
+    const lines = text.trim().split('\n');
+    const header = lines[0].split(/[\t,]/);
+    const data = lines.slice(1).map(line => {
+      const items = line.split(/[\t,]/);
+      let obj = {};
+      header.forEach((h,i)=> obj[h]=isNaN(items[i])?items[i]:parseInt(items[i]));
+      return obj;
     });
+    callback(data);
+  };
+  reader.readAsText(file);
+}
 
-    function processCSVData() {
-        const lines = storage[currentMode];
-        const body = document.getElementById('backtestBody');
-        body.innerHTML = "";
-        
-        let s4Count = 0;
-        const backtestLimit = 12; // 顯示最近 12 期回報
-
-        for (let i = 0; i < backtestLimit; i++) {
-            let targetIdx = lines.length - 1 - i;
-            if (targetIdx < 0) break;
-
-            const realNumbers = lines[targetIdx].split(',').slice(1,6).map(n => n.trim().padStart(2,'0'));
-            // 決定性預測：僅參考當期之前的歷史資料
-            const prediction = runDeterministicEngine(lines.slice(0, targetIdx));
-            const hits = prediction.filter(n => realNumbers.includes(n));
-            
-            if (hits.length >= 4) s4Count++;
-
-            body.innerHTML += `
-                <tr>
-                    <td style="color:#666">T-${i}</td>
-                    <td style="color:#aaa">${realNumbers.join(',')}</td>
-                    <td>
-                        <div class="pred-wrap" data-hits="命中號：${hits.join(', ') || '無'}">
-                            ${prediction.map(n => realNumbers.includes(n) ? `<span class="hit-high">${n}</span>` : n).join(', ')}
-                        </div>
-                    </td>
-                    <td>${hits.length >= 4 ? `<span class="star-tag">${hits.length}★</span>` : hits.length}</td>
-                </tr>`;
-        }
-
-        const finalRate = ((s4Count / backtestLimit) * 100).toFixed(1);
-        document.getElementById('winRateInfo').innerText = `4星率: ${finalRate}%`;
-        addLog(`策略勝率計算：4星命中率達 ${finalRate}%`);
-        
-        renderNextPillar(lines);
+function multiStrategy(data){
+  let predList = [];
+  let hitList = [];
+  for(let i=0;i<data.length;i++){
+    if(i===0){ predList.push([1,2,3,4,5,6,7,8]); hitList.push(null); }
+    else{
+      let past=[];
+      for(let j=0;j<i;j++){
+        past.push(data[j]['獎號1'],data[j]['獎號2'],data[j]['獎號3'],data[j]['獎號4'],data[j]['獎號5']);
+      }
+      let freqMap = {};
+      past.forEach(n=> freqMap[n]=(freqMap[n]||0)+1);
+      let top5 = Object.keys(freqMap).sort((a,b)=> freqMap[b]-freqMap[a]).slice(0,5).map(Number);
+      let allNumbers = Array.from({length:39},(_,k)=>k+1);
+      let remaining = allNumbers.filter(n=>!top5.includes(n));
+      let cold = remaining.filter(n=>!past.slice(-8).includes(n)).slice(0,3);
+      if(cold.length<3) cold = cold.concat(remaining.filter(n=>!top5.includes(n)).slice(0,3-cold.length));
+      let candidate8 = top5.concat(cold);
+      predList.push(candidate8);
+      let current = [data[i]['獎號1'],data[i]['獎號2'],data[i]['獎號3'],data[i]['獎號4'],data[i]['獎號5']];
+      let hit = candidate8.filter(n=>current.includes(n)).length;
+      hitList.push(hit);
     }
+  }
+  return {predList, hitList};
+}
 
-    // 絕對決定性引擎：CSV 相同，結果必相同
-    function runDeterministicEngine(history) {
-        if (history.length === 0) return ['01','02','03','04','05','06','07','08','09','10'];
-        let lastFive = history.slice(-5).join('');
-        let seed = 0;
-        for(let i=0; i<lastFive.length; i++) seed += lastFive.charCodeAt(i);
-        
-        let results = [];
-        for (let i = 1; i <= 10; i++) {
-            let n = ((seed * (i + 5) * 13) % 39) + 1;
-            results.push(n.toString().padStart(2, '0'));
-        }
-        return [...new Set(results)].sort();
-    }
+function renderPanel2(){
+  const tbody = document.querySelector('#resultTable tbody');
+  tbody.innerHTML='';
+  results.slice().reverse().forEach((row,i)=>{
+    let tr = document.createElement('tr');
+    let nums = [row['獎號1'],row['獎號2'],row['獎號3'],row['獎號4'],row['獎號5']].join(',');
+    let pred = row['預測8碼'].join(',');
+    tr.innerHTML=`<td>${row['開獎日期']}</td><td>${nums}</td><td>${pred}</td><td class='${row['命中星數']>=2?'highlight':''}'>${row['命中星數']}</td>`;
+    tbody.appendChild(tr);
+  });
+}
 
-    function renderNextPillar(allLines) {
-        const grid = document.getElementById('pillarGrid');
-        document.getElementById('nextPillarArea').style.display = 'block';
-        const finalPred = runDeterministicEngine(allLines);
-        
-        // 6 柱立柱配置邏輯
-        let pillars = [[], [], [], [], [], []];
-        finalPred.forEach((num, idx) => pillars[idx % 6].push(num));
+function renderPanel3(){
+  const div = document.getElementById('prediction8');
+  div.innerHTML='';
+  if(results.length===0) return;
+  let lastPred = results[results.length-1]['預測8碼'];
+  lastPred.forEach(n=>{
+    let span = document.createElement('span');
+    span.className='number-card';
+    span.textContent=n;
+    div.appendChild(span);
+  });
+}
 
-        grid.innerHTML = pillars.map((nums, i) => `
-            <div class="pillar-box">
-                <div style="font-size:10px; color:#666; margin-bottom:5px;">柱 ${i+1}</div>
-                ${nums.map(n => `<div class="ball">${n}</div>`).join('')}
-            </div>
-        `).join('');
-        addLog(`>> 下期 ${currentMode} 立柱方案已就緒。`);
-    }
+function renderLogBox(){
+  const log = document.getElementById('logbox');
+  if(results.length<10){ log.textContent='歷史不足10期'; return;}
+  let last10 = results.slice(-10);
+  let winCount = last10.filter(r=>r['命中星數']>=2).length;
+  let avgHit = (last10.reduce((a,r)=>a+(r['命中星數']||0),0)/10).toFixed(2);
+  log.innerHTML=`近10期勝率: ${winCount*10}%<br>平均命中星數: ${avgHit}`;
+}
+
+document.getElementById('csvFile').addEventListener('change', e=>{
+  parseCSV(e.target.files[0], data=>{
+    rawData = data;
+    let {predList,hitList} = multiStrategy(rawData);
+    results = rawData.map((d,i)=> ({...d,'預測8碼':predList[i],'命中星數':hitList[i]}));
+    renderPanel2();
+    renderPanel3();
+    renderLogBox();
+  });
+});
+
+// Panel 拖曳
+Sortable.create(document.getElementById('container'), {handle:'h2', animation:150, store:{
+  get:()=> JSON.parse(localStorage.getItem('panelOrder')||'[]'),
+  set:(sortable)=> localStorage.setItem('panelOrder',JSON.stringify(sortable.toArray()))
+}});
 </script>
 </body>
 </html>
