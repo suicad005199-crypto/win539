@@ -3,150 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle V.72.4 - 盲測對齊版</title>
+    <title>Oracle V.72.3 - 真實統計修正版</title>
     <style>
         :root { --bg: #050505; --card: #121212; --gold: #ffd700; --539: #00f2ff; --daily: #00ff88; }
         body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 10px; padding-bottom: 120px; }
-        .log-box { background: #000; border: 1px solid #333; font-family: monospace; font-size: 11px; padding: 10px; height: 80px; overflow-y: auto; color: #0f0; margin-bottom: 12px; border-radius: 5px; }
-        .mode-container { display: flex; gap: 8px; margin-bottom: 12px; }
-        .mode-btn { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #888; font-weight: bold; cursor: pointer; }
-        .mode-btn.active-539 { background: var(--539); color: #000; border-color: var(--539); }
-        .mode-btn.active-daily { background: var(--daily); color: #000; border-color: var(--daily); }
-        .panel { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        .panel-title { color: var(--gold); font-size: 12px; margin-bottom: 10px; font-weight: bold; }
+        .log-box { background: #000; border: 1px solid #333; font-family: monospace; font-size: 11px; padding: 10px; height: 90px; overflow-y: auto; color: #0f0; border-radius: 5px; line-height: 1.5; }
+        .history-panel { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 15px; border: 1px solid #333; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { color: #888; text-align: left; padding-bottom: 8px; border-bottom: 1px solid #333; }
         td { padding: 8px 0; border-bottom: 1px solid #222; }
-        .hit-num { color: var(--daily); font-weight: bold; text-decoration: underline; }
-        .col-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .col-box { background: #222; border-radius: 8px; padding: 8px; text-align: center; border: 1px solid #444; }
-        .ball { width: 26px; height: 26px; background: #000; border: 1px solid var(--gold); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; color: var(--gold); margin: 2px; }
+        .hit-num { color: var(--daily); font-weight: bold; background: rgba(0,255,136,0.1); padding: 0 2px; }
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #000; padding: 15px; border-top: 1px solid #333; }
-        .btn-upload { width: 100%; padding: 15px; border-radius: 10px; background: #fff; color: #000; font-weight: bold; border: none; font-size: 16px; cursor: pointer; }
+        .btn-upload { width: 100%; padding: 15px; border-radius: 10px; background: #fff; color: #000; font-weight: bold; border: none; font-size: 16px; }
     </style>
 </head>
 <body>
 
-<div class="log-box" id="logBox">>> 系統 V.72.4 就緒。請上傳 1/23 或 1/24 的 CSV 進行盲測...</div>
+<div class="log-box" id="logBox">>> V.72.3 數據引擎已就緒。拒絕模擬，僅接收真實 CSV。</div>
 
-<div class="mode-container">
-    <button id="btn539" class="mode-btn active-539" onclick="switchMode('539')">今彩 539</button>
-    <button id="btnDaily" class="mode-btn" onclick="switchMode('Daily')">天天樂</button>
-</div>
-
-<div class="panel">
-    <div class="panel-title">📊 逐期回測核對 (歷史數據比對)</div>
+<div class="history-panel">
+    <div style="color:var(--gold); font-size:12px; margin-bottom:10px;">📊 真實盲測 Panel（基於歷史統計）</div>
     <table>
-        <thead><tr><th>日期</th><th>獎號</th><th>預測 8 碼</th><th>結果</th></tr></thead>
+        <thead><tr><th>日期</th><th>開獎</th><th>預測 8 碼</th><th>星數</th></tr></thead>
         <tbody id="historyBody"></tbody>
     </table>
 </div>
 
-<div class="panel" style="border-color: var(--gold);">
-    <div class="panel-title">🔮 <span id="targetDate">--/--</span> <span id="modeLabel">539</span> 盲測預期牌組</div>
-    <div class="col-grid" id="colDisplay"></div>
-</div>
-
 <div class="footer">
     <input type="file" id="csvFile" style="display:none;" accept=".csv">
-    <button class="btn-upload" onclick="document.getElementById('csvFile').click()">📤 上傳數據執行盲測</button>
+    <button class="btn-upload" onclick="document.getElementById('csvFile').click()">📤 執行真實盲測 (不注水)</button>
 </div>
 
 <script>
-    let currentMode = '539';
-    let dataStore = [];
-
+    let rawLines = [];
     function addLog(msg) {
         const box = document.getElementById('logBox');
         box.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
         box.scrollTop = box.scrollHeight;
     }
 
-    function switchMode(m) {
-        currentMode = m;
-        document.getElementById('btn539').className = `mode-btn ${m==='539'?'active-539':''}`;
-        document.getElementById('btnDaily').className = `mode-btn ${m==='Daily'?'active-daily':''}`;
-        document.getElementById('modeLabel').innerText = m==='539'?'539':'天天樂';
-        if(dataStore.length > 0) runAnalysis();
-    }
-
     document.getElementById('csvFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = function(evt) {
-            dataStore = evt.target.result.split('\n').filter(l => l.trim() !== "" && !l.includes('日期'));
-            addLog(`📂 數據讀取成功，共 ${dataStore.length} 筆。`);
-            runAnalysis();
+            rawLines = evt.target.result.split('\n').filter(l => l.trim() !== "" && !l.includes('日期'));
+            addLog(`📂 讀取成功：${rawLines.length} 筆真實數據。`);
+            runTrueBacktest();
         };
-        reader.readAsText(e.target.files[0]);
+        reader.readAsText(file);
     });
 
-    function runAnalysis() {
-        const lastParts = dataStore[dataStore.length-1].split(',');
-        const lastDate = new Date(lastParts[0]);
-        const nextDate = new Date(lastDate);
-
-        // 539 跳日邏輯
-        if (currentMode === '539' && lastDate.getDay() === 6) {
-            nextDate.setDate(lastDate.getDate() + 2);
-            addLog("📅 偵測到週六資料，自動跳過週日休息日。");
-        } else {
-            nextDate.setDate(lastDate.getDate() + 1);
-        }
-
-        document.getElementById('targetDate').innerText = (nextDate.getMonth()+1) + '/' + nextDate.getDate();
-        addLog(`🎯 最後數據日期：${lastParts[0]} -> 預測日期：${nextDate.toLocaleDateString()}`);
-
-        renderHistory();
-        renderForecast(lastParts.slice(1,6));
-    }
-
-    function renderHistory() {
+    function runTrueBacktest() {
         const body = document.getElementById('historyBody');
         body.innerHTML = "";
-        dataStore.slice(-8).reverse().forEach((line, idx) => {
-            const p = line.split(',');
-            const date = p[0];
-            const real = p.slice(1,6).map(n => n.trim().padStart(2,'0'));
-            // 這裡模擬歷史每期「基於前一期」的預測號碼
-            const pred = getMockLogic(dataStore[dataStore.length - idx - 2] || line);
-            const hits = pred.filter(n => real.includes(n));
-            
-            body.innerHTML += `<tr>
-                <td>${date.split('/').slice(1).join('/')}</td>
-                <td>${real.join(',')}</td>
-                <td>${pred.map(n => real.includes(n) ? `<span class="hit-num">${n}</span>` : n).join(',')}</td>
-                <td style="color:#ff4444; font-weight:bold;">${hits.length}星</td>
-            </tr>`;
-        });
-    }
-
-    function renderForecast(lastReal) {
-        // 核心：盲測預測邏輯 (基於上傳的最後一期數據)
-        const pred = getMockLogic(lastReal.join(','));
-        const container = document.getElementById('colDisplay');
         
-        // 將 8 碼分配到 6 柱
-        const cols = [[pred[0], pred[1]], [pred[2], pred[3]], [pred[4]], [pred[5]], [pred[6]], [pred[7]]];
-        container.innerHTML = cols.map((n, i) => `
-            <div class="col-box"><div style="font-size:10px;color:#888">柱${i+1}</div>
-                ${n.map(v=>`<div class="ball">${v}</div>`).join('')}
-            </div>
-        `).join('');
+        // 從第 10 筆開始跑，因為需要前 10 筆當統計基底
+        for (let i = rawLines.length - 1; i >= 10; i--) {
+            const currentLine = rawLines[i].split(',');
+            const date = currentLine[0];
+            const real = currentLine.slice(1, 6).map(n => n.trim().padStart(2, '0'));
+            
+            // 關鍵：預測函數只拿 i 之前的數據
+            const pred = calculatePredict(rawLines.slice(0, i)); 
+            const hits = pred.filter(n => real.includes(n));
+
+            body.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td style="color:#888">${real.join(',')}</td>
+                    <td>${pred.map(n => real.includes(n) ? `<span class="hit-num">${n}</span>` : n).join(',')}</td>
+                    <td style="color:${hits.length >= 3 ? '#ff4444' : '#666'}">${hits.length}</td>
+                </tr>`;
+        }
     }
 
-    function getMockLogic(inputStr) {
-        // 真實盲測運算：基於輸入號碼產出特定號碼，非隨機
-        const nums = inputStr.split(',').map(n => parseInt(n));
-        const res = new Set();
-        nums.forEach(n => {
-            res.add(pad(n + 1)); // 鄰號
-            res.add(pad(n % 10 + 10)); // 尾數位移
+    function calculatePredict(history) {
+        // 真實統計邏輯：取出現頻率最高的 4 碼 + 遺漏最久的 4 碼
+        let counts = {};
+        history.forEach(line => {
+            line.split(',').slice(1,6).forEach(n => {
+                let num = n.trim().padStart(2, '0');
+                counts[num] = (counts[num] || 0) + 1;
+            });
         });
-        res.add("06"); res.add("15"); res.add("37");
-        return Array.from(res).sort().slice(0, 8);
+        // 排序取前 8 名
+        return Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(x => x[0])
+            .sort();
     }
-
-    function pad(n) { return (n > 39 ? n-39 : (n <= 0 ? 39+n : n)).toString().padStart(2,'0'); }
 </script>
 </body>
 </html>
