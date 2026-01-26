@@ -3,82 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.56.3 Matrix-Sync</title>
+    <title>Oracle V.56.4 Chrono-Link</title>
     <style>
-        :root { --bg: #08080a; --panel: #141417; --primary: #ffd60a; --accent: #ff3b30; --text: #f2f2f7; --border: #2c2c2e; }
+        :root { --bg: #050505; --panel: #111113; --primary: #ffd60a; --accent: #00ebff; --text: #e0e0e0; --border: #2a2a2e; }
         body { font-family: 'PingFang TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; font-size: 13px; }
         .container { max-width: 480px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--primary); padding-left: 10px; font-size: 14px; display: flex; justify-content: space-between; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
+        .panel-header { color: var(--primary); font-weight: bold; margin-bottom: 12px; border-left: 4px solid var(--accent); padding-left: 10px; font-size: 14px; display: flex; justify-content: space-between; }
         .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #222; }
         .n-box { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 5px; background: #1a1a1c; font-size: 11px; margin-right: 3px; border: 1px solid #333; }
-        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); box-shadow: 0 0 10px rgba(255,214,10,0.3); }
+        .n-box.hit { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); }
         .ball-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
-        .ball { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--primary); color: var(--primary); font-size: 16px; }
-        .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .pillar-item { background: #0d0d0f; padding: 15px; border-radius: 10px; border: 1px solid var(--border); text-align: center; }
+        .ball { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 50%; font-weight: 900; border: 2px solid var(--accent); color: var(--accent); font-size: 16px; }
+        .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .pillar-item { background: #0a0a0c; padding: 15px; border-radius: 10px; border: 1px solid var(--border); text-align: center; }
         .p-nums { font-size: 24px; font-weight: 900; color: #fff; margin-top: 8px; letter-spacing: 2px; }
-        #logBox { background: #000; color: #32d74b; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; min-height: 35px; border: 1px solid #1a1a1a; }
-        .tag { font-size: 9px; background: var(--accent); color: #fff; padding: 1px 4px; border-radius: 3px; vertical-align: middle; }
+        #logBox { background: #000; color: var(--accent); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; min-height: 35px; border: 1px solid #1a1a1a; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="panel">
-        <div class="panel-header">數據注入 <span>MATRIX DECODER</span></div>
+        <div class="panel-header">數據注入 (CSV)</div>
         <input type="file" id="csvFile">
     </div>
 
     <div class="panel">
-        <div class="panel-header">熱鏈同步回測 (近15期)</div>
+        <div class="panel-header">時空鏈結回測 (1/24 前 15 期)</div>
         <div id="btBody"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">1/24 矩陣同步 8 碼 <span class="tag">V.56.3</span></div>
+        <div class="panel-header">1/24 推薦 8 碼 (V.56.4)</div>
         <div id="nextPred" class="ball-row"></div>
     </div>
 
     <div class="panel">
-        <div class="panel-header">Sync 立柱佈局 (2-2-2-2)</div>
+        <div class="panel-header">Chrono 立柱佈局 (2-2-2-2)</div>
         <div id="pillarView" class="pillar-grid"></div>
     </div>
 
-    <div id="logBox">> Matrix-Sync 核心加載中...</div>
+    <div id="logBox">> V.56.4 Chrono-Link 準備就緒...</div>
 </div>
 
 <script>
     let rawData = [];
     const pad = (n) => n.toString().padStart(2, '0');
 
-    function getV563Prediction(hist) {
+    function getV564Prediction(hist) {
         if(hist.length < 5) return [1,2,11,12,21,22,31,32];
-        const last = hist[hist.length-1].nums;
+        const lastNums = hist[hist.length-1].nums;
         let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
 
         for(let i=1; i<=39; i++) {
-            last.forEach(ln => {
+            lastNums.forEach(ln => {
                 const diff = Math.abs(ln - i);
-                if(diff === 1) scores[i].s += 3500; 
-                if(diff === 10) scores[i].s += 1500; 
-                if(ln % 10 === i % 10) scores[i].s += 1200;
+                if(diff === 1) scores[i].s += 3800; // 鄰號矩陣最高權重
+                if(diff === 10) scores[i].s += 1600; // 同尾連動
+                if(ln % 10 === i % 10) scores[i].s += 1300;
             });
             let gap = 0; for(let k=hist.length-1; k>=0; k--) { if(!hist[k].nums.includes(i)) gap++; else break; }
-            if(gap >= 3 && gap <= 7) scores[i].s += 1000;
+            if(gap >= 3 && gap <= 6) scores[i].s += 1100; // 縮短遺漏週期
         }
 
         let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
         let final = new Set();
         
+        // 核心矩陣：連號簇優先
         for(let x of sorted) {
             if(final.size >= 8) break;
             final.add(x.n);
-            [x.n-1, x.n+1].forEach(n => {
-                if(n >= 1 && n <= 39 && final.size < 8) final.add(n);
-            });
+            // 矩陣同步：強制補齊鄰號
+            if(final.size < 8) {
+                let neighbor = (x.n % 10 === 0) ? x.n - 1 : x.n + 1;
+                if(neighbor >= 1 && neighbor <= 39) final.add(neighbor);
+            }
         }
 
-        return Array.from(final).sort((a,b) => a-b);
+        return Array.from(final).slice(0, 8).sort((a,b) => a-b);
     }
 
     document.getElementById('csvFile').addEventListener('change', e => {
@@ -96,28 +98,30 @@
     });
 
     function render() {
+        // 設定 1/24 為觀測基準
+        const targetDate = "2026/1/24";
+        const targetIdx = rawData.findIndex(d => d.date === targetDate || d.date === "2026-01-24");
+        const baseData = targetIdx !== -1 ? rawData.slice(0, targetIdx + 1) : rawData;
+
         let btHtml = "";
-        // 尋找 1/24 之前的數據進行預測回測
-        const filteredData = rawData.filter(d => new Date(d.date) <= new Date("2026-01-24"));
-        
-        filteredData.slice(-12).reverse().forEach(row => {
+        baseData.slice(-12).reverse().forEach(row => {
             const hist = rawData.slice(0, rawData.indexOf(row));
-            const pred = getV563Prediction(hist);
+            const pred = getV564Prediction(hist);
             const hits = row.nums.filter(n => pred.includes(n));
             btHtml += `<div class="bt-row"><span>${row.date}</span><div style="display:flex">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2? '#ffd60a':'#444'}">${hits.length}★</b></div>`;
         });
         document.getElementById('btBody').innerHTML = btHtml;
 
-        // 專門針對 1/24 當天的預測顯示
-        const targetDate = "2026-01-24";
-        const idx = rawData.findIndex(d => d.date === targetDate);
-        const histForNext = idx !== -1 ? rawData.slice(0, idx) : rawData;
-        
-        const next = getV563Prediction(histForNext);
+        // 針對 1/24 當日的預測
+        const histFor124 = targetIdx !== -1 ? rawData.slice(0, targetIdx) : rawData;
+        const next = getV564Prediction(histFor124);
         document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        const p = [[next[0], next[2]], [next[1], next[3]], [next[4], next[6]], [next[5], next[7]]];
+        
+        // Chrono 立柱：交叉碰撞法
+        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
         document.getElementById('pillarView').innerHTML = p.map((pair, i) => `<div class="pillar-item"><div>第 ${i+1} 柱</div><div class="p-nums">${pad(pair[0])} · ${pad(pair[1])}</div></div>`).join('');
-        document.getElementById('logBox').innerHTML = "> 已切換至 1/24 觀測模式...<br>> 熱鏈矩陣同步完成";
+        
+        document.getElementById('logBox').innerHTML = "> 1/24 矩陣位移修正完成...<br>> 已執行鄰號簇同步圍堵策略";
     }
 </script>
 </body>
