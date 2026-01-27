@@ -29,13 +29,13 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: CORE-X 30P 自主學習引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 30P 自主學習與排序引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> 30-PERIOD LEARNING ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> AUTO-SORT LEARNING
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正在從 API 末端回推 30 期進行擬合訓練...</span>
+            <span class="text-orange-500/50 italic">正在執行數據清洗與從小到大排序...</span>
         </div>
     </div>
 
@@ -62,14 +62,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">30 期模組訓練績效回測</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">30 期模組擬合回測 (已自動排序)</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
-                        <th class="pb-2">開獎</th>
-                        <th class="pb-2">狙擊選碼</th>
+                        <th class="pb-2">開獎獎號</th>
+                        <th class="pb-2">模組預測</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -88,7 +88,7 @@
                 const response = await fetch(API_URL);
                 fullData = await response.json();
                 processData(fullData);
-            } catch (error) { document.getElementById('logBox').innerText = "API 連結中斷"; }
+            } catch (error) { document.getElementById('logBox').innerText = "API 數據同步失敗"; }
         }
 
         function switchMode(mode) {
@@ -100,21 +100,19 @@
 
         function getCoreLearningPrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
-            const trainSize = 30; 
+            const trainSize = 30; // 自主學習窗口
             const recent = history.slice(0, trainSize);
             const lastNums = history[0].nums;
 
-            let stats = Array.from({ length: range + 1 }, () => ({ heat: 0, gap: 0, tailHeat: 0 }));
+            let stats = Array.from({ length: range + 1 }, () => ({ heat: 0, gap: 0 }));
             
-            // 訓練模組：建立 30 期熱度與尾數特徵
+            // 權重學習：越靠近現在的期數權重越高
             recent.forEach((r, idx) => {
-                const weight = idx < 7 ? 2.5 : (idx < 15 ? 1.2 : 0.6);
-                r.nums.forEach(n => {
-                    stats[n].heat += weight;
-                });
+                const weight = (30 - idx) / 30 * 2.5; 
+                r.nums.forEach(n => { if(stats[n]) stats[n].heat += weight; });
             });
 
-            // 遺漏波段分析
+            // 遺漏值校準
             for(let n=1; n<=range; n++) {
                 let g = 0; for(let r of history) { if(r.nums.includes(n)) break; g++; }
                 stats[n].gap = g;
@@ -124,58 +122,56 @@
             for(let n=1; n<=range; n++) {
                 let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
                 let isRepeat = lastNums.includes(n);
-                
-                // 多星關鍵：30期內同尾出現頻率
                 let tailCount = recent.filter(r => r.nums.some(num => num % 10 === n % 10)).length;
                 
-                let val = (stats[n].heat * (isNeighbor ? 1.6 : 1.0) * (isRepeat ? 1.2 : 1.0));
-                val += (tailCount * 0.4); // 尾數共振加成
+                let val = (stats[n].heat * (isNeighbor ? 1.7 : 1.0) * (isRepeat ? 1.25 : 1.0));
+                val += (tailCount * 0.5); // 強化尾數連動權重
                 
-                // 黃金爆發波段 (遺漏 3-9 期)
-                if (stats[n].gap >= 3 && stats[n].gap <= 9) val *= 1.85;
-                // 深冷對沖
-                if (stats[n].gap >= 14) val += 4.5;
+                if (stats[n].gap >= 3 && stats[n].gap <= 10) val *= 1.9; // 爆發區塊
+                if (stats[n].gap >= 15) val += 5.0; // 極冷補償
 
                 scores.push({ n: n, val: val, gap: stats[n].gap, tail: n % 10 });
             }
             scores.sort((a, b) => b.val - a.val);
 
             let picked = new Set();
-            // 1. 核心熱點 (2碼)
+            // 策略 A: 核心雙強
             picked.add(scores[0].n);
             picked.add(scores[1].n);
 
-            // 2. 影子共振 (2碼) - 尋找核心的同尾或連號
+            // 策略 B: 影子共振 (同尾與連號)
             let coreArray = Array.from(picked);
             for(let s of scores.slice(2)) {
                 if(picked.size >= 4) break;
                 if(coreArray.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.tail)) picked.add(s.n);
             }
 
-            // 3. 冷熱對沖 (2碼) - 強行置入高 Gap 碼
+            // 策略 C: 深度防禦 (最大遺漏碼)
             let coldSort = [...scores].sort((a,b) => b.gap - a.gap);
             picked.add(coldSort[0].n);
-            
-            // 4. 結構補位 (至 8 碼)
+
+            // 策略 D: 結構性補位 (填滿 8 碼)
             for(let s of scores) {
                 if(picked.size >= 8) break;
                 picked.add(s.n);
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.55).toFixed(2);
+            const sIndex = (scores[0].val * 1.62).toFixed(2);
             return { pred, sIndex };
         }
 
         function processData(data) {
+            // 關鍵更新：從小到大排序 (sort) 以維持自主學習的一致性
             let history = data.filter(row => row.length >= 6).map(row => ({
                 date: String(row[0]).split('T')[0],
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
+
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
             let stars = 0, rowsHtml = "", lastS = 0;
-            // 僅顯示近 10 期回測，但每期預測均使用其過去 30 期數據訓練
+            // 回測 10 期績效
             for (let i = 0; i < 10; i++) {
                 const result = getCoreLearningPrediction(history.slice(i + 1));
                 const actual = history[i].nums;
@@ -183,7 +179,7 @@
                 stars += hits;
                 if(i===0) lastS = result.sIndex;
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 3 ? 'text-orange-500 animate-pulse' : (hits >= 2 ? 'text-orange-400' : 'text-gray-700')}">${hits}</td></tr>`;
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 3 ? 'text-orange-500' : (hits >= 2 ? 'text-orange-400' : 'text-gray-700')}">${hits}</td></tr>`;
             }
 
             const avg = (stars / 10).toFixed(2);
@@ -193,8 +189,8 @@
                     <span class="bg-white/10 px-2 rounded text-[9px]">L-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                狀態: <span class="text-white font-bold text-lg">${avg >= 2.5 ? 'HIGH PRECISION' : 'LEARNING...'}</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">系統已回推 30 期數據完成模組擬合，專攻多星連動。</div>`;
+                數據狀態: <span class="text-white font-bold text-lg">CLEANED & SORTED</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">系統已自動清洗亂序獎號，並基於 30 期特徵完成建模。</div>`;
 
             const final = getCoreLearningPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
