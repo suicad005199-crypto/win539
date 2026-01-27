@@ -85,7 +85,6 @@ let fullData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchData();
-
     document.getElementById('btn539').addEventListener('click', () => switchMode('539'));
     document.getElementById('btnDaily').addEventListener('click', () => switchMode('Daily'));
 });
@@ -113,7 +112,6 @@ function switchMode(mode) {
     if(fullData.length > 0) processData(fullData);
 }
 
-// 將你原本的 getFusionPrediction / processData 保留不動，僅補上缺少的模板字串引號
 function getFusionPrediction(history) {
     const range = currentMode === '539' ? 39 : 36;
     const lastNums = history[0].nums;
@@ -163,6 +161,7 @@ function getFusionPrediction(history) {
 function processData(data){
     let history=data.filter(row=>row.length>=6).map(row=>({date:String(row[0]).split('T')[0],nums:row.slice(1,6).map(n=>parseInt(n)).filter(n=>!isNaN(n)).sort((a,b)=>a-b)})).filter(h=>h.nums.length===5);
     if(new Date(history[0].date)<new Date(history[history.length-1].date)) history.reverse();
+
     let stars=0,rowsHtml="",lastS=0;
     for(let i=0;i<10;i++){
         const result=getFusionPrediction(history.slice(i+1));
@@ -174,10 +173,14 @@ function processData(data){
         rowsHtml+=`<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n=>n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits>=2?'text-orange-500':'text-gray-700'}">${hits}</td></tr>`;
     }
     document.getElementById('historyTable').innerHTML=rowsHtml;
-    document.getElementById('p1').innerText='--'; // 可根據需求填充
-    document.getElementById('p2').innerText='--';
-    document.getElementById('p3').innerText='--';
-    document.getElementById('p4').innerText='--';
+
+    // 自動填充 Panel 3 8 碼
+    const latestPred = getFusionPrediction(history).pred;
+    document.getElementById('p1').innerText = latestPred.slice(0,2).join(' ');
+    document.getElementById('p2').innerText = latestPred.slice(2,4).join(' ');
+    document.getElementById('p3').innerText = latestPred.slice(4,6).join(' ');
+    document.getElementById('p4').innerText = latestPred.slice(6,8).join(' ');
+
     document.getElementById('logBox').innerHTML=`近十期平均星數: ${(stars/10).toFixed(2)} | 最新指數: ${lastS}`;
 }
 </script>
