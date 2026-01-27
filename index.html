@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.7 RESONANCE</title>
+    <title>ULTIMATE EVO 6.8 CORE-X</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.7</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.8</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 共振校準與金字塔篩選引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: CORE-X 流體核心校準引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> RESONANCE ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> CORE-X ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正執行三層金字塔演算...</span>
+            <span class="text-orange-500/50 italic">正執行影子序列補位運算...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 共振集成組合 (Resonance Output)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: CORE-X 集成組合 (Shadow Output)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 RESONANCE 綜合績效</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X 綜合績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -103,9 +103,9 @@
             let lastNums = history[0].nums;
             
             let shortCounts = Array(range + 1).fill(0);
-            history.slice(0, 5).forEach(r => r.nums.forEach(n => shortCounts[n]++));
+            history.slice(0, 7).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 20).forEach(r => r.nums.forEach(n => longCounts[n]++));
+            history.slice(0, 25).forEach(r => r.nums.forEach(n => longCounts[n]++));
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -115,14 +115,15 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                let heat = (shortCounts[n] * 1.0) + (longCounts[n] * 0.2);
+                // v6.8 CORE-X: 提升權重靈敏度
+                let heat = (shortCounts[n] * 1.5) + (longCounts[n] * 0.3);
                 let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
                 let isRepeat = lastNums.includes(n);
-                let gapBonus = (gaps[n] >= 5 && gaps[n] <= 12) ? 1.45 : 1.0;
+                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 9) ? 1.6 : 1.0; // 縮小黃金遺漏區間，鎖定更熱的碼
                 
                 scores.push({
                     n: n,
-                    val: (heat * (isNeighbor ? 1.35 : 1.0) * (isRepeat ? 1.25 : 1.0) * gapBonus) + (1 / (gaps[n] + 1)),
+                    val: (heat * (isNeighbor ? 1.4 : 1.0) * (isRepeat ? 1.3 : 1.0) * gapBonus) + (2 / (gaps[n] + 1)),
                     tail: n % 10,
                     zone: Math.floor((n-1)/(range/3)),
                     gap: gaps[n]
@@ -132,46 +133,28 @@
 
             let picked = new Set();
             
-            // 1. 保底層 (Stability Layer): 強制鄰號與高分連莊 (3碼)
-            let stabilityCandidates = scores.filter(s => lastNums.some(ln => Math.abs(ln - s.n) <= 1)).slice(0, 6);
-            stabilityCandidates.slice(0, 3).forEach(s => picked.add(s.n));
+            // 1. 核心共振 (Core 5): 權重最高的前 5 碼，作為保底與強攻主體
+            scores.slice(0, 5).forEach(s => picked.add(s.n));
 
-            // 2. 爆發層 (Expansion Layer): 雙尾共振跨度 (3碼)
-            let tailScores = Array(10).fill(0);
-            scores.slice(0, 15).forEach(s => tailScores[s.tail] += s.val);
-            let sortedTails = tailScores.map((v, i) => ({tail: i, val: v})).sort((a, b) => b.val - a.val);
+            // 2. 影子補位 (Shadow 3): 尋找與核心碼最具關聯性的號碼 (鄰號共振或同尾強化)
+            let coreArray = Array.from(picked);
+            let candidates = scores.filter(s => !picked.has(s.n));
             
-            for(let tIdx of [0, 1]) {
-                let count = 0;
-                for(let s of scores) {
-                    if(picked.size >= 6) break;
-                    if(s.tail === sortedTails[tIdx].tail && !picked.has(s.n)) {
-                        picked.add(s.n);
-                        count++;
-                        if(count >= 2) break;
-                    }
-                }
+            for(let s of candidates) {
+                if(picked.size >= 8) break;
+                // 檢查是否與核心碼形成鄰號或同尾
+                let isShadow = coreArray.some(cn => Math.abs(cn - s.n) === 1 || (cn % 10 === s.n % 10));
+                if(isShadow) picked.add(s.n);
             }
 
-            // 3. 尖端層 (Apex Layer): 頻譜死角黑馬 (2碼)
-            let coldBlackHorses = scores.filter(s => !picked.has(s.n)).sort((a, b) => b.gap - a.gap);
-            [0, 1, 2].forEach(z => {
-                if(picked.size >= 8) return;
-                let zoneDensity = Array.from(picked).filter(n => Math.floor((n-1)/(range/3)) === z).length;
-                if(zoneDensity === 0) {
-                    let horse = coldBlackHorses.find(s => s.zone === z);
-                    if(horse) picked.add(horse.n);
-                }
-            });
-
-            // 最終補齊
+            // 最終補齊 (若影子不足)
             for(let s of scores) {
                 if(picked.size >= 8) break;
                 picked.add(s.n);
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.4).toFixed(2);
+            const sIndex = (scores[0].val * 1.5).toFixed(2);
             return { pred, sIndex };
         }
 
@@ -196,12 +179,12 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.7 RESONANCE</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">R-INDEX: ${lastS}</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.8 CORE-X</span>
+                    <span class="bg-white/10 px-2 rounded text-[9px]">X-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                架構狀態: <span class="text-white font-bold text-lg">TRI-LAYER PYRAMID</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">目標：保底 2 星，衝刺 4 星。優化鄰號黏合度與尾數跨度共振。</div>`;
+                基因狀態: <span class="text-white font-bold text-lg">FLUID CORE CALIBRATED</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">修正：放棄分層限制，實施 5 碼流體核心 + 3 碼影子補位。優先拉回均星表現。</div>`;
 
             const final = getEnsemblePrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
