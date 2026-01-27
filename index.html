@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 穩定二星專攻模組</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 二三星穩定專攻分析</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
                 <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> STABLE ENGINE ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/10 leading-relaxed">
-            <span class="text-orange-500/50 italic">啟動二星穩定器與三星穿透演算法...</span>
+            <span class="text-orange-500/50 italic">重新擬定二三星專攻模組...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 近 10 期回測展示</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼高頻收斂 (熱度連動 + 遺漏補償)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/50">
-                <div class="text-[9px] text-orange-500 font-bold">核心樁腳</div>
+                <div class="text-[9px] text-orange-500 font-bold">主力核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">熱感交叉</div>
+                <div class="text-[9px] text-orange-500 font-bold">連動強碼</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">補位防守</div>
+                <div class="text-[9px] text-gray-400 font-bold">遺漏回補</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">三星伏擊</div>
+                <div class="text-[9px] text-gray-400 font-bold">極致冷熱</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三星穩定專攻：30期回測驗證</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三星穩定專攻：30期回測驗證 (展示近10期)</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 z-10">
@@ -98,61 +98,65 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getStablePattern(history) {
+        function getStableEnginePattern(history) {
             const range = currentMode === '539' ? 39 : 36;
             
-            // 1. 共現強度分析 (找出最常一起出現的號碼組合)
-            let coMatrix = {};
+            // 1. 統計 30 期熱度與遺漏
+            let stats = [];
+            for(let n=1; n<=range; n++) {
+                let freq = 0;
+                let gap = 0;
+                let found = false;
+                history.forEach((h, idx) => {
+                    if(h.nums.includes(n)) {
+                        freq++;
+                        if(!found) { gap = idx; found = true; }
+                    }
+                });
+                if(!found) gap = history.length;
+                stats.push({ n, freq, gap });
+            }
+
+            // 2. 獲取拖牌連動 (共現矩陣)
+            let coOccur = {};
             history.forEach(h => {
                 h.nums.forEach(n1 => {
-                    if(!coMatrix[n1]) coMatrix[n1] = {};
+                    if(!coOccur[n1]) coOccur[n1] = {};
                     h.nums.forEach(n2 => {
-                        if(n1 !== n2) coMatrix[n1][n2] = (coMatrix[n1][n2] || 0) + 1;
+                        if(n1 !== n2) coOccur[n1][n2] = (coOccur[n1][n2] || 0) + 1;
                     });
                 });
             });
 
-            // 2. 遺漏值與熱度加權
-            let scores = Array(range + 1).fill(0).map((_, i) => ({ n: i, score: 0 }));
-            const lastNums = history[0].nums;
-
-            for(let n=1; n<=range; n++) {
-                let freq = history.filter(h => h.nums.includes(n)).length;
-                let gap = 0;
-                for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                
-                // 核心邏輯：熱號持續 + 適度遺漏回補
-                let coScore = 0;
-                lastNums.forEach(ln => { if(coMatrix[ln] && coMatrix[ln][n]) coScore += coMatrix[ln][n]; });
-                
-                scores[n].score = (freq * 1.5) + (coScore * 2.5) - (gap * 0.5);
-            }
-
-            let sorted = scores.slice(1).sort((a,b) => b.score - a.score);
             let picked = new Set();
             
-            // 挑選邏輯：1核心 + 2連動 + 1冷號防守 + 1隨機穿透
-            picked.add(sorted[0].n); // 核心
-            picked.add(sorted[1].n); // 二星連動
-            picked.add(sorted[2].n); // 二星連動
-            
-            // 尋找一個長期未開的冷碼做補位
-            let coldOnes = scores.slice(1).sort((a,b) => {
-                let gapA = 0; for(let r of history) { if(r.nums.includes(a.n)) break; gapA++; }
-                let gapB = 0; for(let r of history) { if(r.nums.includes(b.n)) break; gapB++; }
-                return gapB - gapA;
-            });
-            picked.add(coldOnes[0].n);
+            // 策略 A: 挑選熱度最高且近期活躍的碼 (核心)
+            let core = [...stats].sort((a,b) => (b.freq * 2 - a.gap) - (a.freq * 2 - b.gap))[0];
+            picked.add(core.n);
 
-            // 補足5碼
-            let idx = 3;
+            // 策略 B: 挑選與核心碼連動性最強的碼 (專攻二星)
+            let partners = coOccur[core.n] || {};
+            let bestPartner = Object.keys(partners).map(k => ({n: parseInt(k), count: partners[k]}))
+                               .sort((a,b) => b.count - a.count)[0];
+            if(bestPartner) picked.add(bestPartner.n);
+
+            // 策略 C: 遺漏值適中的補償碼 (專攻三星)
+            let compensation = stats.filter(s => !picked.has(s.n))
+                                .sort((a,b) => b.gap - a.gap)[Math.floor(stats.length/4)];
+            if(compensation) picked.add(compensation.n);
+
+            // 策略 D: 補足 5 碼 (加權頻次)
+            let fillers = stats.filter(s => !picked.has(s.n))
+                            .sort((a,b) => b.freq - a.freq);
             while(picked.size < 5) {
-                picked.add(sorted[idx++].n);
+                picked.add(fillers.shift().n);
             }
 
+            let finalArr = Array.from(picked).sort((a,b)=>a-b);
             return {
-                pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                topPair: `${sorted[0].n.toString().padStart(2,'0')},${sorted[1].n.toString().padStart(2,'0')}`
+                pred: finalArr.map(x => x.toString().padStart(2, '0')),
+                core: core.n.toString().padStart(2, '0'),
+                highFreq: stats.sort((a,b)=>b.freq-a.freq)[0].n.toString().padStart(2, '0')
             };
         }
 
@@ -165,43 +169,43 @@
 
             let stars = [0,0,0,0,0,0];
             let rowsHtml = "";
-            let tenPeriodResults = [];
+            const totalTest = 30; // 計算 30 期命中率
+            const displayLimit = 10; // 僅展示 10 期
 
-            for (let i = 0; i < 30; i++) {
-                const train = history.slice(i + 1, i + 31);
-                if(train.length < 30) break;
+            for (let i = 0; i < totalTest; i++) {
+                const trainingSlice = history.slice(i + 1, i + 31);
+                if(trainingSlice.length < 30) break;
 
-                const res = getStablePattern(train);
+                const res = getStableEnginePattern(trainingSlice);
                 const actual = history[i].nums;
                 const hits = actual.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars[hits]++;
                 
-                if(i < 10) tenPeriodResults.push({res, hits});
-
-                const predHtml = res.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                let d = history[i].date.split('T')[0].split('-').slice(1).join('/');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 text-[10px]">${d}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
+                if (i < displayLimit) {
+                    const predHtml = res.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+                    let d = history[i].date.split('T')[0].split('-').slice(1).join('/');
+                    rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 text-[10px]">${d}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
+                }
             }
 
-            const current = getStablePattern(history.slice(0, 30));
-            const winRate = (((stars[2]+stars[3]+stars[4]+stars[5])/30)*100).toFixed(0);
+            const current = getStableEnginePattern(history.slice(0, 30));
+            const winRate2 = (((stars[2]+stars[3]+stars[4]+stars[5])/totalTest)*100).toFixed(0);
+            const winRate3 = (((stars[3]+stars[4]+stars[5])/totalTest)*100).toFixed(0);
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest uppercase">Stable-Evo Matrix</span>
-                    <span class="text-[10px] bg-orange-600 text-black px-1 font-bold">V8.15</span>
+                    <span class="text-orange-500 font-bold tracking-widest uppercase">Stable Engine v8.10</span>
                 </div>
-                推薦穩定膽組: <span class="text-white font-bold">${current.topPair}</span><br>
-                30期二星以上達成率: <span class="text-orange-500 font-black text-lg">${winRate}%</span><br>
-                三星穿透目標: <span class="text-white font-bold">${stars[3]} 次</span> | 四星: <span class="text-white font-bold">${stars[4]} 次</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">策略：放棄純拖牌，改用共現矩陣優化二星組合。</div>`;
+                當期專攻核心: <span class="text-white font-bold">${current.core}</span><br>
+                連動高頻參考: <span class="text-white font-bold">${current.highFreq}</span><br>
+                30期穩定二星率: <span class="text-orange-500 font-black text-lg">${winRate2}%</span><br>
+                30期三星突破率: <span class="text-white font-black text-lg">${winRate3}%</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">策略：放棄區間平衡，改採「共現矩陣」強化二三星重合機率。</div>`;
 
-            // Panel 3 僅展示近 10 期中的最新一期狀態
-            document.getElementById('p1').innerText = `${current.pred[0]}`;
-            document.getElementById('p2').innerText = `${current.pred[1]},${current.pred[2]}`;
+            document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
+            document.getElementById('p2').innerText = `${current.pred[2]}`;
             document.getElementById('p3').innerText = `${current.pred[3]}`;
             document.getElementById('p4').innerText = `${current.pred[4]}`;
-            
             document.getElementById('historyTable').innerHTML = rowsHtml;
         }
     </script>
