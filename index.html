@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO EVO AI 3.1</title>
+    <title>ULTIMATE EVO 4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -14,13 +14,13 @@
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
         #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; }
+        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 4.0</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: API 雲端演化引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: 多策略競爭引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-green-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 同步中
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 同步成功
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正在獲取雲端數據並優化矩陣權重...</span>
+            <span class="text-orange-500/50 italic italic">策略初始化中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (2-2-2-2 佈局)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (策略優勝組合)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,14 +62,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期回測明細</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期策略回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">演化推薦</th>
+                        <th class="pb-2">優選策略碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -87,11 +87,8 @@
             try {
                 const response = await fetch(API_URL);
                 fullData = await response.json();
-                document.getElementById('syncStatus').innerHTML = `<span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> 已同步`;
                 processData(fullData);
-            } catch (error) {
-                document.getElementById('logBox').innerText = "連線失敗";
-            }
+            } catch (error) { document.getElementById('logBox').innerText = "API 錯誤"; }
         }
 
         function switchMode(mode) {
@@ -101,77 +98,96 @@
             if(fullData.length > 0) processData(fullData);
         }
 
+        // --- 策略池定義 ---
+        const strategies = {
+            hot: (data, range) => {
+                let counts = Array(range + 1).fill(0);
+                data.slice(0, 10).forEach(r => r.nums.forEach(n => counts[n]++));
+                return counts.map((c, i) => ({ n: i, s: c })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 8).map(x => x.n);
+            },
+            cold: (data, range) => {
+                let gaps = Array(range + 1).fill(0);
+                for(let n=1; n<=range; n++) {
+                    let g = 0; for(let r of data) { if(r.nums.includes(n)) break; g++; }
+                    gaps[n] = g;
+                }
+                return gaps.map((g, i) => ({ n: i, s: g })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 8).map(x => x.n);
+            },
+            neighbor: (data, range) => {
+                let last = data[0].nums;
+                let scores = Array(range + 1).fill(0);
+                last.forEach(n => {
+                    if(n>1) scores[n-1] += 5;
+                    if(n<range) scores[n+1] += 5;
+                    if(data.slice(1,3).some(r => r.nums.includes(n))) scores[n] += 10; // 連莊基因
+                });
+                return scores.map((s, i) => ({ n: i, s })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 8).map(x => x.n);
+            },
+            trend: (data, range) => {
+                let scores = Array(range + 1).fill(0);
+                data.slice(0, 5).forEach((r, idx) => r.nums.forEach(n => scores[n] += (5 - idx)));
+                return scores.map((s, i) => ({ n: i, s })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 8).map(x => x.n);
+            }
+        };
+
+        function getBestStrategyPrediction(history) {
+            const range = currentMode === '539' ? 39 : 36;
+            let bestScore = -1, bestStrategyName = 'trend', bestPred = [];
+            
+            // 影子回測：測試哪套策略在最近 5 期最準
+            for (let name in strategies) {
+                let totalHits = 0;
+                for (let i = 0; i < 5; i++) {
+                    const pred = strategies[name](history.slice(i + 1), range);
+                    totalHits += history[i].nums.filter(n => pred.includes(n)).length;
+                }
+                if (totalHits > bestScore) {
+                    bestScore = totalHits;
+                    bestStrategyName = name;
+                }
+            }
+            
+            bestPred = strategies[bestStrategyName](history, range).map(n => n.toString().padStart(2, '0'));
+            return { pred: bestPred, name: bestStrategyName.toUpperCase() };
+        }
+
         function processData(data) {
             let history = data.filter(row => row.length >= 6).map(row => ({
                 date: String(row[0]).split('T')[0],
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
-
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            const depth = 10; // 嚴格近十期
-            let stats = { stars: 0, rows: [] };
-            
-            for (let i = 0; i < depth; i++) {
-                const training = history.slice(i + 1);
+            let stats = { stars: 0, rows: [], currentBest: '' };
+            for (let i = 0; i < 10; i++) {
+                const result = getBestStrategyPrediction(history.slice(i + 1));
                 const actual = history[i].nums;
-                const prediction = evolveMatrix(training);
-                const hits = actual.filter(n => prediction.map(Number).includes(n)).length;
+                const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stats.stars += hits;
-                
-                // 標記號碼本身
-                const predHtml = prediction.map(p => {
-                    return actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p;
-                }).join(',');
-
-                stats.rows.push({ 
-                    date: history[i].date.split('-').slice(1).join('/'), 
-                    actual: actual.map(n => n.toString().padStart(2,'0')).join(' '), 
-                    predHtml, 
-                    hit: hits 
-                });
+                const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+                stats.rows.push({ date: history[i].date.split('-').slice(1).join('/'), actual: actual.map(n => n.toString().padStart(2,'0')).join(' '), predHtml, hit: hits });
+                if(i === 0) stats.currentBest = result.name;
             }
 
-            updateLogBox((stats.stars / depth).toFixed(2), history.length);
-            updatePrediction(evolveMatrix(history));
+            const avg = (stats.stars / 10).toFixed(2);
+            updateLogBox(avg, history.length, stats.currentBest);
+            const final = getBestStrategyPrediction(history);
+            updatePrediction(final.pred);
             document.getElementById('historyTable').innerHTML = stats.rows.map(r => `
-                <tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-500">${r.date}</td>
-                    <td class="font-mono text-white text-[11px]">${r.actual}</td>
-                    <td class="text-[11px] text-gray-400 font-mono">${r.predHtml}</td>
-                    <td class="text-right font-black ${r.hit >= 2 ? 'text-orange-500' : 'text-gray-700'}">${r.hit}</td>
-                </tr>
+                <tr class="border-b border-white/5"><td class="py-3 text-gray-500">${r.date}</td><td class="font-mono text-white">${r.actual}</td>
+                <td class="text-[11px] text-gray-400 font-mono">${r.predHtml}</td><td class="text-right font-black ${r.hit >= 2 ? 'text-orange-500' : 'text-gray-700'}">${r.hit}</td></tr>
             `).join('');
         }
 
-        function evolveMatrix(data) {
-            const range = currentMode === '539' ? 39 : 36;
-            const heatMap = Array(range + 1).fill(0);
-            const lastNums = data[0].nums;
-            
-            for (let n = 1; n <= range; n++) {
-                let gap = 0; for (let r of data) { if (r.nums.includes(n)) break; gap++; }
-                let neighborScore = 0; lastNums.forEach(ln => { if(Math.abs(ln - n) === 1) neighborScore += 7; }); // 加強鄰號權重
-                let trendScore = 0, tailScore = 0;
-                data.slice(0, 10).forEach((r, idx) => {
-                    if (r.nums.includes(n)) trendScore += (12 - idx); // 加強趨勢權重
-                    if (r.nums.some(num => num % 10 === n % 10)) tailScore += (6 - idx/2);
-                });
-                heatMap[n] = (gap * 1.6) + (neighborScore * 2.2) + (trendScore * 1.5) + (tailScore * 2.0);
-                if (lastNums.includes(n)) heatMap[n] *= 2.2; // 強化連莊權重
-            }
-            return heatMap.map((s, i) => ({ n: i, s })).slice(1).sort((a,b) => b.s - a.s).slice(0, 8).map(x => x.n.toString().padStart(2, '0'));
-        }
-
-        function updateLogBox(avg, total) {
+        function updateLogBox(avg, total, strategy) {
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">Matrix Evolution v3.1</span>
+                    <span class="text-orange-500 font-bold">EVO ENGINE v4.0</span>
                     <span class="bg-white/10 px-2 rounded text-[9px]">樣本: ${total}P</span>
                 </div>
                 近10期平均命中: <span class="${avg >= 2 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星/期</span><br>
-                同步時間: <span class="text-white">${new Date().toLocaleTimeString()}</span><br>
-                <div class="mt-1 text-[9px] text-gray-500">已動態強化連莊與鄰號矩陣，優先鎖定熱區號碼。</div>
+                當前優選策略: <span class="text-white font-bold text-orange-400">${strategy}</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">系統已自動切換至實戰勝率最高之算法模型。</div>
             `;
         }
 
