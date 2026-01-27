@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO EVO AI 2.9+</title>
+    <title>PRO EVO AI 3.0 (Auto-Sync)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -14,12 +14,14 @@
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
         #logBox::-webkit-scrollbar { display: none; }
+        .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
-<body class="h-screen flex flex-col p-4">
+<body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 3.0</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
             <button id="btn539" onclick="switchMode('539')" class="px-6 py-1.5 rounded-lg text-sm btn-active">539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-6 py-1.5 rounded-lg text-sm btn-inactive ml-1">天天樂</button>
@@ -28,17 +30,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: 全維度矩陣演化引擎</label>
-            <input type="file" id="csvInput" class="hidden" accept=".csv">
-            <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">導入數據啟動演化</button>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: API 雲端演化引擎</label>
+            <div id="syncStatus" class="flex items-center text-[10px] text-green-500 font-bold uppercase tracking-tighter">
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 連線中...
+            </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic animate-pulse">系統待命：等待樣本進行基因雜交分析...</span>
+            <span class="text-orange-500/50 italic">正在連線至 Google Sheets API 進行大數據採樣...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label id="layoutLabel" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 演化預測 (2-2-2-2 佈局)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 雲端預測 (2-2-2-2 佈局)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -77,54 +80,59 @@
     </div>
 
     <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbys9LFrmqnTftrPqTprRhfn6YBsMH63K4BKOfZfbM7m1wAP_CxH6v9M_2RpIGtbW9cIeA/exec";
         let currentMode = '539';
-        let rawData = [];
-        let matrixWeights = { repeat: 1, tail: 1, gap: 1, trend: 1, neighbor: 1 };
+        let fullData = [];
+
+        async function fetchData() {
+            const log = document.getElementById('logBox');
+            const status = document.getElementById('syncStatus');
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                fullData = data;
+                status.innerHTML = `<span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> 已同步`;
+                processData(fullData);
+            } catch (error) {
+                log.innerHTML = `<span class="text-red-500">API 連線失敗，請檢查網路或 Apps Script 部署設定。</span>`;
+                status.innerHTML = `<span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span> 離線`;
+            }
+        }
 
         function switchMode(mode) {
             currentMode = mode;
             document.getElementById('btn539').className = `px-6 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'}`;
             document.getElementById('btnDaily').className = `px-6 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
-            if(rawData.length > 0) processData(rawData);
+            if(fullData.length > 0) processData(fullData);
         }
 
-        document.getElementById('csvInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                rawData = event.target.result.split('\n').map(l => l.trim()).filter(l => l.includes(',')).map(l => l.split(','));
-                processData(rawData);
-            };
-            reader.readAsText(file);
-        });
-
         function processData(data) {
-            let history = data.slice(1).map(row => ({
-                date: row[0].replace(/"/g, ''),
+            // 假設 API 回傳格式為 [[日期, n1, n2, n3, n4, n5], ...]
+            // 這裡自動過濾對應模式（假設第一欄包含 "天天樂" 或 "539" 字樣，或由您前端定義邏輯）
+            let filtered = data.filter(row => row.length >= 6);
+            
+            let history = filtered.map(row => ({
+                date: String(row[0]).split('T')[0],
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
 
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            // 啟動演化匹配
             const depth = Math.min(history.length - 10, 15);
             let stats = { stars: 0, rows: [] };
             
-            // 模擬回測與優化
             for (let i = 0; i < depth; i++) {
                 const training = history.slice(i + 1);
                 const actual = history[i].nums;
                 const prediction = evolveMatrix(training);
                 const hits = actual.filter(n => prediction.map(Number).includes(n)).length;
-                
                 stats.stars += hits;
                 stats.rows.push({ date: history[i].date, actual: actual.map(n => n.toString().padStart(2,'0')).join(' '), pred: prediction.join(','), hit: hits });
             }
 
             const avg = (stats.stars / depth).toFixed(2);
             updateLogBox(avg, history.length);
-            const final8 = evolveMatrix(history);
-            updatePrediction(final8);
+            updatePrediction(evolveMatrix(history));
             updateHistoryTable(stats.rows);
         }
 
@@ -133,44 +141,30 @@
             const heatMap = Array(range + 1).fill(0);
             const lastNums = data[0].nums;
             
-            // 1. 特徵矩陣提取 (多維度雜交)
             for (let n = 1; n <= range; n++) {
-                // A. 遺漏鏈特徵
                 let gap = 0; for (let r of data) { if (r.nums.includes(n)) break; gap++; }
-                
-                // B. 鄰號與關聯特徵
-                let neighborScore = 0;
-                lastNums.forEach(ln => { if(Math.abs(ln - n) === 1) neighborScore += 5; });
-
-                // C. 趨勢與尾數
-                let trendScore = 0;
-                let tailScore = 0;
+                let neighborScore = 0; lastNums.forEach(ln => { if(Math.abs(ln - n) === 1) neighborScore += 5; });
+                let trendScore = 0, tailScore = 0;
                 data.slice(0, 10).forEach((r, idx) => {
                     if (r.nums.includes(n)) trendScore += (10 - idx);
                     if (r.nums.some(num => num % 10 === n % 10)) tailScore += (5 - idx/2);
                 });
-
-                // D. 自主加權合成
                 heatMap[n] = (gap * 1.5) + (neighborScore * 2) + (trendScore * 1.2) + (tailScore * 1.8);
-                if (lastNums.includes(n)) heatMap[n] *= 1.8; // 連莊基因
+                if (lastNums.includes(n)) heatMap[n] *= 1.8;
             }
-
-            return heatMap.map((s, i) => ({ n: i, s })).slice(1)
-                          .sort((a,b) => b.s - a.s)
-                          .slice(0, 8)
-                          .map(x => x.n.toString().padStart(2, '0'));
+            return heatMap.map((s, i) => ({ n: i, s })).slice(1).sort((a,b) => b.s - a.s).slice(0, 8).map(x => x.n.toString().padStart(2, '0'));
         }
 
         function updateLogBox(avg, total) {
             const color = avg >= 2.0 ? 'text-green-400' : 'text-orange-500';
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold">EVO ENGINE v3.0</span>
+                    <span class="text-orange-500 font-bold uppercase">Matrix Evolution v3.0</span>
                     <span class="bg-white/10 px-2 rounded text-[9px]">樣本: ${total}P</span>
                 </div>
-                當前基因匹配率: <span class="${color} text-lg font-black">${avg} 星/期</span><br>
-                演化策略: <span class="text-white">全維度矩陣雜交 (無過濾)</span><br>
-                狀態: <span class="text-green-500">已根據回測曲線校準權重...</span>
+                平均演化命中: <span class="${color} text-lg font-black">${avg} 星/期</span><br>
+                同步時間: <span class="text-white">${new Date().toLocaleTimeString()}</span><br>
+                <div class="mt-1 text-[9px] text-gray-500">系統已根據最新雲端數據完成矩陣雜交運算。</div>
             `;
         }
 
@@ -184,7 +178,7 @@
         function updateHistoryTable(rows) {
             document.getElementById('historyTable').innerHTML = rows.map(r => `
                 <tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-500">${r.date.split('/').slice(1).join('/')}</td>
+                    <td class="py-3 text-gray-500">${r.date.split('-').slice(1).join('/') || r.date}</td>
                     <td class="font-mono text-white">${r.actual}</td>
                     <td class="text-[10px] text-gray-400 font-mono">${r.pred}</td>
                     <td class="text-right font-black ${r.hit >= 2 ? 'text-orange-500' : 'text-gray-700'}">${r.hit}</td>
