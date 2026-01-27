@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 7.80 COMBINATORIAL EDGE</title>
+    <title>ULTIMATE EVO 7.90 ULTIMATE ANCHOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -14,13 +14,13 @@
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; border-left: 3px solid var(--ios-orange); }
         #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.15); }
+        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.15); padding: 0 2px; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.80</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.90</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,29 +29,29 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 二三四星共生矩陣分析</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 30期規律收斂與樁腳分析</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> COMBINATORIAL ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> 30-PERIOD BACKTEST ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/10 leading-relaxed">
-            <span class="text-orange-500/50 italic">分析500期共生對碰规律中...</span>
+            <span class="text-orange-500/50 italic">深度計算 30 期規律與對碰權重中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼高壓組合 (2+2+1 結構)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼高壓組合 (1核心 + 4對碰)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/50">
-                <div class="text-[9px] text-orange-500 font-bold">對碰核心</div>
+                <div class="text-[9px] text-orange-500 font-bold">絕對樁腳</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">溫區主力</div>
+                <div class="text-[9px] text-orange-500 font-bold">對碰主力</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">溫區補位</div>
+                <div class="text-[9px] text-gray-400 font-bold">共生補位</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
@@ -62,7 +62,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三四星碰：規律收斂測試 (10期驗證)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三四星碰：30期規律收斂測試</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 z-10">
@@ -98,11 +98,11 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getCombinatorialEdge(history) {
+        function getAnchorCombinatorial(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
             
-            // 1. 建立500期共生矩陣
+            // 1. 建立共生矩陣 (分析500期)
             let matrix = {};
             history.slice(0, 500).forEach(h => {
                 h.nums.forEach(n1 => {
@@ -113,21 +113,7 @@
                 });
             });
 
-            // 2. 獲取號碼冷熱與遺漏
-            let stats = [];
-            for(let n=1; n<=range; n++) {
-                let gap = 0;
-                for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let freq = history.slice(0, 20).filter(r => r.nums.includes(n)).length;
-                stats.push({ n, gap, freq });
-            }
-
-            // 3. 2熱 (遺漏0-3) + 2溫 (遺漏4-9) + 1冷 (遺漏10+)
-            let hots = stats.filter(s => s.gap <= 3).sort((a,b) => b.freq - a.freq);
-            let warms = stats.filter(s => s.gap > 3 && s.gap <= 9).sort((a,b) => b.freq - a.freq);
-            let colds = stats.filter(s => s.gap > 9).sort((a,b) => a.gap - b.gap);
-
-            // 4. 根據上期開獎計算共生分數
+            // 2. 核心分數計算 (基於上期拖牌連動)
             let coScores = Array(range + 1).fill(0);
             lastNums.forEach(ln => {
                 if(matrix[ln]) {
@@ -135,27 +121,53 @@
                 }
             });
 
+            // 3. 獲取遺漏與頻率
+            let stats = [];
+            for(let n=1; n<=range; n++) {
+                let gap = 0;
+                for(let r of history) { if(r.nums.includes(n)) break; gap++; }
+                let freq = history.slice(0, 30).filter(r => r.nums.includes(n)).length;
+                stats.push({ n, gap, freq, score: coScores[n] || 0 });
+            }
+
+            // 4. 選碼邏輯：1核心 + 4對碰 (符合 2熱+2溫+1冷結構)
             let picked = new Set();
-            // 第一步：選取共生核心 (從熱/溫區選分最高的)
-            let candidates = stats.map(s => ({ ...s, score: coScores[s.n] })).sort((a,b) => b.score - a.score);
             
-            // 強制結構：2熱
-            hots.sort((a,b) => (coScores[b.n] || 0) - (coScores[a.n] || 0));
-            picked.add(hots[0].n);
-            picked.add(hots[1].n);
+            // A. 選定絕對樁腳 (從熱碼中選共生分最高者)
+            let hots = stats.filter(s => s.gap <= 3).sort((a,b) => b.score - a.score);
+            let anchor = hots[0].n;
+            picked.add(anchor);
 
-            // 強制結構：2溫
-            warms.sort((a,b) => (coScores[b.n] || 0) - (coScores[a.n] || 0));
-            picked.add(warms[0].n);
-            picked.add(warms[1].n);
+            // B. 獲取與樁腳連動最強的號碼
+            let anchorMatrix = matrix[anchor] || {};
+            let partners = stats.filter(s => s.n !== anchor).map(s => ({
+                ...s,
+                pScore: anchorMatrix[s.n] || 0
+            })).sort((a,b) => b.pScore - a.pScore);
 
-            // 強制結構：1冷
+            // C. 補齊結構 (2熱+2溫+1冷)
+            // 補第2個熱碼
+            let hot2 = hots.find(h => !picked.has(h.n));
+            if(hot2) picked.add(hot2.n);
+
+            // 補2個溫碼 (4-9期)
+            let warms = stats.filter(s => s.gap > 3 && s.gap <= 9).sort((a,b) => b.score + (anchorMatrix[b.n] || 0) - (a.score + (anchorMatrix[a.n] || 0)));
+            if(warms.length > 0) picked.add(warms[0].n);
+            if(warms.length > 1) picked.add(warms[1].n);
+
+            // 補1個冷碼或共生最高補位
+            let colds = stats.filter(s => s.gap > 9).sort((a,b) => b.score - a.score);
             if(colds.length > 0) picked.add(colds[0].n);
-            else picked.add(candidates.find(c => !picked.has(c.n)).n);
+
+            // 若不滿5碼，則按綜合分補齊
+            let finalSorted = partners.filter(p => !picked.has(p.n)).sort((a,b) => b.score - a.score);
+            while(picked.size < 5) {
+                picked.add(finalSorted.shift().n);
+            }
 
             return { 
                 pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                topPair: hots[0].n + " & " + hots[1].n
+                anchor: anchor.toString().padStart(2, '0')
             };
         }
 
@@ -168,27 +180,31 @@
 
             let stars = [0,0,0,0,0,0];
             let rowsHtml = "";
-            for (let i = 0; i < 10; i++) {
-                const res = getCombinatorialEdge(history.slice(i + 1));
+            const testCount = 30; // 擴展至30期回測
+
+            for (let i = 0; i < testCount; i++) {
+                if(!history[i+1]) break;
+                const res = getAnchorCombinatorial(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars[hits]++;
                 const predHtml = res.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-400 text-[10px]">${history[i].date.split('T')[0].replace('202', '2')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
+                let d = history[i].date.split('T')[0].split('-');
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 text-[10px]">${d[1]}/${d[2]}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const current = getCombinatorialEdge(history);
-            const winRate = (((stars[2]+stars[3]+stars[4]+stars[5])/10)*100).toFixed(0);
+            const current = getAnchorCombinatorial(history);
+            const winRate = (((stars[2]+stars[3]+stars[4]+stars[5])/testCount)*100).toFixed(0);
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest uppercase">Combo Analysis</span>
-                    <span class="text-[10px] bg-orange-600 text-black px-1 font-bold">V7.80</span>
+                    <span class="text-orange-500 font-bold tracking-widest uppercase">30-PERIOD ANALYSIS</span>
+                    <span class="text-[10px] bg-orange-600 text-black px-1 font-bold">V7.90</span>
                 </div>
-                核心對碰: <span class="text-white font-bold">${current.topPair}</span><br>
-                10期二星以上達成率: <span class="text-orange-500 font-black text-lg">${winRate}%</span><br>
-                結構配比: <span class="text-white">2熱 (0-3期) + 2溫 (4-9期) + 1冷</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">模式：二三四星碰優化。系統會根據前一期號碼自動匹配歷史連動最強的共生對。</div>`;
+                絕對樁腳核心: <span class="text-white font-bold">${current.anchor}</span><br>
+                30期命中 ≥2星: <span class="text-orange-500 font-black text-lg">${winRate}%</span><br>
+                二星數: <span class="text-white font-bold">${stars[2]}</span> | 三星以上: <span class="text-white font-bold">${stars[3]+stars[4]}</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">警告：若勝率低於 60% 代表正處於亂號週期，建議觀察。</div>`;
 
             document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
             document.getElementById('p2').innerText = `${current.pred[2]}`;
