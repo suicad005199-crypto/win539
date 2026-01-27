@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 7.60 STRATEGIC PULSE</title>
+    <title>ULTIMATE EVO 7.70 HISTORY ARCHIVE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.60</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.70</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/40">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 動態版路偵測脈搏</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 全歷史規律匹配引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> STRATEGIC PULSE ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> ARCHIVE SCANNING
             </div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/10 leading-relaxed">
-            <span class="text-orange-500/50 italic">初始化戰略脈搏引擎...</span>
+            <span class="text-orange-500/50 italic">正在掃描全歷史相似基因組...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼高壓狙擊陣列</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼基因狙擊陣列</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/50">
-                <div class="text-[9px] text-orange-500 font-bold">版路雙星</div>
+                <div class="text-[9px] text-orange-500 font-bold">歷史重演</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">星期規律</div>
+                <div class="text-[9px] text-orange-500 font-bold">尾數共振</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">熱門補位</div>
+                <div class="text-[9px] text-gray-400 font-bold">冷熱平衡</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">深冷破冰</div>
+                <div class="text-[9px] text-gray-400 font-bold">黃金回補</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">狙擊測試：80% 達成率驗證 (2星+)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">狙擊測試：歷史規律穿透力驗證</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 z-10">
@@ -98,60 +98,59 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getStrategicPulse(history, targetDate = new Date()) {
+        function getHistoryArchivePrediction(history, targetDate = new Date()) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
-            const dayOfWeek = targetDate.getDay();
-
-            // 1. 版路特徵偵測 (Pattern Detect)
-            let hasSerial = history.slice(0, 3).some(h => h.nums.some((n, i) => i > 0 && n - h.nums[i-1] === 1));
-            let tailCounts = Array(10).fill(0);
-            history.slice(0, 5).forEach(h => h.nums.forEach(n => tailCounts[n % 10]++));
-            let dominantTail = tailCounts.indexOf(Math.max(...tailCounts));
-
-            // 2. 深度星期規律 (24期同週幾掃描)
-            let dayCounts = Array(range + 1).fill(0);
-            history.slice(0, 100).forEach(r => { if(new Date(r.date).getDay() === dayOfWeek) r.nums.forEach(n => dayCounts[n]++); });
-
-            let scores = [];
-            for(let n=1; n<=range; n++) {
-                let s = 0;
-                // 連莊與鄰號 (版路基礎)
-                if (lastNums.includes(n)) s += 6.5;
-                if (lastNums.some(ln => Math.abs(ln - n) === 1)) s += 9.5;
-                // 同尾共振
-                if (n % 10 === dominantTail) s += 8.0;
-                // 星期強規律
-                s += dayCounts[n] * 4.5;
-                // 遺漏值破冰 (針對冷碼回補)
-                let gap = getGap(n, history);
-                if (gap > 8) s += (gap * 1.2);
-
-                scores.push({ n, val: s, gap });
-            }
-            scores.sort((a, b) => b.val - a.val);
-
-            // 3. 結構化選碼 [雙星樁腳 + 星期特徵 + 熱門補位 + 冷門破冰]
-            let picked = new Set();
-            picked.add(scores[0].n); // 樁腳 1
-            picked.add(scores[1].n); // 樁腳 2
+            const prevNums = history[1].nums;
             
-            // 補星期特徵碼
-            let dayTarget = scores.filter(s => !picked.has(s.n)).sort((a,b) => dayCounts[b.n] - dayCounts[a.n])[0];
-            picked.add(dayTarget.n);
+            // 1. 全歷史規律掃描 (Genome Match)
+            let genomeScores = Array(range + 1).fill(0);
+            let matchCount = 0;
+            // 掃描整份數據 (跳過當前預測範圍)
+            for(let j = history.length - 2; j >= 2; j--) {
+                let sim = history[j].nums.filter(n => lastNums.includes(n)).length;
+                if(sim >= 2) { // 相似度閾值
+                    matchCount++;
+                    history[j-1].nums.forEach(n => genomeScores[n] += (sim * 2));
+                }
+            }
 
-            // 補熱門位
-            let hotTarget = scores.filter(s => !picked.has(s.n))[0];
-            picked.add(hotTarget.n);
+            // 2. 尾數矩陣優化 (強制同尾保險)
+            let tailWeights = Array(10).fill(0);
+            history.slice(0, 5).forEach(h => h.nums.forEach(n => tailWeights[n % 10]++));
+            let bestTail = tailWeights.indexOf(Math.max(...tailWeights));
 
-            // 補冷門破冰
-            let coldTarget = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.gap - a.gap)[0];
-            picked.add(coldTarget.n);
+            let finalScores = [];
+            for(let n=1; n<=range; n++) {
+                let s = genomeScores[n]; // 歷史基礎分
+                s += (n % 10 === bestTail) ? 15 : 0; // 強制同尾加權
+                
+                // 排除連開3期或極冷的過濾
+                let gap = getGap(n, history);
+                if (gap > 1 && gap < 8) s += 10; // 黃金回補區
+                if (lastNums.some(ln => Math.abs(ln - n) === 1)) s += 5; // 鄰號加成
+
+                finalScores.push({ n, val: s, gap });
+            }
+            finalScores.sort((a, b) => b.val - a.val);
+
+            // 3. 5碼結構輸出 [歷史高頻2碼 + 同尾1碼 + 黃金回補2碼]
+            let picked = new Set();
+            picked.add(finalScores[0].n);
+            picked.add(finalScores[1].n);
+            
+            let tailTarget = finalScores.find(s => !picked.has(s.n) && s.n % 10 === bestTail);
+            if(tailTarget) picked.add(tailTarget.n);
+
+            let remaining = finalScores.filter(s => !picked.has(s.n));
+            for(let s of remaining) {
+                if(picked.size >= 5) break;
+                picked.add(s.n);
+            }
 
             return { 
                 pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                mode: hasSerial ? "連號版路偵測" : "跳號穩健模式",
-                tail: dominantTail
+                matches: matchCount
             };
         }
 
@@ -168,30 +167,30 @@
             })).filter(h => h.nums.length === 5);
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let starsCount = [0,0,0,0,0,0]; // 0-5星計數
+            let starsCount = [0,0,0,0,0,0];
             let rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const res = getStrategicPulse(history.slice(i + 1), new Date(history[i].date));
+                const res = getHistoryArchivePrediction(history.slice(i + 1), new Date(history[i].date));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 starsCount[hits]++;
                 const predHtml = res.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 let day = ['日','一','二','三','四','五','六'][new Date(history[i].date).getDay()];
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${day} ${history[i].date.split('T')[0].split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${day} ${history[i].date.split('T')[0].split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-bounce' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const currentRes = getStrategicPulse(history, new Date());
+            const currentRes = getHistoryArchivePrediction(history, new Date());
             const hitRate = (((starsCount[2]+starsCount[3]+starsCount[4]+starsCount[5])/10)*100).toFixed(0);
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">PULSE MONITOR</span>
-                    <span class="text-[10px] bg-orange-500 text-black px-1 font-bold">V7.60</span>
+                    <span class="text-orange-500 font-bold tracking-widest">ARCHIVE MONITOR</span>
+                    <span class="text-[10px] bg-orange-500 text-black px-1 font-bold">V7.70</span>
                 </div>
-                當前偵測: <span class="text-white font-bold">${currentRes.mode}</span><br>
-                尾數傾向: <span class="text-white font-bold">${currentRes.tail} 尾核心</span><br>
-                10期勝率: <span class="text-orange-500 font-black text-lg">${hitRate}% (≥2星)</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">警告：戰略脈搏會根據近3期動態調整結構，若開獎連續出現極冷號，建議暫停參考。</div>`;
+                匹配歷史片段: <span class="text-white font-bold">${currentRes.matches} 組</span><br>
+                策略重心: <span class="text-white font-bold">歷史相似重演 + 同尾鎖定</span><br>
+                10期命中 ≥2星: <span class="text-orange-500 font-black text-lg">${hitRate}%</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">模式說明：系統已在全歷史中找出與上期相似的片段，並將該規律映射至本期預測。</div>`;
 
             document.getElementById('p1').innerText = `${currentRes.pred[0]},${currentRes.pred[1]}`;
             document.getElementById('p2').innerText = `${currentRes.pred[2]}`;
