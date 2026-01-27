@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 7.40 PENTAGON SNIPER</title>
+    <title>ULTIMATE EVO 7.45 CORE-LINK SNIPER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.40</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.45</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 5碼高壓收斂引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 版路連動收斂引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> SNIPER MODE ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> PATTERN LINK ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正在執行 8 碼至 5 碼高壓過濾邏輯...</span>
+            <span class="text-orange-500/50 italic">正在掃描前 6 期跨期連動版路...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 精準狙擊 (Pentagon Focus)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 精準狙擊 (5-Code Matrix)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">核心</div>
+                <div class="text-[9px] text-orange-500 font-bold">核心連動</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">週期</div>
+                <div class="text-[9px] text-orange-500 font-bold">同尾狙擊</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">防禦</div>
+                <div class="text-[9px] text-gray-400 font-bold">斜連補位</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">補位</div>
+                <div class="text-[9px] text-gray-400 font-bold">版路守備</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">狙擊測試：5 碼 2 星保底驗證</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">狙擊測試：10期連續 2星 目標驗證</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -98,67 +98,59 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getPentagonPrediction(history) {
+        function getCoreLinkPrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
             
-            // 強化 6 期週規律
+            // 掃描前6期版路規律
+            let weeklyTails = Array(10).fill(0);
             let weeklyCounts = Array(range + 1).fill(0);
-            history.slice(0, 6).forEach(r => r.nums.forEach(n => weeklyCounts[n]++));
+            history.slice(0, 6).forEach(r => r.nums.forEach(n => {
+                weeklyCounts[n]++;
+                weeklyTails[n % 10]++;
+            }));
 
-            let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 40).forEach(r => r.nums.forEach(n => longCounts[n]++));
-
-            let gaps = Array(range + 1).fill(0);
-            for(let n=1; n<=range; n++) {
-                let g = 0; for(let r of history) { if(r.nums.includes(n)) break; g++; }
-                gaps[n] = g;
-            }
+            // 找出最強尾數
+            let topTail = weeklyTails.indexOf(Math.max(...weeklyTails));
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                // v7.40 5碼高壓權重：週頻次權重拉升至 5.0x
-                let weekBonus = (weeklyCounts[n] > 0) ? (2.0 + weeklyCounts[n] * 1.5) : 1.0;
-                let gapBonus = (gaps[n] >= 1 && gaps[n] <= 6) ? 3.5 : (gaps[n] === 0 ? 2.5 : 1.0);
-                let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
+                // 1. 斜連與鄰號權重 (強連動邏輯)
+                let neighborScore = lastNums.some(ln => Math.abs(ln - n) === 1) ? 8.5 : 0;
+                // 2. 連莊權重
+                let repeatScore = lastNums.includes(n) ? 5.0 : 0;
+                // 3. 尾數權重 (同尾狙擊)
+                let tailScore = (n % 10 === topTail) ? 7.0 : (weeklyTails[n % 10] > 2 ? 3.0 : 0);
+                // 4. 週頻次加權
+                let freqScore = weeklyCounts[n] * 4.5;
                 
-                scores.push({
-                    n: n,
-                    val: (weeklyCounts[n] * 6.5) + (longCounts[n] * 0.5) * weekBonus * gapBonus * (isNeighbor ? 2.2 : 1.0) + (10 / (gaps[n] + 1)),
-                    gap: gaps[n],
-                    tail: n % 10
-                });
+                scores.push({ n: n, val: neighborScore + repeatScore + tailScore + freqScore + (5 / (getGap(n, history) + 1)) });
             }
             scores.sort((a, b) => b.val - a.val);
 
             let picked = new Set();
-            
-            // 1. 絕對核心 (2碼)
+            // 第一步：選取最強核心 2 碼 (通常是強鄰號或連莊)
             picked.add(scores[0].n);
             picked.add(scores[1].n);
 
-            // 2. 週期共振 (1碼)：尋找與核心同尾或連號的最強號碼
-            let coreArr = Array.from(picked);
-            let candidates = scores.filter(s => !picked.has(s.n));
-            for(let s of candidates) {
-                if(picked.size >= 3) break;
-                if(coreArr.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.n % 10)) {
-                    picked.add(s.n);
-                }
+            // 第二步：強制補入 1-2 碼同尾碼 (增加 2 星機率)
+            let tailCandidates = scores.filter(s => !picked.has(s.n) && s.n % 10 === topTail);
+            if(tailCandidates.length > 0) picked.add(tailCandidates[0].n);
+
+            // 第三步：補齊 5 碼 (剩餘最高分)
+            let remaining = scores.filter(s => !picked.has(s.n));
+            for(let s of remaining) {
+                if(picked.size >= 5) break;
+                picked.add(s.n);
             }
 
-            // 3. 深度防護 (1碼)：遺漏值對沖
-            candidates = scores.filter(s => !picked.has(s.n));
-            candidates.sort((a, b) => b.gap - a.gap);
-            if(candidates.length > 0) picked.add(candidates[0].n);
+            return { pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')) };
+        }
 
-            // 4. 結構補位 (1碼)：權重最高剩餘位
-            candidates = scores.filter(s => !picked.has(s.n));
-            candidates.sort((a, b) => b.val - a.val);
-            if(candidates.length > 0) picked.add(candidates[0].n);
-
-            const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            return { pred, sIndex: (scores[0].val / 2).toFixed(2) };
+        function getGap(n, history) {
+            let g = 0;
+            for(let r of history) { if(r.nums.includes(n)) break; g++; }
+            return g;
         }
 
         function processData(data) {
@@ -170,7 +162,7 @@
 
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const result = getPentagonPrediction(history.slice(i + 1));
+                const result = getCoreLinkPrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
@@ -180,13 +172,13 @@
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 7.40 PENTAGON</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 7.45 CORE-LINK</span>
                 </div>
-                10期總計: <span class="text-orange-500 text-lg font-black">${stars} 星</span><br>
-                狙擊模式: <span class="text-white font-bold text-lg">5 碼強制壓縮</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">警告：5碼模式極度依賴週規律共振，若週規律失效，風險將顯著提升。</div>`;
+                10期平均命中: <span class="text-orange-500 text-lg font-black">${(stars/10).toFixed(2)} 星</span><br>
+                版路策略: <span class="text-white font-bold text-lg">同尾/鄰號強收斂</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">目標：透過前6期最強版路(同尾+斜連)鎖定 2 星輸出。</div>`;
 
-            const final = getPentagonPrediction(history);
+            const final = getCoreLinkPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
             document.getElementById('p2').innerText = `${final.pred[2]}`;
             document.getElementById('p3').innerText = `${final.pred[3]}`;
