@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 8.00 PATTERN SYNC</title>
+    <title>ULTIMATE EVO 8.10 TRAIL-MASTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.00</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.10</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 尾數聚類與 30 期回測系統</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 拖牌慣性與區間平衡分析</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> PATTERN SYNC ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> TRAIL ENGINE ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/10 leading-relaxed">
-            <span class="text-orange-500/50 italic">正在導入近期數據並分析尾數慣性...</span>
+            <span class="text-orange-500/50 italic">分析拖牌規律與尾數慣性中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼收斂陣列 (連莊+同尾結構)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼拖牌收斂 (核心 + 區間補位)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/50">
-                <div class="text-[9px] text-orange-500 font-bold">核心樁腳</div>
+                <div class="text-[9px] text-orange-500 font-bold">拖牌核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">保險連鄰</div>
+                <div class="text-[9px] text-orange-500 font-bold">強勢同尾</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">尾數對碰</div>
+                <div class="text-[9px] text-gray-400 font-bold">區間補位</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">跳碼奇襲</div>
+                <div class="text-[9px] text-gray-400 font-bold">冷門回補</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三四星碰：30期深度回測列表</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三四星碰：30期拖牌實測驗證</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 z-10">
@@ -98,56 +98,74 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getSyncPattern(history) {
+        function getTrailMasterPattern(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
 
-            // 1. 尾數熱度統計 (近20期)
-            let tailStats = Array(10).fill(0);
-            history.slice(0, 20).forEach(h => h.nums.forEach(n => tailStats[n % 10]++));
-            let topTails = tailStats.map((count, tail) => ({ tail, count })).sort((a,b) => b.count - a.count).slice(0, 2);
+            // 1. 拖牌機率矩陣 (Next-Ball Probability)
+            let trailMap = {};
+            for (let i = 0; i < history.length - 1; i++) {
+                const current = history[i+1].nums;
+                const next = history[i].nums;
+                current.forEach(c => {
+                    if (!trailMap[c]) trailMap[c] = {};
+                    next.forEach(n => {
+                        trailMap[c][n] = (trailMap[c][n] || 0) + 1;
+                    });
+                });
+            }
 
-            // 2. 獲取號碼狀態
+            // 2. 基於上期開獎號計算本期權重
+            let weights = Array(range + 1).fill(0);
+            lastNums.forEach(ln => {
+                if (trailMap[ln]) {
+                    for (let n in trailMap[ln]) weights[n] += trailMap[ln][n];
+                }
+            });
+
+            // 3. 尾數熱度
+            let tailStats = Array(10).fill(0);
+            history.slice(0, 30).forEach(h => h.nums.forEach(n => tailStats[n % 10]++));
+            let topTail = tailStats.indexOf(Math.max(...tailStats));
+
+            // 4. 選碼與區間平衡 (01-13, 14-26, 27-39)
+            let picked = new Set();
             let stats = [];
             for(let n=1; n<=range; n++) {
                 let gap = 0;
                 for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let freq = history.slice(0, 30).filter(r => r.nums.includes(n)).length;
-                stats.push({ n, gap, freq });
+                stats.push({ n, gap, weight: weights[n] || 0 });
             }
 
-            let picked = new Set();
-            
-            // A. 樁腳核心：選取與上期有最強拖牌連動的碼
-            let hots = stats.filter(s => s.gap <= 3).sort((a,b) => b.freq - a.freq);
-            let anchor = hots[0].n;
-            picked.add(anchor);
+            // 第一步：選取最強拖牌樁腳
+            let sortedWeights = [...stats].sort((a,b) => b.weight - a.weight);
+            picked.add(sortedWeights[0].n);
 
-            // B. 保險位：強制選入 1 個「連莊」或「鄰號」
-            let safetyPool = [];
-            lastNums.forEach(ln => {
-                safetyPool.push(ln); // 連莊
-                if(ln > 1) safetyPool.push(ln - 1); // 鄰號
-                if(ln < range) safetyPool.push(ln + 1);
-            });
-            let safetyTarget = stats.filter(s => safetyPool.includes(s.n) && !picked.has(s.n)).sort((a,b) => a.gap - b.gap);
-            if(safetyTarget.length > 0) picked.add(safetyTarget[0].n);
+            // 第二步：選取最強尾數成員
+            let tailMatch = stats.filter(s => s.n % 10 === topTail && !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
+            if(tailMatch.length > 0) picked.add(tailMatch[0].n);
 
-            // C. 尾數聚類：從熱門尾數中挑選
-            topTails.forEach(t => {
-                let tailMatch = stats.filter(s => s.n % 10 === t.tail && !picked.has(s.n)).sort((a,b) => a.gap - b.gap);
-                if(tailMatch.length > 0 && picked.size < 4) picked.add(tailMatch[0].n);
+            // 第三步：區間補位 (確保 3 個區間都有碼)
+            const sections = [[1, 13], [14, 26], [27, 39]];
+            sections.forEach(sec => {
+                let hasInSec = Array.from(picked).some(p => p >= sec[0] && p <= sec[1]);
+                if (!hasInSec) {
+                    let secCandidates = stats.filter(s => s.n >= sec[0] && s.n <= sec[1] && !picked.has(s.n))
+                                            .sort((a,b) => b.weight - a.weight);
+                    if (secCandidates.length > 0) picked.add(secCandidates[0].n);
+                }
             });
 
-            // D. 跳碼/冷碼補位
-            let candidates = stats.filter(s => !picked.has(s.n)).sort((a,b) => b.freq - a.freq);
+            // 第四步：補足 5 碼 (選近期較熱但未選中的)
+            let fillers = stats.filter(s => !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
             while(picked.size < 5) {
-                picked.add(candidates.shift().n);
+                picked.add(fillers.shift().n);
             }
 
             return {
                 pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                tails: topTails.map(t => t.tail + "尾").join(",")
+                mainTail: topTail + "尾",
+                topTrail: sortedWeights[0].n.toString().padStart(2, '0')
             };
         }
 
@@ -164,7 +182,7 @@
 
             for (let i = 0; i < testPeriod; i++) {
                 if(!history[i+1]) break;
-                const res = getSyncPattern(history.slice(i + 1));
+                const res = getTrailMasterPattern(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars[hits]++;
@@ -173,19 +191,18 @@
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 text-[10px]">${d}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const current = getSyncPattern(history);
+            const current = getTrailMasterPattern(history);
             const winRate = (((stars[2]+stars[3]+stars[4]+stars[5])/testPeriod)*100).toFixed(0);
-            const total3Star = stars[3] + stars[4] + stars[5];
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest uppercase">Pattern Sync Report</span>
-                    <span class="text-[10px] bg-orange-600 text-black px-1 font-bold">V8.00</span>
+                    <span class="text-orange-500 font-bold tracking-widest uppercase">Trail-Master Analysis</span>
+                    <span class="text-[10px] bg-orange-600 text-black px-1 font-bold">V8.10</span>
                 </div>
-                熱點尾數偵測: <span class="text-white font-bold">${current.tails}</span><br>
+                當期拖牌首選: <span class="text-white font-bold">${current.topTrail}</span><br>
+                熱門尾數趨勢: <span class="text-white font-bold">${current.mainTail}</span><br>
                 30期命中率 (2星+): <span class="text-orange-500 font-black text-lg">${winRate}%</span><br>
-                累計三星以上: <span class="text-white font-bold">${total3Star} 期</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">結構：[1樁腳 + 1保險位 + 2尾數聚類 + 1跳碼]。此邏輯專為二三四星碰優化。</div>`;
+                <div class="mt-1 text-[9px] text-gray-500 italic">核心：根據上期開獎號計算拖牌機率。佈局：區間平衡 (1:2:2) 確保分佈。</div>`;
 
             document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
             document.getElementById('p2').innerText = `${current.pred[2]}`;
