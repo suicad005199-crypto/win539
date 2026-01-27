@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE v7.0 GENESIS</title>
+    <title>ULTIMATE EVO 6.8 CORE-X</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 25px rgba(249, 115, 22, 0.4); }
+        .orange-glow { box-shadow: 0 0 25px rgba(249, 115, 22, 0.3); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
@@ -20,49 +20,49 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">v7.0 <span class="text-white">GENESIS</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.8</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
+    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: GENESIS 全維度共振引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: CORE-X 流體核心校準引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> OMNI-RESONANCE ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> CORE-X ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">整合 v5/v6 基因序列中...</span>
+            <span class="text-orange-500/50 italic">正執行影子序列補位運算...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 全維度集成組合 (Genesis Output)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: CORE-X 集成組合 (Shadow Output)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">V6 現代核心</div>
+                <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">V6 流體補位</div>
+            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
+                <div class="text-[9px] text-gray-400 font-bold">第二柱</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">V5 歷史記憶</div>
+                <div class="text-[9px] text-gray-400 font-bold">第三柱</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">V5 結構互補</div>
+                <div class="text-[9px] text-gray-400 font-bold">第四柱</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 GENESIS 綜合績效</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X 綜合績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -98,15 +98,14 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getGenesisPrediction(history) {
+        function getEnsemblePrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             let lastNums = history[0].nums;
             
-            // 多維度數據採樣
             let shortCounts = Array(range + 1).fill(0);
             history.slice(0, 7).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 50).forEach(r => r.nums.forEach(n => longCounts[n]++)); // v5 基因：擴大採樣至 50 期
+            history.slice(0, 25).forEach(r => r.nums.forEach(n => longCounts[n]++));
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -114,57 +113,49 @@
                 gaps[n] = g;
             }
 
-            // --- 邏輯 A: v6 現代流體核心 ---
-            let v6Scores = [];
+            let scores = [];
             for(let n=1; n<=range; n++) {
-                let heat = (shortCounts[n] * 1.8) + (longCounts[n] * 0.2);
+                // v6.8 CORE-X: 提升權重靈敏度
+                let heat = (shortCounts[n] * 1.5) + (longCounts[n] * 0.3);
                 let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
-                let gapBonus = (gaps[n] >= 2 && gaps[n] <= 7) ? 1.8 : 1.0;
-                v6Scores.push({ n, val: heat * (isNeighbor ? 1.5 : 1.0) * gapBonus });
-            }
-            v6Scores.sort((a, b) => b.val - a.val);
-
-            // --- 邏輯 B: v5 歷史記憶互補 ---
-            let v5Scores = [];
-            for(let n=1; n<=range; n++) {
-                // v5 強項：極端冷碼回補與長線頻率
-                let freq = longCounts[n] / 50;
-                let coldBonus = (gaps[n] >= 12) ? 2.0 : (gaps[n] === 0 ? 0.5 : 1.0); // 避開剛開出的，抓極冷
-                v5Scores.push({ n, val: freq * coldBonus });
-            }
-            v5Scores.sort((a, b) => b.val - a.val);
-
-            let alpha = new Set();
-            let beta = new Set();
-            
-            // Alpha: 由 v6 流體核心決定前 4 碼
-            v6Scores.slice(0, 4).forEach(s => alpha.add(s.n));
-
-            // Beta: 由 v5 歷史記憶與 v6 進行「邏輯互補」
-            // 規則：從 v5 高分中挑選與 alpha 不重複且「跨度最大」的碼
-            let alphaArray = Array.from(alpha);
-            for(let s of v5Scores) {
-                if(alpha.has(s.n)) continue;
-                if(beta.size >= 4) break;
+                let isRepeat = lastNums.includes(n);
+                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 9) ? 1.6 : 1.0; // 縮小黃金遺漏區間，鎖定更熱的碼
                 
-                // 結構檢查：確保與 alpha 核心有一定的區間跨度 (v6.0-6.4 基因)
-                let isDistanced = alphaArray.every(an => Math.abs(an - s.n) > 2);
-                if(isDistanced) beta.add(s.n);
+                scores.push({
+                    n: n,
+                    val: (heat * (isNeighbor ? 1.4 : 1.0) * (isRepeat ? 1.3 : 1.0) * gapBonus) + (2 / (gaps[n] + 1)),
+                    tail: n % 10,
+                    zone: Math.floor((n-1)/(range/3)),
+                    gap: gaps[n]
+                });
+            }
+            scores.sort((a, b) => b.val - a.val);
+
+            let picked = new Set();
+            
+            // 1. 核心共振 (Core 5): 權重最高的前 5 碼，作為保底與強攻主體
+            scores.slice(0, 5).forEach(s => picked.add(s.n));
+
+            // 2. 影子補位 (Shadow 3): 尋找與核心碼最具關聯性的號碼 (鄰號共振或同尾強化)
+            let coreArray = Array.from(picked);
+            let candidates = scores.filter(s => !picked.has(s.n));
+            
+            for(let s of candidates) {
+                if(picked.size >= 8) break;
+                // 檢查是否與核心碼形成鄰號或同尾
+                let isShadow = coreArray.some(cn => Math.abs(cn - s.n) === 1 || (cn % 10 === s.n % 10));
+                if(isShadow) picked.add(s.n);
             }
 
-            // 最終補齊 (若互補碼不足)
-            let fallback = v6Scores.filter(s => !alpha.has(s.n) && !beta.has(s.n));
-            while(beta.size < 4) beta.add(fallback.shift().n);
+            // 最終補齊 (若影子不足)
+            for(let s of scores) {
+                if(picked.size >= 8) break;
+                picked.add(s.n);
+            }
 
-            const combined = [...Array.from(alpha), ...Array.from(beta)].sort((a,b)=>a-b);
-            const pred = combined.map(x => x.toString().padStart(2, '0'));
-            const gIndex = (v6Scores[0].val * 1.2 + v5Scores[0].val * 10).toFixed(2);
-            
-            return { 
-                pred, gIndex, 
-                alpha: Array.from(alpha).sort((a,b)=>a-b), 
-                beta: Array.from(beta).sort((a,b)=>a-b) 
-            };
+            const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
+            const sIndex = (scores[0].val * 1.5).toFixed(2);
+            return { pred, sIndex };
         }
 
         function processData(data) {
@@ -174,12 +165,13 @@
             })).filter(h => h.nums.length === 5);
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let stars = 0, rowsHtml = "";
+            let stars = 0, rowsHtml = "", lastS = 0;
             for (let i = 0; i < 10; i++) {
-                const result = getGenesisPrediction(history.slice(i + 1));
+                const result = getEnsemblePrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
+                if(i===0) lastS = result.sIndex;
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
@@ -187,18 +179,18 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">v7.0 GENESIS</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">G-INDEX: ${(stars*1.15).toFixed(2)}</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.8 CORE-X</span>
+                    <span class="bg-white/10 px-2 rounded text-[9px]">X-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                架構模式: <span class="text-white font-bold text-lg">OMNI-COMPLEMENTARY</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">大一統版本：Alpha(v6流體) + Beta(v5記憶) 邏輯互補。</div>`;
+                基因狀態: <span class="text-white font-bold text-lg">FLUID CORE CALIBRATED</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">修正：放棄分層限制，實施 5 碼流體核心 + 3 碼影子補位。優先拉回均星表現。</div>`;
 
-            const final = getGenesisPrediction(history);
-            document.getElementById('p1').innerText = `${final.alpha[0]},${final.alpha[1]}`;
-            document.getElementById('p2').innerText = `${final.alpha[2]},${final.alpha[3]}`;
-            document.getElementById('p3').innerText = `${final.beta[0]},${final.beta[1]}`;
-            document.getElementById('p4').innerText = `${final.beta[2]},${final.beta[3]}`;
+            const final = getEnsemblePrediction(history);
+            document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
+            document.getElementById('p2').innerText = `${final.pred[2]},${final.pred[3]}`;
+            document.getElementById('p3').innerText = `${final.pred[4]},${final.pred[5]}`;
+            document.getElementById('p4').innerText = `${final.pred[6]},${final.pred[7]}`;
             document.getElementById('historyTable').innerHTML = rowsHtml;
         }
     </script>
