@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOTTO Predictor AI Pro</title>
+    <title>LOTTO Predictor Pro AI 2.9x</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 15px rgba(249, 115, 22, 0.2); }
+        .orange-glow { box-shadow: 0 0 20px rgba(249, 115, 22, 0.25); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
@@ -19,7 +19,7 @@
 <body class="h-screen flex flex-col p-4">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">PRO <span class="text-white">AI</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">PRO <span class="text-white">AI 2.9</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
             <button id="btn539" onclick="switchMode('539')" class="px-6 py-1.5 rounded-lg text-sm btn-active transition-all">539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-6 py-1.5 rounded-lg text-sm btn-inactive transition-all">天天樂</button>
@@ -28,19 +28,19 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: AI Engine Status</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: AI 特徵權重引擎</label>
             <input type="file" id="csvInput" class="hidden" accept=".csv">
-            <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">上傳數據</button>
+            <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">數據導入</button>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-gray-500">系統待命。請上傳 CSV (18-25期)...</span>
+            <span class="text-gray-500 italic">系統已就緒，等待連莊與尾數特徵數據...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label id="layoutLabel" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (初始化中)</label>
+        <label id="layoutLabel" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期核心預測 (2-3-2-1 膽拖)</label>
         <div class="grid grid-cols-4 gap-2">
-            <div class="bg-orange-950/20 p-2 rounded-lg text-center border border-orange-500/30">
+            <div class="bg-orange-950/40 p-2 rounded-lg text-center border border-orange-500">
                 <div class="text-[9px] text-orange-500 font-bold italic">第一柱(膽)</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
@@ -60,15 +60,15 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 自我優化回測報告</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 命中率強化追蹤</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 shadow-sm">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
-                        <th class="pb-2 font-medium">日期</th>
-                        <th class="pb-2 font-medium">開獎</th>
-                        <th class="pb-2 font-medium">預測</th>
-                        <th class="pb-2 font-medium text-right">星</th>
+                        <th class="pb-2">日期</th>
+                        <th class="pb-2">開獎</th>
+                        <th class="pb-2">AI 預測組合</th>
+                        <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
                 <tbody id="historyTable" class="divide-y divide-white/5"></tbody>
@@ -79,7 +79,6 @@
     <script>
         let currentMode = '539';
         let rawData = [];
-        let aiConfig = { strategy: "初始化", layout: "2-2-2-2" };
 
         function switchMode(mode) {
             currentMode = mode;
@@ -88,14 +87,11 @@
             if(rawData.length > 0) processData(rawData);
         }
 
-        document.getElementById('csvInput').addEventListener('change', function(e) {
+        document.getElementById('csvInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = (event) => {
-                rawData = event.target.result.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.includes(','))
-                    .map(line => line.split(','));
+                rawData = event.target.result.split('\n').map(l => l.trim()).filter(l => l.includes(',')).map(l => l.split(','));
                 processData(rawData);
             };
             reader.readAsText(file);
@@ -105,114 +101,98 @@
             let history = data.slice(1).map(row => ({
                 date: row[0].replace(/"/g, ''),
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
-            })).filter(item => item.nums.length === 5);
+            })).filter(h => h.nums.length === 5);
 
-            if (history.length > 1 && new Date(history[0].date) < new Date(history[history.length - 1].date)) {
-                history.reverse();
-            }
+            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            // --- AI 自我優化模組 ---
-            const backtestDepth = Math.min(history.length - 5, 10);
-            let stats = { count: 0, hits: [], totalStars: 0 };
-            
-            // 執行深度回測以決定最佳策略
+            const backtestDepth = Math.min(history.length - 5, 12);
+            let stats = { total: 0, x2: 0, x3: 0, x4: 0, stars: 0, rows: [] };
+
             for (let i = 0; i < backtestDepth; i++) {
                 const train = history.slice(i + 1);
-                const pred = generateStrategy(train, true); // true 代表回測模式
-                const flatPred = pred.flat().map(Number);
-                const hitCount = history[i].nums.filter(n => flatPred.includes(n)).length;
-                stats.hits.push({ date: history[i].date, actual: history[i].nums, pred: pred, hit: hitCount });
-                stats.totalStars += hitCount;
-                stats.count++;
+                const pred = generateStrategy(train);
+                const flat = pred.flat().map(Number);
+                const hits = history[i].nums.filter(n => flat.includes(n));
+                
+                stats.total++;
+                stats.stars += hits.length;
+                if(hits.length === 2) stats.x2++;
+                if(hits.length === 3) stats.x3++;
+                if(hits.length >= 4) stats.x4++;
+
+                stats.rows.push({
+                    date: history[i].date,
+                    actual: history[i].nums.map(n => n.toString().padStart(2,'0')).join(' '),
+                    pred: pred.map(p => p.join(',')).join('|'),
+                    hit: hits.length
+                });
             }
 
-            const avgHit = stats.totalStars / stats.count;
-            
-            // 策略權重自動調整
-            if (avgHit < 1.0) {
-                aiConfig.strategy = "深度聚焦 (熱溫4:4)";
-                aiConfig.layout = "3-2-2-1";
-            } else {
-                aiConfig.strategy = "均衡補償 (遺漏優先)";
-                aiConfig.layout = "2-2-2-2";
-            }
-
-            updateLogBox(stats, avgHit, history.length);
-            updatePrediction(generateStrategy(history, false));
-            updateHistoryTable(stats.hits);
-            document.getElementById('layoutLabel').innerText = `Panel 3: 下期預測 (${aiConfig.layout} 佈局)`;
+            const avg = (stats.stars / stats.total).toFixed(2);
+            updateLogBox(avg, stats, history.length);
+            updatePrediction(generateStrategy(history));
+            updateHistoryTable(stats.rows);
         }
 
-        function generateStrategy(data, isBacktest) {
+        function generateStrategy(data) {
             const range = currentMode === '539' ? 39 : 36;
-            const hotScores = Array(range + 1).fill(0);
-            const gaps = Array(range + 1).fill(0);
-            const tails = Array(10).fill(0); // 尾數分析
+            const scores = Array(range + 1).fill(0);
+            const tails = Array(10).fill(0);
+            const lastNums = data[0].nums; // 連莊特徵
 
-            // 1. 基礎分析
-            for (let n = 1; n <= range; n++) {
-                let g = 0;
-                for (let r of data) { if (r.nums.includes(n)) break; g++; }
-                gaps[n] = g;
-            }
-            data.slice(0, 10).forEach((r, idx) => {
-                r.nums.forEach(n => { 
-                    if(n <= range) {
-                        hotScores[n] += (10 - idx);
-                        tails[n % 10] += 1;
+            // 1. 深度特徵抓取
+            data.slice(0, 15).forEach((row, idx) => {
+                row.nums.forEach(n => {
+                    if (n <= range) {
+                        scores[n] += (15 - idx) * 1.2; // 基礎熱度
+                        tails[n % 10] += (15 - idx) * 0.5; // 尾數權重
                     }
                 });
             });
 
-            // 2. 模組化選號邏輯
+            // 2. 核心權重注入
             let pool = [];
             for (let n = 1; n <= range; n++) {
-                let score = hotScores[n] * 1.5; // 趨勢權重
-                score += (gaps[n] > 5 ? 5 : 0); // 遺漏補償
-                score += tails[n % 10] * 0.8; // 尾數聯動
-                pool.push({ n, s: score });
+                let finalScore = scores[n];
+                if (lastNums.includes(n)) finalScore *= 2.5; // 連莊翻倍
+                finalScore += tails[n % 10] * 1.8; // 強力尾數補強
+                pool.push({ n, s: finalScore });
             }
-            pool.sort((a,b) => b.s - a.s);
-            let final8 = pool.slice(0, 8).map(x => x.n);
 
-            // 3. 動態佈局封裝
-            const s = final8.map(n => n.toString().padStart(2, '0'));
-            if (aiConfig.layout === "3-2-2-1") {
-                return [[s[0], s[1], s[2]], [s[3], s[4]], [s[5], s[6]], [s[7]]];
-            } else {
-                return [[s[0], s[1]], [s[2], s[3]], [s[4], s[5]], [s[6], s[7]]];
-            }
+            pool.sort((a,b) => b.s - a.s);
+            const s = pool.slice(0, 8).map(x => x.n.toString().padStart(2, '0'));
+
+            // 3. 2-3-2-1 高效佈局
+            return [[s[0], s[1]], [s[2], s[3], s[4]], [s[5], s[6]], [s[7]]];
         }
 
-        function updateLogBox(s, avg, total) {
-            const mood = avg > 1.2 ? "良好" : (avg > 0.8 ? "普通" : "低迷");
+        function updateLogBox(avg, s, total) {
+            const status = avg >= 2.5 ? "目標達成" : "持續優化中";
             document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-orange-500 font-bold">AI 權重引擎 [${currentMode}]</span>
-                    <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded text-gray-300">數據量: ${total}期</span>
+                <div class="flex justify-between">
+                    <span class="text-orange-500 font-bold">高星數強化引擎 [${currentMode}]</span>
+                    <span class="text-white bg-orange-600 px-2 rounded">${status}</span>
                 </div>
-                當前策略: <span class="text-white">${aiConfig.strategy}</span><br>
-                回測表現: <span class="${avg<1?'text-red-400':'text-green-400'}">${avg.toFixed(2)} 星/期 (${mood})</span><br>
-                <div class="mt-2 grid grid-cols-3 gap-1 text-[9px] text-center">
-                    <div class="bg-white/5 py-1 rounded">2星: ${s.hits.filter(h=>h.hit===2).length}</div>
-                    <div class="bg-white/5 py-1 rounded">3星: ${s.hits.filter(h=>h.hit===3).length}</div>
-                    <div class="bg-white/5 py-1 rounded">4星+: ${s.hits.filter(h=>h.hit>=4).length}</div>
+                平均命中: <span class="text-white text-lg">${avg}</span> 星/期<br>
+                連莊加權: <span class="text-green-400">2.5x</span> | 尾數加權: <span class="text-green-400">1.8x</span><br>
+                <div class="mt-2 grid grid-cols-3 gap-1">
+                    <div class="bg-white/5 p-1 rounded text-center">2星: ${s.x2}</div>
+                    <div class="bg-white/5 p-1 rounded text-center text-orange-400">3星: ${s.x3}</div>
+                    <div class="bg-white/5 p-1 rounded text-center text-red-400">4星: ${s.x4}</div>
                 </div>
             `;
         }
 
         function updatePrediction(pred) {
-            for(let i=0; i<4; i++) {
-                document.getElementById(`p${i+1}`).innerText = pred[i] ? pred[i].join(',') : '--';
-            }
+            pred.forEach((p, i) => document.getElementById(`p${i+1}`).innerText = p.join(','));
         }
 
-        function updateHistoryTable(hits) {
-            document.getElementById('historyTable').innerHTML = hits.map(r => `
+        function updateHistoryTable(rows) {
+            document.getElementById('historyTable').innerHTML = rows.map(r => `
                 <tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-500 text-[10px]">${r.date}</td>
-                    <td class="font-mono text-white text-xs">${r.actual.map(n=>n.toString().padStart(2,'0')).join(' ')}</td>
-                    <td class="text-[10px] text-gray-400 font-mono">${r.pred.map(p=>p.join(',')).join('|')}</td>
+                    <td class="py-3 text-gray-500">${r.date.split('/').slice(1).join('/')}</td>
+                    <td class="font-mono text-white">${r.actual}</td>
+                    <td class="text-[10px] text-gray-400 font-mono">${r.pred}</td>
                     <td class="text-right font-bold ${r.hit>=2?'text-orange-500':'text-gray-700'}">${r.hit}</td>
                 </tr>
             `).join('');
