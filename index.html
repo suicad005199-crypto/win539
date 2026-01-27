@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 5.4 CLUSTER</title>
+    <title>ULTIMATE EVO 5.5 DYNAMIC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 5.4</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 5.5</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 尾數集群與溫碼喚醒</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 動態自適應引擎 (快慢線校準)</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-green-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 結構同步中
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 權重計算中
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">分析尾數結構中...</span>
+            <span class="text-orange-500/50 italic">計算策略勝率分配中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 集成預測組合 (結構優化)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 動態集成組合 (Dynamic Output)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,14 +62,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 Cluster 回測績效</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 Dynamic Engine 回測績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">優選共識碼</th>
+                        <th class="pb-2">自適應選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -101,77 +101,84 @@
         const strategies = {
             hot: (data, range) => {
                 let counts = Array(range + 1).fill(0);
-                data.slice(0, 15).forEach(r => r.nums.forEach(n => counts[n]++));
+                data.slice(0, 10).forEach(r => r.nums.forEach(n => counts[n]++));
                 return counts.map((c, i) => ({ n: i, s: c })).slice(1).sort((a,b)=>b.s-a.s).map(x => x.n);
             },
-            warm: (data, range) => {
+            cold: (data, range) => {
                 let gaps = Array(range + 1).fill(0);
                 for(let n=1; n<=range; n++) {
                     let g = 0; for(let r of data) { if(r.nums.includes(n)) break; g++; }
                     gaps[n] = g;
                 }
-                // 鎖定遺漏 5-12 期的溫號，其餘降權
-                return gaps.map((g, i) => ({ n: i, s: (g >= 5 && g <= 12) ? 100 + g : g }))
-                           .slice(1).sort((a,b)=>b.s-a.s).map(x => x.n);
+                return gaps.map((g, i) => ({ n: i, s: g })).slice(1).sort((a,b)=>b.s-a.s).map(x => x.n);
             },
             neighbor: (data, range) => {
                 let last = data[0].nums;
                 let scores = Array(range + 1).fill(0);
                 last.forEach(n => {
-                    if(n>1) scores[n-1] += 15;
-                    if(n<range) scores[n+1] += 15;
-                    if(data.slice(1,4).some(r => r.nums.includes(n))) scores[n] += 10;
+                    if(n>1) scores[n-1] += 10;
+                    if(n<range) scores[n+1] += 10;
                 });
                 return scores.map((s, i) => ({ n: i, s })).slice(1).sort((a,b)=>b.s-a.s).map(x => x.n);
-            },
-            cluster: (data, range) => {
-                // 尾數熱度統計
-                let tails = Array(10).fill(0);
-                data.slice(0, 5).forEach(r => r.nums.forEach(n => tails[n % 10]++));
-                let bestTail = tails.indexOf(Math.max(...tails));
-                let pool = []; for(let i=1; i<=range; i++) if(i % 10 === bestTail) pool.push(i);
-                return pool;
             }
         };
 
         function getEnsemblePrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
+            
+            // 1. 動態評估各策略近 5 期勝率
+            let strategyPerformance = { hot: 0, cold: 0, neighbor: 0 };
+            for(let i=0; i<5; i++) {
+                if(!history[i+1]) break;
+                const actual = history[i].nums;
+                for(let sName in strategies) {
+                    const pred = strategies[sName](history.slice(i+1), range).slice(0, 10);
+                    strategyPerformance[sName] += actual.filter(n => pred.includes(n)).length;
+                }
+            }
+
+            // 2. 根據勝率分配選碼配額 (總數 8)
+            let totalScore = Object.values(strategyPerformance).reduce((a,b)=>a+b, 0) || 1;
             let picked = new Set();
             
-            const pickFrom = (name, count) => {
+            const pickFrom = (name) => {
+                const share = Math.max(1, Math.round((strategyPerformance[name] / totalScore) * 8));
                 const list = strategies[name](history, range);
                 let added = 0;
                 for(let n of list) {
-                    if(!picked.has(n) && added < count) {
+                    if(!picked.has(n) && added < share && picked.size < 8) {
                         picked.add(n);
                         added++;
                     }
                 }
             };
 
-            // 結構化配額：熱碼 3, 溫碼 2, 鄰碼 2, 尾數群 1
-            pickFrom('hot', 3);
-            pickFrom('warm', 2);
-            pickFrom('neighbor', 2);
-            pickFrom('cluster', 1);
+            // 按表現順序選碼
+            const sortedStrats = Object.keys(strategyPerformance).sort((a,b)=>strategyPerformance[b]-strategyPerformance[a]);
+            sortedStrats.forEach(s => pickFrom(s));
 
-            let finalPicks = Array.from(picked).slice(0, 8);
+            // 補齊不足 8 碼的情況
+            let fallback = strategies[sortedStrats[0]](history, range);
+            for(let n of fallback) { if(picked.size < 8) picked.add(n); }
+
+            // 3. 自適應連號補償 (偵測近 10 期連號頻率)
+            let serialCount = 0;
+            for(let i=0; i<10; i++) {
+                if(!history[i]) break;
+                let h = history[i].nums;
+                for(let j=0; j<h.length-1; j++) if(h[j+1]-h[j] === 1) { serialCount++; break; }
+            }
             
-            // 結構修正：若 8 碼完全沒有同尾，將最後一碼替換為第一碼的同尾
-            let tailCounts = {};
-            finalPicks.forEach(n => tailCounts[n%10] = (tailCounts[n%10]||0)+1);
-            if (Object.keys(tailCounts).length === 8) {
-                let targetTail = finalPicks[0] % 10;
-                for(let i=1; i<=range; i++) {
-                    if (i % 10 === targetTail && !finalPicks.includes(i)) {
-                        finalPicks[7] = i;
-                        break;
-                    }
-                }
+            let finalPicks = Array.from(picked);
+            if(serialCount >= 6) { // 連號率高，強制在最強號碼旁安插鄰號
+                let base = finalPicks[0];
+                let serialMate = base < range ? base + 1 : base - 1;
+                if(!finalPicks.includes(serialMate)) finalPicks[7] = serialMate;
             }
 
             const pred = finalPicks.sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            return { pred };
+            const activeStrat = sortedStrats[0].toUpperCase();
+            return { pred, activeStrat };
         }
 
         function processData(data) {
@@ -181,30 +188,26 @@
             })).filter(h => h.nums.length === 5);
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let stars = 0;
-            let rowsHtml = "";
+            let stars = 0, rowsHtml = "", currentActive = "";
             for (let i = 0; i < 10; i++) {
                 const result = getEnsemblePrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
+                if(i===0) currentActive = result.activeStrat;
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rowsHtml += `
-                    <tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td>
-                    <td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td>
-                    <td class="text-[11px] text-gray-400 font-mono">${predHtml}</td>
-                    <td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 5.4 CLUSTER</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">WARM MODE ON</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 5.5 DYNAMIC</span>
+                    <span class="bg-white/10 px-2 rounded text-[9px]">ACTIVE: ${currentActive}</span>
                 </div>
-                10期平均命中: <span class="${avg >= 1.5 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
-                結構一致性: <span class="text-white font-bold text-lg">HIGH</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">已啟動尾數集群校準。優先過濾遺漏 5-12 期之溫熱號。</div>`;
+                10期平均命中: <span class="${avg >= 1.4 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
+                數據窗口: <span class="text-white font-bold text-lg">DYNAMIC 10-WINDOW</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">已切換至快慢線自適應引擎。系統正在根據近 5 期表現動態調整選碼權重。</div>`;
 
             const final = getEnsemblePrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
