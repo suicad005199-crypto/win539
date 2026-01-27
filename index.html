@@ -33,12 +33,12 @@
             <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">上傳數據</button>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-gray-500">等待 CSV 數據以啟動遺漏值配比策略...</span>
+            <span class="text-gray-500">等待 CSV 數據上傳... (建議 20 期以上)</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (膽碼 + 拖碼佈局)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (膽拖分佈)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-950/20 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold italic">第一柱(膽)</div>
@@ -60,14 +60,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 2-4-2 策略回測報告</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期回測明細</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 shadow-sm">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2 font-medium">日期</th>
                         <th class="pb-2 font-medium">開獎</th>
-                        <th class="pb-2 font-medium">預測組合</th>
+                        <th class="pb-2 font-medium">預測</th>
                         <th class="pb-2 font-medium text-right">星</th>
                     </tr>
                 </thead>
@@ -93,7 +93,7 @@
             reader.onload = (event) => {
                 rawData = event.target.result.split('\n')
                     .map(line => line.trim())
-                    .filter(line => line !== '')
+                    .filter(line => line.includes(','))
                     .map(line => line.split(','));
                 processData(rawData);
             };
@@ -102,21 +102,22 @@
 
         function processData(data) {
             let history = data.slice(1).map(row => ({
-                date: row[0],
+                date: row[0].replace(/"/g, ''),
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(item => item.nums.length === 5);
 
-            if (history.length > 0 && new Date(history[0].date) < new Date(history[history.length - 1].date)) {
+            if (history.length > 1 && new Date(history[0].date) < new Date(history[history.length - 1].date)) {
                 history.reverse();
             }
 
+            // 修正回測起點：至少預留 10 期做參考數據
+            const baseLine = history.length > 15 ? 10 : 5;
             let stats = { count: 0, x2: 0, x3: 0, x4: 0, totalHits: 0 };
             const backtestRows = [];
-            const baseLine = 30; // 增加回測深度
 
-            for (let i = 0; i < Math.min(history.length - baseLine, 50); i++) {
-                const trainingData = history.slice(i + 1); 
-                const actual = history[i]; 
+            for (let i = 0; i < Math.min(history.length - baseLine, 10); i++) {
+                const trainingData = history.slice(i + 1);
+                const actual = history[i];
                 const prediction = generateStrategy(trainingData);
                 const flatPred = prediction.flat().map(Number);
                 const hits = actual.nums.filter(n => flatPred.includes(n));
@@ -127,26 +128,25 @@
                 if(hits.length === 3) stats.x3++;
                 if(hits.length >= 4) stats.x4++;
 
-                if (i < 10) {
-                    backtestRows.push({
-                        date: actual.date,
-                        actual: actual.nums.map(n => n.toString().padStart(2,'0')).join(' '),
-                        pred: prediction.map(p => p.join(',')).join('|'),
-                        hit: hits.length
-                    });
-                }
+                backtestRows.push({
+                    date: actual.date,
+                    actual: actual.nums.map(n => n.toString().padStart(2,'0')).join(' '),
+                    pred: prediction.map(p => p.join(',')).join('|'),
+                    hit: hits.length
+                });
             }
-            updateLogBox(stats);
+
+            updateLogBox(stats, history.length);
             updatePrediction(generateStrategy(history));
             updateHistoryTable(backtestRows);
         }
 
         function generateStrategy(data) {
-            const range = 39;
+            const range = currentMode === '539' ? 39 : 36;
             const gaps = Array(range + 1).fill(0);
             const hotScores = Array(range + 1).fill(0);
             
-            // 1. 計算遺漏值 (Gaps)
+            // 1. 計算遺漏值
             for (let n = 1; n <= range; n++) {
                 let count = 0;
                 for (let row of data) {
@@ -156,69 +156,60 @@
                 gaps[n] = count;
             }
 
-            // 2. 計算近期熱度
+            // 2. 熱度統計
             data.slice(0, 15).forEach((row, idx) => {
-                row.nums.forEach(n => hotScores[n] += (15 - idx));
+                row.nums.forEach(n => { if(n <= range) hotScores[n] += (15 - idx); });
             });
 
-            // 3. 分類：熱(0-3), 溫(4-9), 冷(10+)
+            // 3. 2:4:2 遺漏補償邏輯
             let poolHot = [], poolWarm = [], poolCold = [];
             for (let n = 1; n <= range; n++) {
-                // 殺號過濾：排除連開3期號碼
-                let isSerial3 = data.slice(0,3).every(r => r.nums.includes(n));
-                if (isSerial3) continue;
-
                 if (gaps[n] <= 3) poolHot.push({n, s: hotScores[n]});
-                else if (gaps[n] <= 9) poolWarm.push({n, s: hotScores[n]});
+                else if (gaps[n] <= 8) poolWarm.push({n, s: hotScores[n]});
                 else poolCold.push({n, s: hotScores[n]});
             }
 
-            // 排序
-            poolHot.sort((a,b) => b.s - a.s);
-            poolWarm.sort((a,b) => b.s - a.s);
-            poolCold.sort((a,b) => b.s - a.s);
+            const sortFn = (a,b) => b.s - a.s;
+            poolHot.sort(sortFn); poolWarm.sort(sortFn); poolCold.sort(sortFn);
 
-            // 4. 2:4:2 配比挑選
+            // 抽取號碼，增加不足時的後援
             let final8 = [
                 ...poolHot.slice(0, 2).map(x => x.n),
                 ...poolWarm.slice(0, 4).map(x => x.n),
                 ...poolCold.slice(0, 2).map(x => x.n)
             ];
 
-            // 補足 8 碼 (若某池不足)
+            // 補足 8 碼
             if(final8.length < 8) {
-                let all = [...poolHot, ...poolWarm, ...poolCold].sort((a,b) => b.s - a.s);
-                for(let item of all) {
-                    if(!final8.includes(item.n)) final8.push(item.n);
-                    if(final8.length === 8) break;
+                let fallback = [...poolHot, ...poolWarm, ...poolCold]
+                    .filter(x => !final8.includes(x.n))
+                    .sort(sortFn);
+                while(final8.length < 8 && fallback.length > 0) {
+                    final8.push(fallback.shift().n);
                 }
             }
 
-            return packAsBanker(final8);
-        }
-
-        function packAsBanker(nums) {
-            // 第一柱為膽 (最強2碼)，其餘為拖
-            const sorted = [...nums]; 
+            // 立柱分配：[前2最強為膽], [其餘分配]
+            const sorted = final8; 
             return [
-                [sorted[0], sorted[1]], // 膽碼柱
+                [sorted[0], sorted[1]],
                 [sorted[2], sorted[3]],
                 [sorted[4], sorted[5]],
                 [sorted[6], sorted[7]]
             ].map(c => c.map(n => n.toString().padStart(2, '0')).sort());
         }
 
-        function updateLogBox(s) {
-            const winRate = s.count > 0 ? ((s.x2 + s.x3 + s.x4) / s.count * 100).toFixed(1) : 0;
+        function updateLogBox(s, total) {
+            const avg = s.count > 0 ? (s.totalHits / s.count).toFixed(2) : "0.00";
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between">
-                    <span class="text-orange-500 font-bold">遺漏補償報告 [${currentMode}]</span>
-                    <span class="text-white bg-orange-600 px-2 rounded">勝率: ${winRate}%</span>
+                    <span class="text-orange-500 font-bold">動態分析報告 [${currentMode}]</span>
+                    <span class="text-white bg-orange-600 px-2 rounded">平均: ${avg} 星</span>
                 </div>
-                遺漏配比: 熱2 : 溫4 : 冷2 | 殺號: 已排除連3期號碼<br>
-                佈局模式: 膽拖立柱 (核心膽碼 + 擴展拖碼)<br>
+                讀取筆數: ${total} | 回測筆數: ${s.count}<br>
+                策略: 遺漏值動態補償 (2:4:2 分佈)<br>
                 <span class="text-white">--------------------------------</span><br>
-                命中統計 -> 2星: <span class="text-white">${s.x2}</span> | 3星: <span class="text-orange-400 font-bold">${s.x3}</span> | 4星: <span class="text-yellow-400 font-bold">${s.x4}</span>
+                2星: <span class="text-white">${s.x2}</span> | 3星: <span class="text-white">${s.x3}</span> | 4星: <span class="text-white">${s.x4}</span>
             `;
         }
 
@@ -230,11 +221,11 @@
 
         function updateHistoryTable(rows) {
             document.getElementById('historyTable').innerHTML = rows.map(r => `
-                <tr>
-                    <td class="py-3 text-gray-400 text-[10px]">${r.date}</td>
-                    <td class="font-mono text-white">${r.actual}</td>
-                    <td class="text-[10px] text-gray-500 font-mono">${r.pred}</td>
-                    <td class="text-right font-bold ${r.hit>=3?'text-yellow-500':(r.hit===2?'text-orange-500':'text-gray-700')}">${r.hit}</td>
+                <tr class="border-b border-white/5">
+                    <td class="py-3 text-gray-500 text-[10px]">${r.date}</td>
+                    <td class="font-mono text-white text-xs">${r.actual}</td>
+                    <td class="text-[10px] text-gray-400 font-mono">${r.pred}</td>
+                    <td class="text-right font-bold ${r.hit>=2?'text-orange-500':'text-gray-700'}">${r.hit}</td>
                 </tr>
             `).join('');
         }
