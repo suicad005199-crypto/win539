@@ -1,115 +1,205 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oracle V.77.0 MAX</title>
+    <title>LOTTO Predictor Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --bg: #030712; --panel: #111827; --primary: #facc15; --accent: #f87171; --success: #22c55e; --text: #f3f4f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
-        .container { max-width: 440px; margin: auto; }
-        .panel { background: var(--panel); border: 2px solid #374151; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .header { font-size: 17px; font-weight: 800; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin-bottom: 14px; display: flex; justify-content: space-between; }
-        .bt-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .n-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #1f2937; font-size: 11px; color: #9ca3af; }
-        .n-box.hit { background: var(--success); color: #000; font-weight: bold; border: 1px solid #fff; box-shadow: 0 0 10px var(--success); }
-        .ball-row { display: flex; gap: 8px; justify-content: center; margin: 18px 0; flex-wrap: wrap; }
-        .ball { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #4b5563, #000); border: 3px solid var(--primary); border-radius: 50%; font-size: 21px; font-weight: 900; color: var(--primary); text-shadow: 0 0 5px #000; }
-        .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .p-card { background: #111; border: 1px solid #4b5563; padding: 12px; text-align: center; border-radius: 8px; position: relative; }
-        .p-nums { font-size: 26px; font-weight: 900; color: #fff; margin-top: 5px; }
-        #status { font-family: monospace; font-size: 11px; color: #fbbf24; background: #000; padding: 12px; border-radius: 8px; border-left: 4px solid var(--accent); }
+        :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
+        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
+        .ios-panel { background: var(--ios-panel); border-radius: 12px; }
+        .orange-glow { box-shadow: 0 0 15px rgba(249, 115, 22, 0.2); }
+        .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
+        .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
+        #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
+        #logBox::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body>
-<div class="container">
-    <div class="panel">
-        <div class="header">暴力命中優化 <span>V.77.0 MAX</span></div>
-        <input type="file" id="csvFile" accept=".csv" style="font-size: 11px; color: #9ca3af;">
+<body class="h-screen flex flex-col p-4">
+
+    <div class="flex justify-between items-center mb-5">
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">PRO <span class="text-white">AI</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
+            <button id="btn539" onclick="switchMode('539')" class="px-6 py-1.5 rounded-lg text-sm btn-active transition-all">539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-6 py-1.5 rounded-lg text-sm btn-inactive transition-all">天天樂</button>
+        </div>
     </div>
 
-    <div class="panel">
-        <div class="header" style="color:var(--success)">命中補償軌跡 (1/26 觀測)</div>
-        <div id="btBody"></div>
+    <div class="ios-panel p-4 mb-4 orange-glow">
+        <div class="flex justify-between items-end mb-2">
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: Data Control</label>
+            <input type="file" id="csvInput" class="hidden" accept=".csv">
+            <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">上傳數據</button>
+        </div>
+        <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
+            <span class="text-gray-500">等待 CSV 數據上傳以啟動滾動回測策略...</span>
+        </div>
     </div>
 
-    <div class="panel" style="border: 2px solid var(--accent); background: linear-gradient(to bottom, #111827, #1e1b4b);">
-        <div class="header" style="color:var(--accent)">1/26 終極 8 碼</div>
-        <div id="nextPred" class="ball-row"></div>
+    <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (2-2-2-2 立柱)</label>
+        <div class="grid grid-cols-4 gap-2">
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
+                <div class="text-[9px] text-orange-700 font-bold">第一柱</div>
+                <div class="text-lg font-black text-white" id="p1">--</div>
+            </div>
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
+                <div class="text-[9px] text-orange-700 font-bold">第二柱</div>
+                <div class="text-lg font-black text-white" id="p2">--</div>
+            </div>
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
+                <div class="text-[9px] text-orange-700 font-bold">第三柱</div>
+                <div class="text-lg font-black text-white" id="p3">--</div>
+            </div>
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
+                <div class="text-[9px] text-orange-700 font-bold">第四柱</div>
+                <div class="text-lg font-black text-white" id="p4">--</div>
+            </div>
+        </div>
     </div>
 
-    <div class="panel">
-        <div class="header" style="color:#fff">交叉立柱 (命中率最大化佈局)</div>
-        <div id="pillarView" class="p-grid"></div>
+    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期滾動回測明細</label>
+        <div class="overflow-y-auto flex-grow">
+            <table class="w-full text-[12px]">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 shadow-sm">
+                    <tr class="text-left border-b border-white/10">
+                        <th class="pb-2 font-medium">日期</th>
+                        <th class="pb-2 font-medium">開獎</th>
+                        <th class="pb-2 font-medium">預測</th>
+                        <th class="pb-2 font-medium text-right">星</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable" class="divide-y divide-white/5">
+                    </tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="status">> 診斷：V.76 對冷碼判斷失準，V.77 強制轉向「高頻坍縮」模式。<br>> 鎖定：1/26 必開區間 09-19 與 22-29。<br>> 警告：嚴禁追蹤 7 尾，強攻 2、6、9 尾共振點。</div>
-</div>
+    <script>
+        let currentMode = '539';
+        let rawData = [];
 
-<script>
-    let rawData = [];
-    const pad = (n) => n.toString().padStart(2, '0');
-
-    function getV77Logic(hist) {
-        if(hist.length < 5) return [06,09,12,16,22,26,29,32];
-        const last = hist[hist.length-1].nums;
-        let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-
-        for(let i=1; i<=39; i++) {
-            // 1. 強制回填加權 (08-28)
-            if(i >= 8 && i <= 28) scores[i].s += 25000;
-
-            // 2. 尾數共振優化
-            const t = i % 10;
-            if([2, 6, 9].includes(t)) scores[i].s += 18000;
-            if([0, 7].includes(t)) scores[i].s -= 20000; // 排除近期無效尾數
-
-            // 3. 鄰位補償 (針對 1/24 的 06, 07, 15)
-            if([5, 8, 9, 14, 16].includes(i)) scores[i].s += 15000;
-
-            // 4. 熱度過濾：只取最近 10 期出現過 1-2 次的「溫碼」
-            let count = 0;
-            hist.slice(-10).forEach(h => { if(h.nums.includes(i)) count++; });
-            if(count >= 1 && count <= 2) scores[i].s += 12000;
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn539').className = `px-6 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-6 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active':'btn-inactive'}`;
+            if(rawData.length > 0) processData(rawData);
         }
 
-        let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
-        // 跨區均衡取碼，保證覆蓋面
-        return [
-            ...sorted.filter(x => x.n <= 12).slice(0,3),
-            ...sorted.filter(x => x.n > 12 && x.n <= 25).slice(0,3),
-            ...sorted.filter(x => x.n > 25).slice(0,2)
-        ].map(x => x.n).sort((a,b) => a-b);
-    }
-
-    document.getElementById('csvFile').addEventListener('change', e => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const lines = reader.result.replace(/\r/g, "").trim().split('\n').slice(1);
-            rawData = lines.map(l => {
-                const c = l.split(',');
-                return { date: c[0], nums: c.slice(1,6).map(n=>parseInt(n)).sort((a,b)=>a-b) };
-            }).filter(r => r.nums.length === 5);
-            rawData.sort((a,b) => new Date(a.date) - new Date(b.date));
-            render();
-        };
-        reader.readAsText(e.target.files[0]);
-    });
-
-    function render() {
-        const next = getV77Logic(rawData);
-        let btHtml = "";
-        rawData.slice(-15).reverse().forEach(row => {
-            const idx = rawData.indexOf(row);
-            const pred = getV77Logic(rawData.slice(0, idx));
-            const hits = row.nums.filter(n => pred.includes(n));
-            btHtml += `<div class="bt-row"><span>${row.date.slice(-5)}</span><div style="display:flex;gap:4px">${row.nums.map(n => `<div class="n-box ${pred.includes(n)?'hit':''}">${pad(n)}</div>`).join('')}</div><b style="color:${hits.length>=2?'var(--success)':'#4b5563'}">${hits.length}★</b></div>`;
+        document.getElementById('csvInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                rawData = event.target.result.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line !== '')
+                    .map(line => line.split(','));
+                processData(rawData);
+            };
+            reader.readAsText(file);
         });
-        document.getElementById('btBody').innerHTML = btHtml;
-        document.getElementById('nextPred').innerHTML = next.map(n => `<div class="ball">${pad(n)}</div>`).join('');
-        const p = [[next[0], next[4]], [next[1], next[5]], [next[2], next[6]], [next[3], next[7]]];
-        document.getElementById('pillarView').innerHTML = p.map((pair, i) => `<div class="p-card"><div style="color:var(--primary);font-size:10px;font-weight:bold;">MAX-NODE ${i+1}</div><div class="p-nums">${pad(pair[0])}·${pad(pair[1])}</div></div>`).join('');
-    }
-</script>
+
+        function processData(data) {
+            const history = data.slice(1).map(row => ({
+                date: row[0],
+                nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+            })).filter(item => item.nums.length === 5);
+
+            let stats = { count: 0, x2: 0, x3: 0, x4: 0 };
+            const backtestRows = [];
+
+            // 滾動回測邏輯：從最舊的數據開始往最新日期移動
+            // 每一期 i 的預測，只能使用 i+1 之後的數據
+            for (let i = 0; i < history.length - 20; i++) {
+                const trainingData = history.slice(i + 1); // 過去的歷史
+                const actual = history[i]; // 該期開獎
+                const prediction = generateStrategy(trainingData);
+                const flatPred = prediction.flat().map(Number);
+                
+                const hits = actual.nums.filter(n => flatPred.includes(n));
+                
+                stats.count++;
+                if(hits.length === 2) stats.x2++;
+                if(hits.length === 3) stats.x3++;
+                if(hits.length >= 4) stats.x4++;
+
+                if (i < 10) {
+                    backtestRows.push({
+                        date: actual.date.replace('2026-','').replace('2025-',''),
+                        actual: actual.nums.map(n => n.toString().padStart(2,'0')).join(' '),
+                        pred: prediction.map(p => p.join(',')).join('|'),
+                        hit: hits.length
+                    });
+                }
+            }
+
+            // 更新 UI
+            updateLogBox(history.length, stats);
+            updatePrediction(generateStrategy(history));
+            updateHistoryTable(backtestRows);
+        }
+
+        function generateStrategy(data) {
+            const range = 39;
+            const scores = Array(range + 1).fill(0);
+            
+            // 策略 A: 頻率權重 (滾動計算最近 60 期)
+            const lookback = data.slice(0, 60);
+            lookback.forEach((row, idx) => {
+                const weight = (60 - idx) / 60;
+                row.nums.forEach(n => { if(n <= range) scores[n] += (3 * weight); });
+            });
+
+            // 策略 B: 遺漏值加成
+            for(let n = 1; n <= range; n++) {
+                let miss = 0;
+                for(let row of data) {
+                    if(row.nums.includes(n)) break;
+                    miss++;
+                }
+                scores[n] += (miss * 0.1); 
+            }
+
+            // 確保決定論排序：分數相同時按號碼大小排
+            const picked = scores
+                .map((score, num) => ({ num, score }))
+                .filter(x => x.num !== 0)
+                .sort((a, b) => b.score - a.score || a.num - b.num)
+                .slice(0, 8)
+                .map(x => x.num.toString().padStart(2, '0'));
+
+            return [[picked[0], picked[1]], [picked[2], picked[3]], [picked[4], picked[5]], [picked[6], picked[7]]];
+        }
+
+        function updateLogBox(total, s) {
+            document.getElementById('logBox').innerHTML = `
+                <div class="text-orange-500 font-bold mb-1">滾動回測報告 [${currentMode}]</div>
+                讀取筆數: ${total} | 回測期數: ${s.count}<br>
+                <span class="text-white">--------------------------------</span><br>
+                命中 2 星: <span class="text-white">${s.x2}</span> 次 (${((s.x2/s.count)*100).toFixed(1)}%)<br>
+                命中 3 星: <span class="text-white">${s.x3}</span> 次 (${((s.x3/s.count)*100).toFixed(1)}%)<br>
+                命中 4 星: <span class="text-white">${s.x4}</span> 次
+            `;
+        }
+
+        function updatePrediction(pred) {
+            pred.forEach((col, i) => {
+                document.getElementById(`p${i+1}`).innerText = col.join(',');
+            });
+        }
+
+        function updateHistoryTable(rows) {
+            document.getElementById('historyTable').innerHTML = rows.map(r => `
+                <tr>
+                    <td class="py-3 text-gray-400">${r.date}</td>
+                    <td class="font-mono text-white">${r.actual}</td>
+                    <td class="text-[10px] text-gray-500">${r.pred}</td>
+                    <td class="text-right font-bold ${r.hit>=2?'text-orange-500':'text-gray-700'}">${r.hit}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
 </body>
 </html>
