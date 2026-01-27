@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOTTO Predictor Pro AI 2.9x</title>
+    <title>PRO AI: Evolution</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -19,40 +19,40 @@
 <body class="h-screen flex flex-col p-4">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">PRO <span class="text-white">AI 2.9</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">PRO <span class="text-white">EVO AI</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
-            <button id="btn539" onclick="switchMode('539')" class="px-6 py-1.5 rounded-lg text-sm btn-active transition-all">539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-6 py-1.5 rounded-lg text-sm btn-inactive transition-all">天天樂</button>
+            <button id="btn539" onclick="switchMode('539')" class="px-6 py-1.5 rounded-lg text-sm btn-active">539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-6 py-1.5 rounded-lg text-sm btn-inactive ml-1">天天樂</button>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 orange-glow">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: AI 特徵權重引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: 多模組權重演化中</label>
             <input type="file" id="csvInput" class="hidden" accept=".csv">
-            <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">數據導入</button>
+            <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">上傳數據</button>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-gray-500 italic">系統已就緒，等待連莊與尾數特徵數據...</span>
+            <span class="text-gray-500 italic">等待數據載入以啟動自主學習模組...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label id="layoutLabel" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期核心預測 (2-3-2-1 膽拖)</label>
+        <label id="layoutLabel" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (2-2-2-2 演進佈局)</label>
         <div class="grid grid-cols-4 gap-2">
-            <div class="bg-orange-950/40 p-2 rounded-lg text-center border border-orange-500">
-                <div class="text-[9px] text-orange-500 font-bold italic">第一柱(膽)</div>
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/10">
+                <div class="text-[9px] text-orange-500 font-bold italic">第一柱</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
-            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/10">
                 <div class="text-[9px] text-gray-500 font-bold">第二柱</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
-            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/10">
                 <div class="text-[9px] text-gray-500 font-bold">第三柱</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
-            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
+            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/10">
                 <div class="text-[9px] text-gray-500 font-bold">第四柱</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
@@ -60,14 +60,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 命中率強化追蹤</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 模組回測效能</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">AI 預測組合</th>
+                        <th class="pb-2">最佳模組預測</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -79,11 +79,12 @@
     <script>
         let currentMode = '539';
         let rawData = [];
+        let strategyWeights = { gap: 1, trend: 1, synergy: 1 };
 
         function switchMode(mode) {
             currentMode = mode;
             document.getElementById('btn539').className = `px-6 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'}`;
-            document.getElementById('btnDaily').className = `px-6 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-6 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
             if(rawData.length > 0) processData(rawData);
         }
 
@@ -105,93 +106,113 @@
 
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            const backtestDepth = Math.min(history.length - 5, 12);
-            let stats = { total: 0, x2: 0, x3: 0, x4: 0, stars: 0, rows: [] };
+            // 自主學習階段：對不同模組進行回測與權重優化
+            const backtestDepth = Math.min(history.length - 10, 10);
+            let performance = { gap: 0, trend: 0, synergy: 0 };
+            let historyRows = [];
 
             for (let i = 0; i < backtestDepth; i++) {
-                const train = history.slice(i + 1);
-                const pred = generateStrategy(train);
-                const flat = pred.flat().map(Number);
-                const hits = history[i].nums.filter(n => flat.includes(n));
+                const training = history.slice(i + 1);
+                const actual = history[i].nums;
                 
-                stats.total++;
-                stats.stars += hits.length;
-                if(hits.length === 2) stats.x2++;
-                if(hits.length === 3) stats.x3++;
-                if(hits.length >= 4) stats.x4++;
+                const resGap = getModuleScore(training, 'gap');
+                const resTrend = getModuleScore(training, 'trend');
+                const resSynergy = getModuleScore(training, 'synergy');
 
-                stats.rows.push({
+                performance.gap += calculateHits(resGap, actual);
+                performance.trend += calculateHits(resTrend, actual);
+                performance.synergy += calculateHits(resSynergy, actual);
+
+                const bestPool = evolveStrategy(training);
+                const hits = calculateHits(bestPool, actual);
+                historyRows.push({
                     date: history[i].date,
-                    actual: history[i].nums.map(n => n.toString().padStart(2,'0')).join(' '),
-                    pred: pred.map(p => p.join(',')).join('|'),
-                    hit: hits.length
+                    actual: actual.map(n => n.toString().padStart(2,'0')).join(' '),
+                    pred: bestPool.slice(0,8).join(','),
+                    hit: hits
                 });
             }
 
-            const avg = (stats.stars / stats.total).toFixed(2);
-            updateLogBox(avg, stats, history.length);
-            updatePrediction(generateStrategy(history));
-            updateHistoryTable(stats.rows);
+            // 更新動態權重
+            const totalPerf = performance.gap + performance.trend + performance.synergy || 1;
+            strategyWeights = {
+                gap: (performance.gap / totalPerf).toFixed(2),
+                trend: (performance.trend / totalPerf).toFixed(2),
+                synergy: (performance.synergy / totalPerf).toFixed(2)
+            };
+
+            const final8 = evolveStrategy(history);
+            updateLogBox(performance, history.length);
+            updatePrediction(final8);
+            updateHistoryTable(historyRows);
         }
 
-        function generateStrategy(data) {
+        function getModuleScore(data, type) {
             const range = currentMode === '539' ? 39 : 36;
             const scores = Array(range + 1).fill(0);
-            const tails = Array(10).fill(0);
-            const lastNums = data[0].nums; // 連莊特徵
-
-            // 1. 深度特徵抓取
-            data.slice(0, 15).forEach((row, idx) => {
-                row.nums.forEach(n => {
-                    if (n <= range) {
-                        scores[n] += (15 - idx) * 1.2; // 基礎熱度
-                        tails[n % 10] += (15 - idx) * 0.5; // 尾數權重
-                    }
-                });
-            });
-
-            // 2. 核心權重注入
-            let pool = [];
-            for (let n = 1; n <= range; n++) {
-                let finalScore = scores[n];
-                if (lastNums.includes(n)) finalScore *= 2.5; // 連莊翻倍
-                finalScore += tails[n % 10] * 1.8; // 強力尾數補強
-                pool.push({ n, s: finalScore });
+            if (type === 'gap') {
+                for (let n = 1; n <= range; n++) {
+                    let g = 0; for (let r of data) { if (r.nums.includes(n)) break; g++; }
+                    scores[n] = g;
+                }
+            } else if (type === 'trend') {
+                data.slice(0, 10).forEach((r, idx) => r.nums.forEach(n => { if(n <= range) scores[n] += (10 - idx); }));
+            } else if (type === 'synergy') {
+                const lastNums = data[0].nums;
+                for (let n = 1; n <= range; n++) {
+                    if (lastNums.includes(n)) scores[n] = 10;
+                    data.slice(0, 5).forEach(r => { if(r.nums.some(ln => Math.abs(ln - n) === 10)) scores[n] += 5; });
+                }
             }
-
-            pool.sort((a,b) => b.s - a.s);
-            const s = pool.slice(0, 8).map(x => x.n.toString().padStart(2, '0'));
-
-            // 3. 2-3-2-1 高效佈局
-            return [[s[0], s[1]], [s[2], s[3], s[4]], [s[5], s[6]], [s[7]]];
+            return scores;
         }
 
-        function updateLogBox(avg, s, total) {
-            const status = avg >= 2.5 ? "目標達成" : "持續優化中";
+        function evolveStrategy(data) {
+            const range = currentMode === '539' ? 39 : 36;
+            const sGap = getModuleScore(data, 'gap');
+            const sTrend = getModuleScore(data, 'trend');
+            const sSynergy = getModuleScore(data, 'synergy');
+            
+            let finalPool = [];
+            for (let n = 1; n <= range; n++) {
+                const combined = (sGap[n] * strategyWeights.gap) + 
+                                 (sTrend[n] * strategyWeights.trend) + 
+                                 (sSynergy[n] * strategyWeights.synergy);
+                finalPool.push({ n, s: combined });
+            }
+            return finalPool.sort((a,b) => b.s - a.s).slice(0, 8).map(x => x.n.toString().padStart(2, '0'));
+        }
+
+        function calculateHits(pool, actual) {
+            const p = Array.isArray(pool) ? pool.map(Number) : [];
+            return actual.filter(n => p.includes(n)).length;
+        }
+
+        function updateLogBox(perf, total) {
             document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between">
-                    <span class="text-orange-500 font-bold">高星數強化引擎 [${currentMode}]</span>
-                    <span class="text-white bg-orange-600 px-2 rounded">${status}</span>
+                <div class="flex justify-between font-bold text-orange-500 mb-1">
+                    <span>EVO 學習引擎狀態</span>
+                    <span>樣本: ${total}期</span>
                 </div>
-                平均命中: <span class="text-white text-lg">${avg}</span> 星/期<br>
-                連莊加權: <span class="text-green-400">2.5x</span> | 尾數加權: <span class="text-green-400">1.8x</span><br>
-                <div class="mt-2 grid grid-cols-3 gap-1">
-                    <div class="bg-white/5 p-1 rounded text-center">2星: ${s.x2}</div>
-                    <div class="bg-white/5 p-1 rounded text-center text-orange-400">3星: ${s.x3}</div>
-                    <div class="bg-white/5 p-1 rounded text-center text-red-400">4星: ${s.x4}</div>
-                </div>
+                策略分配比: 冷補(${strategyWeights.gap}) 趨勢(${strategyWeights.trend}) 規律(${strategyWeights.synergy})<br>
+                <span class="text-white">--------------------------------</span><br>
+                最佳模組模擬命中: <span class="text-green-400">${((perf.gap+perf.trend+perf.synergy)/30).toFixed(2)}</span> 星/期<br>
+                系統已自動根據回測切換權重至最佳路徑。
             `;
         }
 
-        function updatePrediction(pred) {
-            pred.forEach((p, i) => document.getElementById(`p${i+1}`).innerText = p.join(','));
+        function updatePrediction(s) {
+            document.getElementById('p1').innerText = `${s[0]},${s[1]}`;
+            document.getElementById('p2').innerText = `${s[2]},${s[3]}`;
+            document.getElementById('p3').innerText = `${s[4]},${s[5]}`;
+            document.getElementById('p4').innerText = `${s[6]},${s[7]}`;
         }
 
         function updateHistoryTable(rows) {
             document.getElementById('historyTable').innerHTML = rows.map(r => `
                 <tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500">${r.date.split('/').slice(1).join('/')}</td>
-                    <td class="font-mono text-white">${r.actual}</td>
+                    <td class="font-mono text-white text-[11px]">${r.actual}</td>
                     <td class="text-[10px] text-gray-400 font-mono">${r.pred}</td>
                     <td class="text-right font-bold ${r.hit>=2?'text-orange-500':'text-gray-700'}">${r.hit}</td>
                 </tr>
