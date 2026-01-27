@@ -3,73 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 7.70 HISTORY ARCHIVE</title>
+    <title>ULTIMATE EVO 7.80 COMBINATORIAL EDGE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 30px rgba(249, 115, 22, 0.5); }
+        .orange-glow { box-shadow: 0 0 35px rgba(249, 115, 22, 0.6); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
-        #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; border-left: 2px solid var(--ios-orange); }
+        #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; border-left: 3px solid var(--ios-orange); }
         #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.1); padding: 0 2px; }
+        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.15); }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.70</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.80</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/40">
+    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 全歷史規律匹配引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 二三四星共生矩陣分析</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> ARCHIVE SCANNING
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> COMBINATORIAL ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/10 leading-relaxed">
-            <span class="text-orange-500/50 italic">正在掃描全歷史相似基因組...</span>
+            <span class="text-orange-500/50 italic">分析500期共生對碰规律中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼基因狙擊陣列</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼高壓組合 (2+2+1 結構)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/50">
-                <div class="text-[9px] text-orange-500 font-bold">歷史重演</div>
+                <div class="text-[9px] text-orange-500 font-bold">對碰核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">尾數共振</div>
+                <div class="text-[9px] text-orange-500 font-bold">溫區主力</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">冷熱平衡</div>
+                <div class="text-[9px] text-gray-400 font-bold">溫區補位</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">黃金回補</div>
+                <div class="text-[9px] text-gray-400 font-bold">冷門破冰</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">狙擊測試：歷史規律穿透力驗證</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三四星碰：規律收斂測試 (10期驗證)</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 z-10">
                     <tr class="text-left border-b border-white/10">
-                        <th class="pb-2">日期/週</th>
-                        <th class="pb-2">開獎號</th>
-                        <th class="pb-2">狙擊5碼</th>
+                        <th class="pb-2">日期</th>
+                        <th class="pb-2">開獎</th>
+                        <th class="pb-2">精選5碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -88,7 +88,7 @@
                 const response = await fetch(API_URL);
                 fullData = await response.json();
                 processData(fullData);
-            } catch (error) { document.getElementById('logBox').innerText = "API 錯誤"; }
+            } catch (error) { document.getElementById('logBox').innerText = "數據同步失敗"; }
         }
 
         function switchMode(mode) {
@@ -98,66 +98,65 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getHistoryArchivePrediction(history, targetDate = new Date()) {
+        function getCombinatorialEdge(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
-            const prevNums = history[1].nums;
             
-            // 1. 全歷史規律掃描 (Genome Match)
-            let genomeScores = Array(range + 1).fill(0);
-            let matchCount = 0;
-            // 掃描整份數據 (跳過當前預測範圍)
-            for(let j = history.length - 2; j >= 2; j--) {
-                let sim = history[j].nums.filter(n => lastNums.includes(n)).length;
-                if(sim >= 2) { // 相似度閾值
-                    matchCount++;
-                    history[j-1].nums.forEach(n => genomeScores[n] += (sim * 2));
-                }
-            }
+            // 1. 建立500期共生矩陣
+            let matrix = {};
+            history.slice(0, 500).forEach(h => {
+                h.nums.forEach(n1 => {
+                    if(!matrix[n1]) matrix[n1] = {};
+                    h.nums.forEach(n2 => {
+                        if(n1 !== n2) matrix[n1][n2] = (matrix[n1][n2] || 0) + 1;
+                    });
+                });
+            });
 
-            // 2. 尾數矩陣優化 (強制同尾保險)
-            let tailWeights = Array(10).fill(0);
-            history.slice(0, 5).forEach(h => h.nums.forEach(n => tailWeights[n % 10]++));
-            let bestTail = tailWeights.indexOf(Math.max(...tailWeights));
-
-            let finalScores = [];
+            // 2. 獲取號碼冷熱與遺漏
+            let stats = [];
             for(let n=1; n<=range; n++) {
-                let s = genomeScores[n]; // 歷史基礎分
-                s += (n % 10 === bestTail) ? 15 : 0; // 強制同尾加權
-                
-                // 排除連開3期或極冷的過濾
-                let gap = getGap(n, history);
-                if (gap > 1 && gap < 8) s += 10; // 黃金回補區
-                if (lastNums.some(ln => Math.abs(ln - n) === 1)) s += 5; // 鄰號加成
-
-                finalScores.push({ n, val: s, gap });
+                let gap = 0;
+                for(let r of history) { if(r.nums.includes(n)) break; gap++; }
+                let freq = history.slice(0, 20).filter(r => r.nums.includes(n)).length;
+                stats.push({ n, gap, freq });
             }
-            finalScores.sort((a, b) => b.val - a.val);
 
-            // 3. 5碼結構輸出 [歷史高頻2碼 + 同尾1碼 + 黃金回補2碼]
+            // 3. 2熱 (遺漏0-3) + 2溫 (遺漏4-9) + 1冷 (遺漏10+)
+            let hots = stats.filter(s => s.gap <= 3).sort((a,b) => b.freq - a.freq);
+            let warms = stats.filter(s => s.gap > 3 && s.gap <= 9).sort((a,b) => b.freq - a.freq);
+            let colds = stats.filter(s => s.gap > 9).sort((a,b) => a.gap - b.gap);
+
+            // 4. 根據上期開獎計算共生分數
+            let coScores = Array(range + 1).fill(0);
+            lastNums.forEach(ln => {
+                if(matrix[ln]) {
+                    for(let target in matrix[ln]) coScores[target] += matrix[ln][target];
+                }
+            });
+
             let picked = new Set();
-            picked.add(finalScores[0].n);
-            picked.add(finalScores[1].n);
+            // 第一步：選取共生核心 (從熱/溫區選分最高的)
+            let candidates = stats.map(s => ({ ...s, score: coScores[s.n] })).sort((a,b) => b.score - a.score);
             
-            let tailTarget = finalScores.find(s => !picked.has(s.n) && s.n % 10 === bestTail);
-            if(tailTarget) picked.add(tailTarget.n);
+            // 強制結構：2熱
+            hots.sort((a,b) => (coScores[b.n] || 0) - (coScores[a.n] || 0));
+            picked.add(hots[0].n);
+            picked.add(hots[1].n);
 
-            let remaining = finalScores.filter(s => !picked.has(s.n));
-            for(let s of remaining) {
-                if(picked.size >= 5) break;
-                picked.add(s.n);
-            }
+            // 強制結構：2溫
+            warms.sort((a,b) => (coScores[b.n] || 0) - (coScores[a.n] || 0));
+            picked.add(warms[0].n);
+            picked.add(warms[1].n);
+
+            // 強制結構：1冷
+            if(colds.length > 0) picked.add(colds[0].n);
+            else picked.add(candidates.find(c => !picked.has(c.n)).n);
 
             return { 
                 pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                matches: matchCount
+                topPair: hots[0].n + " & " + hots[1].n
             };
-        }
-
-        function getGap(n, history) {
-            let g = 0;
-            for(let r of history) { if(r.nums.includes(n)) break; g++; }
-            return g;
         }
 
         function processData(data) {
@@ -167,35 +166,34 @@
             })).filter(h => h.nums.length === 5);
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let starsCount = [0,0,0,0,0,0];
+            let stars = [0,0,0,0,0,0];
             let rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const res = getHistoryArchivePrediction(history.slice(i + 1), new Date(history[i].date));
+                const res = getCombinatorialEdge(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
-                starsCount[hits]++;
+                stars[hits]++;
                 const predHtml = res.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                let day = ['日','一','二','三','四','五','六'][new Date(history[i].date).getDay()];
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${day} ${history[i].date.split('T')[0].split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-bounce' : 'text-gray-700'}">${hits}</td></tr>`;
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-400 text-[10px]">${history[i].date.split('T')[0].replace('202', '2')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const currentRes = getHistoryArchivePrediction(history, new Date());
-            const hitRate = (((starsCount[2]+starsCount[3]+starsCount[4]+starsCount[5])/10)*100).toFixed(0);
+            const current = getCombinatorialEdge(history);
+            const winRate = (((stars[2]+stars[3]+stars[4]+stars[5])/10)*100).toFixed(0);
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">ARCHIVE MONITOR</span>
-                    <span class="text-[10px] bg-orange-500 text-black px-1 font-bold">V7.70</span>
+                    <span class="text-orange-500 font-bold tracking-widest uppercase">Combo Analysis</span>
+                    <span class="text-[10px] bg-orange-600 text-black px-1 font-bold">V7.80</span>
                 </div>
-                匹配歷史片段: <span class="text-white font-bold">${currentRes.matches} 組</span><br>
-                策略重心: <span class="text-white font-bold">歷史相似重演 + 同尾鎖定</span><br>
-                10期命中 ≥2星: <span class="text-orange-500 font-black text-lg">${hitRate}%</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">模式說明：系統已在全歷史中找出與上期相似的片段，並將該規律映射至本期預測。</div>`;
+                核心對碰: <span class="text-white font-bold">${current.topPair}</span><br>
+                10期二星以上達成率: <span class="text-orange-500 font-black text-lg">${winRate}%</span><br>
+                結構配比: <span class="text-white">2熱 (0-3期) + 2溫 (4-9期) + 1冷</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">模式：二三四星碰優化。系統會根據前一期號碼自動匹配歷史連動最強的共生對。</div>`;
 
-            document.getElementById('p1').innerText = `${currentRes.pred[0]},${currentRes.pred[1]}`;
-            document.getElementById('p2').innerText = `${currentRes.pred[2]}`;
-            document.getElementById('p3').innerText = `${currentRes.pred[3]}`;
-            document.getElementById('p4').innerText = `${currentRes.pred[4]}`;
+            document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
+            document.getElementById('p2').innerText = `${current.pred[2]}`;
+            document.getElementById('p3').innerText = `${current.pred[3]}`;
+            document.getElementById('p4').innerText = `${current.pred[4]}`;
             document.getElementById('historyTable').innerHTML = rowsHtml;
         }
     </script>
