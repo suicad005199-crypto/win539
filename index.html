@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.5 KINETIC</title>
+    <title>ULTIMATE EVO 6.6 APEX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.5</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.6</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 全維度基因集成引擎 (v5.7-v6.4)</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 極限巔峰校準引擎 (Authority Reclaim)</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> KINETIC SYNC ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> APEX MODE ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正執行全基因組序列比對...</span>
+            <span class="text-orange-500/50 italic">正在執行動態權限回收機制...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 動能集成組合 (Kinetic Output)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 巔峰集成組合 (Apex Output)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 KINETIC 綜合績效</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 APEX 綜合績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -105,7 +105,7 @@
             let shortCounts = Array(range + 1).fill(0);
             history.slice(0, 5).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 15).forEach(r => r.nums.forEach(n => longCounts[n]++));
+            history.slice(0, 20).forEach(r => r.nums.forEach(n => longCounts[n]++));
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -115,16 +115,16 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                // v6.0 / v5.7 進攻權重 (核心熱度)
-                let heat = (shortCounts[n] * 0.9) + (longCounts[n] * 0.1);
-                // v6.2 斜連權重
+                // v6.0 強化攻擊: 加大短期熱度權重 (0.9 -> 1.2)
+                let heat = (shortCounts[n] * 1.2) + (longCounts[n] * 0.1);
+                // v6.2 斜連權重 (1.25 -> 1.3)
                 let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
-                // v6.1 遺漏干涉
-                let gapBonus = (gaps[n] >= 6 && gaps[n] <= 11) ? 1.4 : 1.0;
+                // v6.1 遺漏干涉 (6-11期黃金區間)
+                let gapBonus = (gaps[n] >= 6 && gaps[n] <= 11) ? 1.5 : 1.0;
                 
                 scores.push({
                     n: n,
-                    val: (heat * (isNeighbor ? 1.25 : 1.0) * gapBonus) + (1 / (gaps[n] + 1)),
+                    val: (heat * (isNeighbor ? 1.3 : 1.0) * gapBonus) + (1 / (gaps[n] + 1.2)),
                     tail: n % 10,
                     zone: Math.floor((n-1)/(range/3)),
                     gap: gaps[n]
@@ -134,9 +134,10 @@
 
             let picked = new Set();
             
-            // Phase 1: v6.0/v5.8 核心雙尾 (4 碼)
+            // Phase 1: v6.0 Apex Sniper (核心進攻 4 碼)
+            // 鎖定最強 2 個尾數，每尾取前 2 名，不容稀釋
             let tailScores = Array(10).fill(0);
-            scores.slice(0, 15).forEach(s => tailScores[s.tail] += s.val);
+            scores.slice(0, 12).forEach(s => tailScores[s.tail] += s.val);
             let sortedTails = tailScores.map((v, i) => ({tail: i, val: v})).sort((a, b) => b.val - a.val);
             [0, 1].forEach(idx => {
                 let count = 0;
@@ -148,32 +149,27 @@
                 }
             });
 
-            // Phase 2: v6.1 強制連莊鎖定 (1 碼)
-            let repeatCandidate = scores.filter(s => lastNums.includes(s.n)).sort((a,b)=>b.val - a.val)[0];
-            if(repeatCandidate) picked.add(repeatCandidate.n);
-
-            // Phase 3: v6.2 斜連偵測補位 (1 碼)
-            let neighborCandidate = scores.filter(s => !picked.has(s.n) && lastNums.some(ln => Math.abs(ln - s.n) === 1))[0];
-            if(neighborCandidate) picked.add(neighborCandidate.n);
-
-            // Phase 4: v6.4 頻譜平衡補位 (填滿 8 碼)
+            // Phase 2: 真空期補償 (針對 0 星防禦)
+            // 強制從遺漏值最高且處於「頻譜空缺區」的號碼挑選 2 碼
+            let highGapNums = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.gap - a.gap);
             [0, 1, 2].forEach(z => {
-                if(picked.size >= 8) return;
-                let hasZone = Array.from(picked).some(n => Math.floor((n-1)/(range/3)) === z);
-                if(!hasZone) {
-                    let bestInZone = scores.find(s => s.zone === z && !picked.has(s.n));
-                    if(bestInZone) picked.add(bestInZone.n);
+                if(picked.size >= 6) return;
+                let zoneEmpty = !Array.from(picked).some(n => Math.floor((n-1)/(range/3)) === z);
+                if(zoneEmpty) {
+                    let compensator = highGapNums.find(s => s.zone === z);
+                    if(compensator) picked.add(compensator.n);
                 }
             });
 
-            // Final: v5.8 權重填充
+            // Phase 3: v6.1/6.2 鄰號與連莊權限回收
+            // 剩餘配額給予分數最高且具備動能的號碼
             for(let s of scores) {
                 if(picked.size >= 8) break;
                 picked.add(s.n);
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.3).toFixed(2);
+            const sIndex = (scores[0].val * 1.35).toFixed(2);
             return { pred, sIndex };
         }
 
@@ -198,12 +194,12 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.5 KINETIC</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">K-INDEX: ${lastS}</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.6 APEX</span>
+                    <span class="bg-white/10 px-2 rounded text-[9px]">A-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                基因狀態: <span class="text-white font-bold text-lg">FULL GENOME INTEGRATED</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">已融合 v5.7-v6.4 所有優勢。核心：雙尾共振(6.0)+連莊鎖定(6.1)+頻譜平衡(6.4)。</div>`;
+                防禦狀態: <span class="text-white font-bold text-lg">VACUUM-FILL ACTIVE</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">實施 4+4 斷層結構：4 碼強攻 + 4 碼極端遺漏填補。針對 0 星真空期進行強制校準。</div>`;
 
             const final = getEnsemblePrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
