@@ -71,8 +71,7 @@
                         <th class="pb-2 font-medium text-right">星</th>
                     </tr>
                 </thead>
-                <tbody id="historyTable" class="divide-y divide-white/5">
-                    </tbody>
+                <tbody id="historyTable" class="divide-y divide-white/5"></tbody>
             </table>
         </div>
     </div>
@@ -102,22 +101,27 @@
         });
 
         function processData(data) {
-            const history = data.slice(1).map(row => ({
+            let history = data.slice(1).map(row => ({
                 date: row[0],
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(item => item.nums.length === 5);
 
+            // 自動偵測並翻轉順序：確保 history[0] 是最新資料
+            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) {
+                history.reverse();
+            }
+
             let stats = { count: 0, x2: 0, x3: 0, x4: 0 };
             const backtestRows = [];
+            
+            // 動態基準量：資料少時縮短參考期，確保能產出回測
+            const baseLine = history.length < 40 ? Math.floor(history.length * 0.4) : 20;
 
-            // 滾動回測邏輯：從最舊的數據開始往最新日期移動
-            // 每一期 i 的預測，只能使用 i+1 之後的數據
-            for (let i = 0; i < history.length - 20; i++) {
-                const trainingData = history.slice(i + 1); // 過去的歷史
-                const actual = history[i]; // 該期開獎
+            for (let i = 0; i < history.length - baseLine; i++) {
+                const trainingData = history.slice(i + 1); 
+                const actual = history[i]; 
                 const prediction = generateStrategy(trainingData);
                 const flatPred = prediction.flat().map(Number);
-                
                 const hits = actual.nums.filter(n => flatPred.includes(n));
                 
                 stats.count++;
@@ -127,7 +131,7 @@
 
                 if (i < 10) {
                     backtestRows.push({
-                        date: actual.date.replace('2026-','').replace('2025-',''),
+                        date: actual.date,
                         actual: actual.nums.map(n => n.toString().padStart(2,'0')).join(' '),
                         pred: prediction.map(p => p.join(',')).join('|'),
                         hit: hits.length
@@ -135,7 +139,6 @@
                 }
             }
 
-            // 更新 UI
             updateLogBox(history.length, stats);
             updatePrediction(generateStrategy(history));
             updateHistoryTable(backtestRows);
@@ -144,25 +147,33 @@
         function generateStrategy(data) {
             const range = 39;
             const scores = Array(range + 1).fill(0);
+            const lookbackLen = Math.min(data.length, 60);
+            const lookback = data.slice(0, lookbackLen);
             
-            // 策略 A: 頻率權重 (滾動計算最近 60 期)
-            const lookback = data.slice(0, 60);
+            // 基礎頻率加權
             lookback.forEach((row, idx) => {
-                const weight = (60 - idx) / 60;
+                const weight = (lookbackLen - idx) / lookbackLen;
                 row.nums.forEach(n => { if(n <= range) scores[n] += (3 * weight); });
             });
 
-            // 策略 B: 遺漏值加成
-            for(let n = 1; n <= range; n++) {
-                let miss = 0;
-                for(let row of data) {
-                    if(row.nums.includes(n)) break;
-                    miss++;
+            // 模式分支策略
+            if (currentMode === '539') {
+                // 539 強化連莊規律
+                data.slice(0, 1).forEach(row => {
+                    row.nums.forEach(n => scores[n] *= 1.2);
+                });
+            } else {
+                // 天天樂強化冷門補償 (遺漏值)
+                for(let n = 1; n <= range; n++) {
+                    let miss = 0;
+                    for(let row of data) {
+                        if(row.nums.includes(n)) break;
+                        miss++;
+                    }
+                    scores[n] += (miss * 0.15);
                 }
-                scores[n] += (miss * 0.1); 
             }
 
-            // 確保決定論排序：分數相同時按號碼大小排
             const picked = scores
                 .map((score, num) => ({ num, score }))
                 .filter(x => x.num !== 0)
@@ -178,8 +189,8 @@
                 <div class="text-orange-500 font-bold mb-1">滾動回測報告 [${currentMode}]</div>
                 讀取筆數: ${total} | 回測期數: ${s.count}<br>
                 <span class="text-white">--------------------------------</span><br>
-                命中 2 星: <span class="text-white">${s.x2}</span> 次 (${((s.x2/s.count)*100).toFixed(1)}%)<br>
-                命中 3 星: <span class="text-white">${s.x3}</span> 次 (${((s.x3/s.count)*100).toFixed(1)}%)<br>
+                命中 2 星: <span class="text-white">${s.x2}</span> 次 (${s.count > 0 ? ((s.x2/s.count)*100).toFixed(1) : 0}%)<br>
+                命中 3 星: <span class="text-white">${s.x3}</span> 次 (${s.count > 0 ? ((s.x3/s.count)*100).toFixed(1) : 0}%)<br>
                 命中 4 星: <span class="text-white">${s.x4}</span> 次
             `;
         }
@@ -193,7 +204,7 @@
         function updateHistoryTable(rows) {
             document.getElementById('historyTable').innerHTML = rows.map(r => `
                 <tr>
-                    <td class="py-3 text-gray-400">${r.date}</td>
+                    <td class="py-3 text-gray-400 text-[10px]">${r.date}</td>
                     <td class="font-mono text-white">${r.actual}</td>
                     <td class="text-[10px] text-gray-500">${r.pred}</td>
                     <td class="text-right font-bold ${r.hit>=2?'text-orange-500':'text-gray-700'}">${r.hit}</td>
