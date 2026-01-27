@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 5.1 PRO</title>
+    <title>ULTIMATE EVO 5.2 PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 5.1</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 5.2</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: 集成共識量化引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 非線性淘汰與抗性運算</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-green-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 結構性運算中
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 核心穩定
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正在過濾弱先驗規律雜訊...</span>
+            <span class="text-orange-500/50 italic">初始化非線性過濾...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 集成預測組合 (高共識優先)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 集成預測組合 (結構優化)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,14 +62,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期 Ensemble 交叉回測</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期交叉回測績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">共識優選碼</th>
+                        <th class="pb-2">優選共識碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -122,7 +122,6 @@
                 });
                 return scores.map((s, i) => ({ n: i, s })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 10).map(x => x.n);
             },
-            // 弱先驗策略
             remainder: (data, range) => {
                 let modCounts = Array(5).fill(0);
                 data.slice(0, 8).forEach(r => r.nums.forEach(n => modCounts[n % 5]++));
@@ -143,41 +142,49 @@
             const range = currentMode === '539' ? 39 : 36;
             const windowSize = 15;
             let strategyWeights = {};
-            
+            let activeCount = 0;
+
+            // 1. 計算權重並實施淘汰制
             for (let name in strategies) {
                 let score = 0;
-                // 基礎結構折扣：弱先驗策略權重減半
                 const baseMultiplier = (name === 'remainder' || name === 'bucket') ? 0.5 : 1.0;
-                
                 for (let i = 0; i < windowSize; i++) {
                     if (!history[i+1]) break;
                     const pred = strategies[name](history.slice(i + 1), range);
                     const hits = history[i].nums.filter(n => pred.includes(n)).length;
                     score += hits * (1 - (i * 0.05));
                 }
-                strategyWeights[name] = Math.max(0.1, score) * baseMultiplier;
+                strategyWeights[name] = score * baseMultiplier;
             }
 
+            const avgWeight = Object.values(strategyWeights).reduce((a,b)=>a+b,0) / 5;
+            for (let name in strategyWeights) {
+                if (strategyWeights[name] < avgWeight * 0.6) strategyWeights[name] = 0;
+                else activeCount++;
+            }
+
+            // 2. 投票
             let numVotes = Array(range + 1).fill(0);
             for (let name in strategies) {
-                const weight = strategyWeights[name];
+                if (strategyWeights[name] === 0) continue;
                 const picks = strategies[name](history, range);
-                picks.forEach(n => numVotes[n] += weight);
+                picks.forEach(n => numVotes[n] += strategyWeights[name]);
             }
 
-            const sortedResults = numVotes
-                .map((v, i) => ({ n: i, v }))
-                .slice(1)
-                .sort((a,b) => b.v - a.v);
-
-            const ensemblePicks = sortedResults.slice(0, 8).map(x => x.n.toString().padStart(2, '0'));
+            let sorted = numVotes.map((v, i) => ({ n: i, v })).slice(1).sort((a,b) => b.v - a.v);
+            let top8 = sorted.slice(0, 8);
             
-            // 計算共識強度指數 (CSI): 前8碼平均得票 / 策略總權重
+            // 3. CSI 與抗性補償
             const totalWeight = Object.values(strategyWeights).reduce((a, b) => a + b, 0);
-            const topVotesAvg = sortedResults.slice(0, 8).reduce((a, b) => a + b.v, 0) / 8;
-            const csi = (topVotesAvg / (totalWeight / 5)).toFixed(2);
-            
-            return { pred: ensemblePicks, csi: csi };
+            const csi = ( (top8.reduce((a,b)=>a+b.v,0)/8) / (totalWeight/5 || 1) ).toFixed(2);
+
+            // 抗性對沖：CSI過高時換掉最後一碼為冷門共識碼
+            if (csi > 3.0 && sorted.length > 15) {
+                top8[7] = sorted[12]; 
+            }
+
+            const pred = top8.map(x => x.n.toString().padStart(2, '0'));
+            return { pred, csi, activeCount };
         }
 
         function processData(data) {
@@ -187,7 +194,7 @@
             })).filter(h => h.nums.length === 5);
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let stats = { stars: 0, rows: [], currentCSI: 0 };
+            let stats = { stars: 0, rows: [], currentCSI: 0, currentActive: 0 };
             for (let i = 0; i < 10; i++) {
                 const result = getEnsemblePrediction(history.slice(i + 1));
                 const actual = history[i].nums;
@@ -195,10 +202,10 @@
                 stats.stars += hits;
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 stats.rows.push({ date: history[i].date.split('-').slice(1).join('/'), actual: actual.map(n => n.toString().padStart(2,'0')).join(' '), predHtml, hit: hits });
-                if(i === 0) stats.currentCSI = result.csi;
+                if(i === 0) { stats.currentCSI = result.csi; stats.currentActive = result.activeCount; }
             }
 
-            updateLogBox((stats.stars / 10).toFixed(2), history.length, stats.currentCSI);
+            updateLogBox((stats.stars / 10).toFixed(2), stats.currentCSI, stats.currentActive);
             const final = getEnsemblePrediction(history);
             updatePrediction(final.pred);
             document.getElementById('historyTable').innerHTML = stats.rows.map(r => `
@@ -207,16 +214,15 @@
             `).join('');
         }
 
-        function updateLogBox(avg, total, csi) {
-            let csiColor = csi > 2.5 ? 'text-green-400' : (csi > 1.8 ? 'text-orange-400' : 'text-red-400');
+        function updateLogBox(avg, csi, active) {
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO QUANT 5.1</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">結構優化版</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 5.2 NON-LINEAR</span>
+                    <span class="bg-white/10 px-2 rounded text-[9px]">ACTIVE: ${active}/5</span>
                 </div>
-                10期平均命中: <span class="${avg >= 2 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
-                本期共識強度: <span class="${csiColor} font-bold text-lg">${csi}</span> <span class="text-[9px] text-gray-500">(CSI Index)</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">弱先驗策略已降權 50%，當 CSI > 2.0 時預測穩定度較高。</div>
+                10期平均命中: <span class="${avg >= 1.5 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
+                共識強度指數: <span class="text-white font-bold text-lg">${csi}</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">當前已淘汰 ${5-active} 個低效策略。CSI > 3.0 已啟動抗性對沖。</div>
             `;
         }
 
