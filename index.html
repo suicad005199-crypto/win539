@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 5.7 RESONANCE</title>
+    <title>ULTIMATE EVO 5.8 MOMENTUM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 5.7</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 5.8</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 結構化共振引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 連莊趨勢與動量引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-green-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 同尾規律校準中
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 連莊碼鎖定中
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">計算尾數共振頻率...</span>
+            <span class="text-orange-500/50 italic">分析近期連開動量...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 結構集成組合 (Resonance Output)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 動量集成組合 (Momentum Output)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,14 +62,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 Resonance 回測績效</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 Momentum 回測績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">結構化選碼</th>
+                        <th class="pb-2">動量選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -101,10 +101,13 @@
         function getEnsemblePrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             
-            // 1. 綜合評分：熱度(0.7) + 遺漏校準(0.3)
-            let counts = Array(range + 1).fill(0);
-            history.slice(0, 12).forEach(r => r.nums.forEach(n => counts[n]++));
+            // 1. 短線(3期)與長線(12期)混合加權
+            let shortCounts = Array(range + 1).fill(0);
+            history.slice(0, 3).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             
+            let longCounts = Array(range + 1).fill(0);
+            history.slice(0, 12).forEach(r => r.nums.forEach(n => longCounts[n]++));
+
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
                 let g = 0; for(let r of history) { if(r.nums.includes(n)) break; g++; }
@@ -113,47 +116,45 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                // 遺漏 3-9 期的權重最高 (活躍區)
-                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 9) ? 1.5 : 1.0;
+                // 動態權重分配
+                let combinedHeat = (shortCounts[n] * 0.6) + (longCounts[n] * 0.4);
+                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 9) ? 1.4 : 1.0;
                 scores.push({
                     n: n,
-                    val: (counts[n] * 0.7 + (1 / (gaps[n] + 1)) * 0.3) * gapBonus,
+                    val: combinedHeat * gapBonus + (1 / (gaps[n] + 1)),
                     tail: n % 10
                 });
             }
             scores.sort((a, b) => b.val - a.val);
 
-            // 2. 同尾優化 (Tail-Sync)
             let picked = new Set();
-            let tailCounts = {};
+            
+            // 2. 連莊機制：從上一期(history[0])中選取 1 個積分最高的號碼
+            let lastResult = history[0].nums;
+            let bestRepeat = lastResult.map(n => ({n, s: scores.find(x => x.n === n).val}))
+                                      .sort((a,b) => b.s - a.s)[0].n;
+            picked.add(bestRepeat);
 
-            // 先挑選積分前 4 名
-            for(let i=0; i<4; i++) {
-                picked.add(scores[i].n);
-                tailCounts[scores[i].tail] = (tailCounts[scores[i].tail] || 0) + 1;
-            }
-
-            // 尋找同尾共振：從剩餘高分號碼中尋找與已選號碼同尾的
-            for(let i=4; i<scores.length; i++) {
+            // 3. 精確同尾：僅保留一組最強同尾
+            let bestTail = scores[0].tail;
+            let tailCount = 0;
+            for(let s of scores) {
                 if(picked.size >= 8) break;
-                let s = scores[i];
-                if(tailCounts[s.tail] > 0 && !picked.has(s.n)) {
+                if(s.tail === bestTail && tailCount < 2) {
                     picked.add(s.n);
-                    tailCounts[s.tail]++;
+                    tailCount++;
                 }
             }
 
-            // 補齊至 8 碼
-            for(let i=0; i<scores.length; i++) {
+            // 4. 補齊至 8 碼 (獨立高分碼)
+            for(let s of scores) {
                 if(picked.size >= 8) break;
-                picked.add(scores[i].n);
+                picked.add(s.n);
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            
-            // 計算熱度總值做為監控指標
-            const totalHeat = Array.from(picked).reduce((acc, n) => acc + counts[n], 0).toFixed(1);
-            return { pred, totalHeat };
+            const mScore = (scores[0].val).toFixed(2);
+            return { pred, mScore };
         }
 
         function processData(data) {
@@ -163,13 +164,13 @@
             })).filter(h => h.nums.length === 5);
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let stars = 0, rowsHtml = "", lastHeat = 0;
+            let stars = 0, rowsHtml = "", lastM = 0;
             for (let i = 0; i < 10; i++) {
                 const result = getEnsemblePrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
-                if(i===0) lastHeat = result.totalHeat;
+                if(i===0) lastM = result.mScore;
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
@@ -177,12 +178,12 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 5.7 RESONANCE</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">HEAT: ${lastHeat}</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 5.8 MOMENTUM</span>
+                    <span class="bg-white/10 px-2 rounded text-[9px]">M-INDEX: ${lastM}</span>
                 </div>
-                10期平均命中: <span class="${avg >= 1.6 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
-                核心算法: <span class="text-white font-bold text-lg">TAIL-SYNC & GAP BONUS</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">已鎖定遺漏 3-9 期之活躍碼。強化同尾號共振篩選，提升結構匹配度。</div>`;
+                10期平均命中: <span class="${avg >= 1.8 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
+                戰略核心: <span class="text-white font-bold text-lg">REPEAT LOCK + DUAL-WEIGHT</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">已強制導入連莊守則，優化獨立碼權重，鎖定短線噴發動量。</div>`;
 
             const final = getEnsemblePrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
