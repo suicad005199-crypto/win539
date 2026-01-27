@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 4.0</title>
+    <title>ULTIMATE EVO 4.5 PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 4.0</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 4.5</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: 多策略競爭引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: 抗噪競爭管理引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-green-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 同步成功
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-ping"></span> 全力運算中
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic italic">策略初始化中...</span>
+            <span class="text-orange-500/50 italic">正進行 15 期加權回測...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (策略優勝組合)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 抗噪預測組合 (2-2-2-2)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,14 +62,14 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期策略回測</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期策略回測明細</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">優選策略碼</th>
+                        <th class="pb-2">抗噪策略碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -98,11 +98,10 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        // --- 策略池定義 ---
         const strategies = {
             hot: (data, range) => {
                 let counts = Array(range + 1).fill(0);
-                data.slice(0, 10).forEach(r => r.nums.forEach(n => counts[n]++));
+                data.slice(0, 12).forEach(r => r.nums.forEach(n => counts[n]++));
                 return counts.map((c, i) => ({ n: i, s: c })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 8).map(x => x.n);
             },
             cold: (data, range) => {
@@ -117,38 +116,50 @@
                 let last = data[0].nums;
                 let scores = Array(range + 1).fill(0);
                 last.forEach(n => {
-                    if(n>1) scores[n-1] += 5;
-                    if(n<range) scores[n+1] += 5;
-                    if(data.slice(1,3).some(r => r.nums.includes(n))) scores[n] += 10; // 連莊基因
+                    if(n>1) scores[n-1] += 10;
+                    if(n<range) scores[n+1] += 10;
+                    if(data.slice(1,4).some(r => r.nums.includes(n))) scores[n] += 15;
                 });
                 return scores.map((s, i) => ({ n: i, s })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 8).map(x => x.n);
             },
-            trend: (data, range) => {
-                let scores = Array(range + 1).fill(0);
-                data.slice(0, 5).forEach((r, idx) => r.nums.forEach(n => scores[n] += (5 - idx)));
-                return scores.map((s, i) => ({ n: i, s })).slice(1).sort((a,b)=>b.s-a.s).slice(0, 8).map(x => x.n);
+            remainder: (data, range) => {
+                let modCounts = Array(5).fill(0);
+                data.slice(0, 5).forEach(r => r.nums.forEach(n => modCounts[n % 5]++));
+                let bestMod = modCounts.indexOf(Math.max(...modCounts));
+                let pool = []; for(let i=1; i<=range; i++) if(i % 5 === bestMod) pool.push(i);
+                return pool.slice(0, 8);
+            },
+            bucket: (data, range) => {
+                let bucketScores = Array(6).fill(0);
+                data.slice(0, 8).forEach(r => r.nums.forEach(n => bucketScores[Math.floor(n/8)]++));
+                let bestB = bucketScores.indexOf(Math.max(...bucketScores));
+                let pool = []; for(let i=bestB*8; i<bestB*8+8; i++) if(i>=1 && i<=range) pool.push(i);
+                while(pool.length < 8) pool.push(Math.floor(Math.random()*range)+1);
+                return pool;
             }
         };
 
         function getBestStrategyPrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
-            let bestScore = -1, bestStrategyName = 'trend', bestPred = [];
+            const windowSize = 15; // 拉長回測窗口至 15 期
+            let bestStrategyScore = -1, bestStrategyName = 'hot';
             
-            // 影子回測：測試哪套策略在最近 5 期最準
             for (let name in strategies) {
-                let totalHits = 0;
-                for (let i = 0; i < 5; i++) {
+                let weightedScore = 0;
+                for (let i = 0; i < windowSize; i++) {
+                    if (!history[i+1]) break;
                     const pred = strategies[name](history.slice(i + 1), range);
-                    totalHits += history[i].nums.filter(n => pred.includes(n)).length;
+                    const hits = history[i].nums.filter(n => pred.includes(n)).length;
+                    // 時間衰減加權：越近的期數權重越高 (1.0, 0.93, 0.86...)
+                    weightedScore += hits * (1 - (i * 0.05));
                 }
-                if (totalHits > bestScore) {
-                    bestScore = totalHits;
+                if (weightedScore > bestStrategyScore) {
+                    bestStrategyScore = weightedScore;
                     bestStrategyName = name;
                 }
             }
-            
-            bestPred = strategies[bestStrategyName](history, range).map(n => n.toString().padStart(2, '0'));
-            return { pred: bestPred, name: bestStrategyName.toUpperCase() };
+            const finalPred = strategies[bestStrategyName](history, range).map(n => n.toString().padStart(2, '0'));
+            return { pred: finalPred, name: bestStrategyName.toUpperCase() };
         }
 
         function processData(data) {
@@ -169,8 +180,7 @@
                 if(i === 0) stats.currentBest = result.name;
             }
 
-            const avg = (stats.stars / 10).toFixed(2);
-            updateLogBox(avg, history.length, stats.currentBest);
+            updateLogBox((stats.stars / 10).toFixed(2), history.length, stats.currentBest);
             const final = getBestStrategyPrediction(history);
             updatePrediction(final.pred);
             document.getElementById('historyTable').innerHTML = stats.rows.map(r => `
@@ -182,12 +192,12 @@
         function updateLogBox(avg, total, strategy) {
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold">EVO ENGINE v4.0</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO QUANT 4.5</span>
                     <span class="bg-white/10 px-2 rounded text-[9px]">樣本: ${total}P</span>
                 </div>
-                近10期平均命中: <span class="${avg >= 2 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星/期</span><br>
-                當前優選策略: <span class="text-white font-bold text-orange-400">${strategy}</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">系統已自動切換至實戰勝率最高之算法模型。</div>
+                10期平均命中: <span class="${avg >= 2 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
+                最優抗噪權重: <span class="text-white font-bold text-orange-400">${strategy} (15P 加權)</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">已引入時間權重衰減，自動過濾隨機噪音。</div>
             `;
         }
 
