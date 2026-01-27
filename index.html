@@ -35,34 +35,34 @@
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">分析伴生矩陣與尾數避讓...</span>
+            <span class="text-orange-500/50 italic">正在掃描全域共振特徵...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: PHANTOM 集成組合 (Stability Focus)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: PHANTOM 集成組合 (Ultra Stable)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">核心幻影</div>
+                <div class="text-[9px] text-orange-500 font-bold">核心序列</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">同步序列</div>
+                <div class="text-[9px] text-orange-500 font-bold">幻影共振</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">伴生對沖</div>
+                <div class="text-[9px] text-gray-400 font-bold">低頻對沖</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">平衡補位</div>
+                <div class="text-[9px] text-gray-400 font-bold">跨區補位</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X PHANTOM 績效趨勢</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X PHANTOM 穩定度監控</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -103,9 +103,9 @@
             let lastNums = history[0].nums;
             
             let shortCounts = Array(range + 1).fill(0);
-            history.slice(0, 7).forEach(r => r.nums.forEach(n => shortCounts[n]++));
+            history.slice(0, 8).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 30).forEach(r => r.nums.forEach(n => longCounts[n]++));
+            history.slice(0, 32).forEach(r => r.nums.forEach(n => longCounts[n]++));
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -115,16 +115,18 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                let heat = (shortCounts[n] * 1.8) + (longCounts[n] * 0.2);
+                let heat = (shortCounts[n] * 1.8) + (longCounts[n] * 0.35);
                 let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
                 let isRepeat = lastNums.includes(n);
-                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 11) ? 1.8 : 1.0;
-                // PHANTOM HEDGE: 對深遺漏碼進行結構性加分，防止全熱掛零
-                let hedge = (gaps[n] >= 14) ? 2.8 : 0;
+                
+                // PHANTOM 修正：動態遺漏補強
+                let gapBonus = 1.0;
+                if (gaps[n] >= 4 && gaps[n] <= 9) gapBonus = 1.85;
+                else if (gaps[n] >= 14) gapBonus = 1.35; // 深度冷碼適度拉抬
 
                 scores.push({
                     n: n,
-                    val: (heat * (isNeighbor ? 1.5 : 1.0) * (isRepeat ? 1.25 : 1.0) * gapBonus) + (4 / (gaps[n] + 1)) + hedge,
+                    val: (heat * (isNeighbor ? 1.5 : 1.0) * (isRepeat ? 1.25 : 1.0) * gapBonus) + (4 / (gaps[n] + 1)),
                     gap: gaps[n],
                     tail: n % 10
                 });
@@ -132,26 +134,29 @@
             scores.sort((a, b) => b.val - a.val);
 
             let picked = new Set();
-            let tailCount = {};
+            
+            // 1. 穩定核心 (4 碼)
+            scores.slice(0, 4).forEach(s => picked.add(s.n));
 
-            // 1. 核心與伴生選碼 (採取動態尾數平衡)
-            for(let s of scores) {
-                if(picked.size >= 8) break;
-                
-                // 尾數避讓機制：單一尾數不超過 2 個，強迫分散投資以守住穩定度
-                let currentTail = s.tail;
-                if((tailCount[currentTail] || 0) < 2) {
-                    picked.add(s.n);
-                    tailCount[currentTail] = (tailCount[currentTail] || 0) + 1;
-                } else if (picked.size < 4 && s.val > scores[0].val * 0.9) {
-                    // 若前 4 碼極強，允許第 3 個同尾出現以確保核心爆發力
-                    picked.add(s.n);
-                    tailCount[currentTail] = (tailCount[currentTail] || 0) + 1;
-                }
+            // 2. 幻影對沖與補位 (4 碼)
+            let coreArray = Array.from(picked);
+            
+            // A. 同尾/鄰號共振補位 (優先確保 2 星)
+            let candidates = scores.filter(s => !picked.has(s.n));
+            for(let s of candidates) {
+                if(picked.size >= 6) break;
+                let hasConnection = coreArray.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.n % 10);
+                if(hasConnection) picked.add(s.n);
             }
 
-            // 若因尾數過濾導致數量不足，補足最強碼
-            for(let s of scores) {
+            // B. 強制跨區補位 (避免選碼過於集中)
+            candidates = scores.filter(s => !picked.has(s.n));
+            candidates.sort((a, b) => b.gap - a.gap); 
+            if(candidates.length > 0) picked.add(candidates[0].n); // 加入最冷碼防禦
+
+            // C. 最終 val 補齊
+            candidates.sort((a, b) => b.val - a.val);
+            for(let s of candidates) {
                 if(picked.size >= 8) break;
                 picked.add(s.n);
             }
@@ -186,8 +191,8 @@
                     <span class="bg-white/10 px-2 rounded text-[9px]">P-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                目標: <span class="text-white font-bold text-lg">ZERO LOW-HIT TOLERANCE</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">幻影同步：實施尾數避讓與冷碼結構加固，全力拉回 0-1 星期數。</div>`;
+                目標校準: <span class="text-white font-bold text-lg">ZERO LOSS / STABLE 2+</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">幻影同步：強化 2 星防禦網，針對 0-1 星殘留區間實施動態補位。</div>`;
 
             const final = getPhantomPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
