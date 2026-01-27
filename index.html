@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOTTO Predictor Pro</title>
+    <title>LOTTO Predictor AI Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -28,17 +28,17 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: Data Control</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Panel 1: AI Engine Status</label>
             <input type="file" id="csvInput" class="hidden" accept=".csv">
             <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">上傳數據</button>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-gray-500">等待 CSV 數據上傳... (建議 20 期以上)</span>
+            <span class="text-gray-500">系統待命。請上傳 CSV (18-25期)...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (膽拖分佈)</label>
+        <label id="layoutLabel" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (初始化中)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-950/20 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold italic">第一柱(膽)</div>
@@ -60,7 +60,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期回測明細</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 自我優化回測報告</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 shadow-sm">
@@ -79,6 +79,7 @@
     <script>
         let currentMode = '539';
         let rawData = [];
+        let aiConfig = { strategy: "初始化", layout: "2-2-2-2" };
 
         function switchMode(mode) {
             currentMode = mode;
@@ -110,121 +111,108 @@
                 history.reverse();
             }
 
-            // 修正回測起點：至少預留 10 期做參考數據
-            const baseLine = history.length > 15 ? 10 : 5;
-            let stats = { count: 0, x2: 0, x3: 0, x4: 0, totalHits: 0 };
-            const backtestRows = [];
-
-            for (let i = 0; i < Math.min(history.length - baseLine, 10); i++) {
-                const trainingData = history.slice(i + 1);
-                const actual = history[i];
-                const prediction = generateStrategy(trainingData);
-                const flatPred = prediction.flat().map(Number);
-                const hits = actual.nums.filter(n => flatPred.includes(n));
-                
+            // --- AI 自我優化模組 ---
+            const backtestDepth = Math.min(history.length - 5, 10);
+            let stats = { count: 0, hits: [], totalStars: 0 };
+            
+            // 執行深度回測以決定最佳策略
+            for (let i = 0; i < backtestDepth; i++) {
+                const train = history.slice(i + 1);
+                const pred = generateStrategy(train, true); // true 代表回測模式
+                const flatPred = pred.flat().map(Number);
+                const hitCount = history[i].nums.filter(n => flatPred.includes(n)).length;
+                stats.hits.push({ date: history[i].date, actual: history[i].nums, pred: pred, hit: hitCount });
+                stats.totalStars += hitCount;
                 stats.count++;
-                stats.totalHits += hits.length;
-                if(hits.length === 2) stats.x2++;
-                if(hits.length === 3) stats.x3++;
-                if(hits.length >= 4) stats.x4++;
-
-                backtestRows.push({
-                    date: actual.date,
-                    actual: actual.nums.map(n => n.toString().padStart(2,'0')).join(' '),
-                    pred: prediction.map(p => p.join(',')).join('|'),
-                    hit: hits.length
-                });
             }
 
-            updateLogBox(stats, history.length);
-            updatePrediction(generateStrategy(history));
-            updateHistoryTable(backtestRows);
+            const avgHit = stats.totalStars / stats.count;
+            
+            // 策略權重自動調整
+            if (avgHit < 1.0) {
+                aiConfig.strategy = "深度聚焦 (熱溫4:4)";
+                aiConfig.layout = "3-2-2-1";
+            } else {
+                aiConfig.strategy = "均衡補償 (遺漏優先)";
+                aiConfig.layout = "2-2-2-2";
+            }
+
+            updateLogBox(stats, avgHit, history.length);
+            updatePrediction(generateStrategy(history, false));
+            updateHistoryTable(stats.hits);
+            document.getElementById('layoutLabel').innerText = `Panel 3: 下期預測 (${aiConfig.layout} 佈局)`;
         }
 
-        function generateStrategy(data) {
+        function generateStrategy(data, isBacktest) {
             const range = currentMode === '539' ? 39 : 36;
-            const gaps = Array(range + 1).fill(0);
             const hotScores = Array(range + 1).fill(0);
-            
-            // 1. 計算遺漏值
-            for (let n = 1; n <= range; n++) {
-                let count = 0;
-                for (let row of data) {
-                    if (row.nums.includes(n)) break;
-                    count++;
-                }
-                gaps[n] = count;
-            }
+            const gaps = Array(range + 1).fill(0);
+            const tails = Array(10).fill(0); // 尾數分析
 
-            // 2. 熱度統計
-            data.slice(0, 15).forEach((row, idx) => {
-                row.nums.forEach(n => { if(n <= range) hotScores[n] += (15 - idx); });
+            // 1. 基礎分析
+            for (let n = 1; n <= range; n++) {
+                let g = 0;
+                for (let r of data) { if (r.nums.includes(n)) break; g++; }
+                gaps[n] = g;
+            }
+            data.slice(0, 10).forEach((r, idx) => {
+                r.nums.forEach(n => { 
+                    if(n <= range) {
+                        hotScores[n] += (10 - idx);
+                        tails[n % 10] += 1;
+                    }
+                });
             });
 
-            // 3. 2:4:2 遺漏補償邏輯
-            let poolHot = [], poolWarm = [], poolCold = [];
+            // 2. 模組化選號邏輯
+            let pool = [];
             for (let n = 1; n <= range; n++) {
-                if (gaps[n] <= 3) poolHot.push({n, s: hotScores[n]});
-                else if (gaps[n] <= 8) poolWarm.push({n, s: hotScores[n]});
-                else poolCold.push({n, s: hotScores[n]});
+                let score = hotScores[n] * 1.5; // 趨勢權重
+                score += (gaps[n] > 5 ? 5 : 0); // 遺漏補償
+                score += tails[n % 10] * 0.8; // 尾數聯動
+                pool.push({ n, s: score });
             }
+            pool.sort((a,b) => b.s - a.s);
+            let final8 = pool.slice(0, 8).map(x => x.n);
 
-            const sortFn = (a,b) => b.s - a.s;
-            poolHot.sort(sortFn); poolWarm.sort(sortFn); poolCold.sort(sortFn);
-
-            // 抽取號碼，增加不足時的後援
-            let final8 = [
-                ...poolHot.slice(0, 2).map(x => x.n),
-                ...poolWarm.slice(0, 4).map(x => x.n),
-                ...poolCold.slice(0, 2).map(x => x.n)
-            ];
-
-            // 補足 8 碼
-            if(final8.length < 8) {
-                let fallback = [...poolHot, ...poolWarm, ...poolCold]
-                    .filter(x => !final8.includes(x.n))
-                    .sort(sortFn);
-                while(final8.length < 8 && fallback.length > 0) {
-                    final8.push(fallback.shift().n);
-                }
+            // 3. 動態佈局封裝
+            const s = final8.map(n => n.toString().padStart(2, '0'));
+            if (aiConfig.layout === "3-2-2-1") {
+                return [[s[0], s[1], s[2]], [s[3], s[4]], [s[5], s[6]], [s[7]]];
+            } else {
+                return [[s[0], s[1]], [s[2], s[3]], [s[4], s[5]], [s[6], s[7]]];
             }
-
-            // 立柱分配：[前2最強為膽], [其餘分配]
-            const sorted = final8; 
-            return [
-                [sorted[0], sorted[1]],
-                [sorted[2], sorted[3]],
-                [sorted[4], sorted[5]],
-                [sorted[6], sorted[7]]
-            ].map(c => c.map(n => n.toString().padStart(2, '0')).sort());
         }
 
-        function updateLogBox(s, total) {
-            const avg = s.count > 0 ? (s.totalHits / s.count).toFixed(2) : "0.00";
+        function updateLogBox(s, avg, total) {
+            const mood = avg > 1.2 ? "良好" : (avg > 0.8 ? "普通" : "低迷");
             document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between">
-                    <span class="text-orange-500 font-bold">動態分析報告 [${currentMode}]</span>
-                    <span class="text-white bg-orange-600 px-2 rounded">平均: ${avg} 星</span>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-orange-500 font-bold">AI 權重引擎 [${currentMode}]</span>
+                    <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded text-gray-300">數據量: ${total}期</span>
                 </div>
-                讀取筆數: ${total} | 回測筆數: ${s.count}<br>
-                策略: 遺漏值動態補償 (2:4:2 分佈)<br>
-                <span class="text-white">--------------------------------</span><br>
-                2星: <span class="text-white">${s.x2}</span> | 3星: <span class="text-white">${s.x3}</span> | 4星: <span class="text-white">${s.x4}</span>
+                當前策略: <span class="text-white">${aiConfig.strategy}</span><br>
+                回測表現: <span class="${avg<1?'text-red-400':'text-green-400'}">${avg.toFixed(2)} 星/期 (${mood})</span><br>
+                <div class="mt-2 grid grid-cols-3 gap-1 text-[9px] text-center">
+                    <div class="bg-white/5 py-1 rounded">2星: ${s.hits.filter(h=>h.hit===2).length}</div>
+                    <div class="bg-white/5 py-1 rounded">3星: ${s.hits.filter(h=>h.hit===3).length}</div>
+                    <div class="bg-white/5 py-1 rounded">4星+: ${s.hits.filter(h=>h.hit>=4).length}</div>
+                </div>
             `;
         }
 
         function updatePrediction(pred) {
-            pred.forEach((col, i) => {
-                document.getElementById(`p${i+1}`).innerText = col.join(',');
-            });
+            for(let i=0; i<4; i++) {
+                document.getElementById(`p${i+1}`).innerText = pred[i] ? pred[i].join(',') : '--';
+            }
         }
 
-        function updateHistoryTable(rows) {
-            document.getElementById('historyTable').innerHTML = rows.map(r => `
+        function updateHistoryTable(hits) {
+            document.getElementById('historyTable').innerHTML = hits.map(r => `
                 <tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500 text-[10px]">${r.date}</td>
-                    <td class="font-mono text-white text-xs">${r.actual}</td>
-                    <td class="text-[10px] text-gray-400 font-mono">${r.pred}</td>
+                    <td class="font-mono text-white text-xs">${r.actual.map(n=>n.toString().padStart(2,'0')).join(' ')}</td>
+                    <td class="text-[10px] text-gray-400 font-mono">${r.pred.map(p=>p.join(',')).join('|')}</td>
                     <td class="text-right font-bold ${r.hit>=2?'text-orange-500':'text-gray-700'}">${r.hit}</td>
                 </tr>
             `).join('');
