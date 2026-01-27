@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.90 APEX</title>
+    <title>EVO v1.SIGMA CO-OCCURRENCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -14,13 +14,13 @@
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
         #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; }
+        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.1); padding: 0 1px; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.90</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">v1.SIGMA</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,25 +29,25 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: CORE-X APEX 巔峰校準引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: SIGMA 共生關聯演算</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> APEX STABLE ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> 2.00 STAR TARGETING
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">啟動負載平衡對沖機制...</span>
+            <span class="text-orange-500/50 italic">矩陣掃描中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 集成組合 (Balanced Output)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: SIGMA 8碼輸出 (2-2-2-2 佈局)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">熱點核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">影子共振</div>
+                <div class="text-[9px] text-orange-500 font-bold">共生對碰</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
@@ -62,7 +62,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X APEX 績效趨勢</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 SIGMA 績效回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -98,14 +98,24 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getApexPrediction(history) {
+        function getSigmaPrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             let lastNums = history[0].nums;
             
+            // 1. 基礎統計 (近期 vs 長期)
             let shortCounts = Array(range + 1).fill(0);
-            history.slice(0, 7).forEach(r => r.nums.forEach(n => shortCounts[n]++));
+            history.slice(0, 10).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 30).forEach(r => r.nums.forEach(n => longCounts[n]++));
+            history.slice(0, 50).forEach(r => r.nums.forEach(n => longCounts[n]++));
+
+            // 2. SIGMA 共生矩陣分析 (過去 80 期)
+            let coMatrix = {};
+            history.slice(0, 80).forEach(h => {
+                h.nums.forEach(n1 => {
+                    if(!coMatrix[n1]) coMatrix[n1] = {};
+                    h.nums.forEach(n2 => { if(n1!==n2) coMatrix[n1][n2] = (coMatrix[n1][n2] || 0) + 1; });
+                });
+            });
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -113,56 +123,49 @@
                 gaps[n] = g;
             }
 
+            // 3. 綜合評分引擎
             let scores = [];
             for(let n=1; n<=range; n++) {
-                let heat = (shortCounts[n] * 1.7) + (longCounts[n] * 0.3);
-                let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
-                let isRepeat = lastNums.includes(n);
-                // 擴大黃金遺漏區間，並對「極深遺漏」給予對沖分數
-                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 10) ? 1.75 : 1.0;
-                let hedgeScore = (gaps[n] >= 15) ? 2.5 : 0; 
+                let heat = (shortCounts[n] * 2.2) + (longCounts[n] * 0.5);
+                let coScore = 0;
+                lastNums.forEach(ln => { if(coMatrix[ln] && coMatrix[ln][n]) coScore += coMatrix[ln][n]; });
+                
+                let gapBonus = (gaps[n] >= 4 && gaps[n] <= 12) ? 1.8 : 1.0;
+                let hedgeScore = (gaps[n] >= 18) ? 3.0 : 0; 
                 
                 scores.push({
                     n: n,
-                    val: (heat * (isNeighbor ? 1.45 : 1.0) * (isRepeat ? 1.3 : 1.0) * gapBonus) + (3 / (gaps[n] + 1)) + hedgeScore,
+                    val: (heat * gapBonus) + (coScore * 1.5) + hedgeScore,
                     gap: gaps[n],
-                    tail: n % 10
+                    co: coScore
                 });
             }
             scores.sort((a, b) => b.val - a.val);
 
-            let picked = new Set();
+            let picked = [];
             
-            // 1. 強攻核心 (4 碼): 絕對熱點
-            scores.slice(0, 4).forEach(s => picked.add(s.n));
+            // 柱1 & 2: 熱點核心
+            picked.push(scores[0].n, scores[1].n);
 
-            // 2. 影子與對沖平衡 (4 碼): 
-            // - 2 碼 影子碼 (同尾/鄰號)
-            // - 2 碼 結構補位 (由非核心區與深遺漏組成)
-            let candidates = scores.filter(s => !picked.has(s.n));
-            
-            // 影子碼選取
-            let coreArray = Array.from(picked);
-            for(let s of candidates) {
-                if(picked.size >= 6) break;
-                if(coreArray.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.n % 10)) picked.add(s.n);
-            }
+            // 柱3 & 4: SIGMA 共生對碰 (選取與核心關聯度最高的)
+            let core = [scores[0].n, scores[1].n];
+            let coPool = scores.filter(s => !picked.includes(s.n));
+            coPool.sort((a, b) => b.co - a.co);
+            picked.push(coPool[0].n, coPool[1].n);
 
-            // 對沖/結構補位選取 (選取剩餘候選人中 Gap 最大的或是 val 最高的)
-            candidates = scores.filter(s => !picked.has(s.n));
-            candidates.sort((a, b) => b.gap - a.gap); // 優先抓冷
-            if(candidates.length > 0) picked.add(candidates[0].n);
-            
-            // 最後補齊
-            candidates.sort((a, b) => b.val - a.val);
-            for(let s of candidates) {
-                if(picked.size >= 8) break;
-                picked.add(s.n);
-            }
+            // 柱5 & 6: 冷熱對沖
+            let hedgePool = scores.filter(s => !picked.includes(s.n));
+            hedgePool.sort((a, b) => b.gap - a.gap);
+            picked.push(hedgePool[0].n, hedgePool[1].n);
 
-            const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.6).toFixed(2);
-            return { pred, sIndex };
+            // 柱7 & 8: 結構補位 (由剩餘評分最高者補位)
+            let remain = scores.filter(s => !picked.includes(s.n));
+            picked.push(remain[0].n, remain[1].n);
+
+            return { 
+                pred: picked.sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
+                sIndex: (scores[0].val / 10).toFixed(1)
+            };
         }
 
         function processData(data) {
@@ -172,28 +175,29 @@
             })).filter(h => h.nums.length === 5);
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let stars = 0, rowsHtml = "", lastS = 0;
-            for (let i = 0; i < 10; i++) {
-                const result = getApexPrediction(history.slice(i + 1));
+            let stars = 0, rowsHtml = "";
+            const testPeriod = 10;
+
+            for (let i = 0; i < testPeriod; i++) {
+                const result = getSigmaPrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
-                if(i===0) lastS = result.sIndex;
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const avg = (stars / 10).toFixed(2);
+            const avg = (stars / testPeriod).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.90 APEX</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">A-INDEX: ${lastS}</span>
+                    <span class="text-orange-500 font-bold tracking-widest uppercase">SIGMA v1.0 REPORT</span>
+                    <span class="bg-orange-600 text-black px-1 rounded text-[9px] font-bold">STABLE</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                目標: <span class="text-white font-bold text-lg">STABILIZE 2.0 STAR</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">巔峰校準：引入冷熱對沖 (Hedge)，強行拉升 0-1 星低潮期。</div>`;
+                讀取總量: <span class="text-white font-bold">${history.length} 期數據</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">SIGMA 機制：已優化熱碼共生權重，目標均值 2.00。</div>`;
 
-            const final = getApexPrediction(history);
+            const final = getSigmaPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
             document.getElementById('p2').innerText = `${final.pred[2]},${final.pred[3]}`;
             document.getElementById('p3').innerText = `${final.pred[4]},${final.pred[5]}`;
