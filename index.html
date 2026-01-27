@@ -106,15 +106,12 @@
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(item => item.nums.length === 5);
 
-            // 自動偵測並翻轉順序：確保 history[0] 是最新資料
-            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) {
+            if (history.length > 0 && new Date(history[0].date) < new Date(history[history.length - 1].date)) {
                 history.reverse();
             }
 
-            let stats = { count: 0, x2: 0, x3: 0, x4: 0 };
+            let stats = { count: 0, x2: 0, x3: 0, x4: 0, totalHits: 0 };
             const backtestRows = [];
-            
-            // 動態基準量：資料少時縮短參考期，確保能產出回測
             const baseLine = history.length < 40 ? Math.floor(history.length * 0.4) : 20;
 
             for (let i = 0; i < history.length - baseLine; i++) {
@@ -125,6 +122,7 @@
                 const hits = actual.nums.filter(n => flatPred.includes(n));
                 
                 stats.count++;
+                stats.totalHits += hits.length;
                 if(hits.length === 2) stats.x2++;
                 if(hits.length === 3) stats.x3++;
                 if(hits.length >= 4) stats.x4++;
@@ -150,44 +148,91 @@
             const lookbackLen = Math.min(data.length, 60);
             const lookback = data.slice(0, lookbackLen);
             
-            // 基礎頻率加權
             lookback.forEach((row, idx) => {
                 const weight = (lookbackLen - idx) / lookbackLen;
                 row.nums.forEach(n => { if(n <= range) scores[n] += (3 * weight); });
             });
 
-            // 模式分支策略
             if (currentMode === '539') {
-                // 539 強化連莊規律
                 data.slice(0, 1).forEach(row => {
-                    row.nums.forEach(n => scores[n] *= 1.2);
+                    row.nums.forEach(n => scores[n] *= 1.35); // 加強連莊權重
+                });
+                data.slice(1, 3).forEach(row => {
+                    row.nums.forEach(n => scores[n] *= 1.1); // 近三期熱度加成
                 });
             } else {
-                // 天天樂強化冷門補償 (遺漏值)
                 for(let n = 1; n <= range; n++) {
                     let miss = 0;
                     for(let row of data) {
                         if(row.nums.includes(n)) break;
                         miss++;
                     }
-                    scores[n] += (miss * 0.15);
+                    scores[n] += (miss * 0.2); // 天天樂強化遺漏
                 }
             }
 
-            const picked = scores
+            const sortedIndices = scores
                 .map((score, num) => ({ num, score }))
                 .filter(x => x.num !== 0)
-                .sort((a, b) => b.score - a.score || a.num - b.num)
-                .slice(0, 8)
-                .map(x => x.num.toString().padStart(2, '0'));
+                .sort((a, b) => b.score - a.score || a.num - b.num);
 
-            return [[picked[0], picked[1]], [picked[2], picked[3]], [picked[4], picked[5]], [picked[6], picked[7]]];
+            return packColumns(sortedIndices);
+        }
+
+        // 立柱衝突檢查邏輯 (2-2-2-2)
+        function packColumns(sorted) {
+            const columns = [[], [], [], []];
+            const used = new Set();
+            
+            for (let c = 0; c < 4; c++) {
+                for (let i = 0; i < sorted.length; i++) {
+                    const candidate = sorted[i].num;
+                    if (used.has(candidate)) continue;
+                    
+                    if (columns[c].length === 0) {
+                        columns[c].push(candidate);
+                        used.add(candidate);
+                    } else {
+                        const existing = columns[c][0];
+                        const isConsecutive = Math.abs(existing - candidate) === 1;
+                        const isSameTail = (existing % 10) === (candidate % 10);
+                        
+                        if (!isConsecutive && !isSameTail) {
+                            columns[c].push(candidate);
+                            used.add(candidate);
+                            break; 
+                        }
+                    }
+                    if (columns[c].length === 2) break;
+                }
+                // 保底邏輯：若篩選太嚴導致選不到，強制補位
+                if (columns[c].length < 2) {
+                    for (let i = 0; i < sorted.length; i++) {
+                        if (!used.has(sorted[i].num)) {
+                            columns[c].push(sorted[i].num);
+                            used.add(sorted[i].num);
+                            break;
+                        }
+                    }
+                }
+            }
+            return columns.map(col => col.map(n => n.toString().padStart(2, '0')).sort());
         }
 
         function updateLogBox(total, s) {
+            const avgStars = s.count > 0 ? (s.totalHits / s.count).toFixed(2) : "0.00";
+            let confidence = "低";
+            const winRate = s.count > 0 ? (s.x2 + s.x3 + s.x4) / s.count : 0;
+            if (winRate > 0.35) confidence = "極高";
+            else if (winRate > 0.25) confidence = "高";
+            else if (winRate > 0.15) confidence = "中";
+
             document.getElementById('logBox').innerHTML = `
-                <div class="text-orange-500 font-bold mb-1">滾動回測報告 [${currentMode}]</div>
-                讀取筆數: ${total} | 回測期數: ${s.count}<br>
+                <div class="flex justify-between">
+                    <span class="text-orange-500 font-bold">滾動回測報告 [${currentMode}]</span>
+                    <span class="text-white bg-orange-600 px-2 rounded">下期信心: ${confidence}</span>
+                </div>
+                回測期數: ${s.count} | 平均命中: ${avgStars} 星<br>
                 <span class="text-white">--------------------------------</span><br>
                 命中 2 星: <span class="text-white">${s.x2}</span> 次 (${s.count > 0 ? ((s.x2/s.count)*100).toFixed(1) : 0}%)<br>
                 命中 3 星: <span class="text-white">${s.x3}</span> 次 (${s.count > 0 ? ((s.x3/s.count)*100).toFixed(1) : 0}%)<br>
