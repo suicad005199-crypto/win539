@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.1 DISRUPTOR</title>
+    <title>ULTIMATE EVO 6.2 CALIBRATOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.1</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.2</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,18 +29,18 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 核心狙擊與冷熱擾動機制</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: 動態校準與斜連偵測</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> 擾動邏輯已掛載
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> 校準邏輯運作中
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">偵測盤勢斷層...</span>
+            <span class="text-orange-500/50 italic">分析鄰號擴散趨勢...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 狙擊集成組合 (Disruptor Output)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 狙擊集成組合 (Calibrator Output)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
                 <div class="text-[9px] text-orange-500 font-bold">第一柱</div>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 Disruptor 回測績效</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 Calibrator 回測績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -103,7 +103,7 @@
             let shortCounts = Array(range + 1).fill(0);
             history.slice(0, 3).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 12).forEach(r => r.nums.forEach(n => longCounts[n]++));
+            history.slice(0, 15).forEach(r => r.nums.forEach(n => longCounts[n]++));
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -113,13 +113,15 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                // v6.1: 核心動能加權
-                let combinedHeat = (shortCounts[n] * 0.75) + (longCounts[n] * 0.25);
-                let gapBonus = (gaps[n] >= 2 && gaps[n] <= 8) ? 1.45 : 1.0;
+                let heat = (shortCounts[n] * 0.7) + (longCounts[n] * 0.3);
+                // v6.2: 鄰號加權邏輯
+                let isNeighbor = history[0].nums.some(ln => Math.abs(ln - n) === 1);
+                let neighborBonus = isNeighbor ? 1.2 : 1.0;
+                let gapBonus = (gaps[n] >= 8 && gaps[n] <= 12) ? 1.5 : 1.0; // 溫冷碼加權
                 
                 scores.push({
                     n: n,
-                    val: (combinedHeat * gapBonus) + (1 / (gaps[n] + 1)),
+                    val: (heat * neighborBonus * gapBonus) + (1 / (gaps[n] + 1)),
                     tail: n % 10,
                     gap: gaps[n]
                 });
@@ -128,11 +130,10 @@
 
             let picked = new Set();
             
-            // 1. 雙尾狙擊核心 (4 碼)
+            // 1. 雙尾核心校準 (4 碼)
             let tailScores = Array(10).fill(0);
-            scores.slice(0, 12).forEach(s => tailScores[s.tail] += s.val);
-            let sortedTails = tailScores.map((v, i) => ({tail: i, val: v}))
-                                        .sort((a, b) => b.val - a.val);
+            scores.slice(0, 15).forEach(s => tailScores[s.tail] += s.val);
+            let sortedTails = tailScores.map((v, i) => ({tail: i, val: v})).sort((a, b) => b.val - a.val);
             
             [0, 1].forEach(idx => {
                 let targetTail = sortedTails[idx].tail;
@@ -145,23 +146,18 @@
                 }
             });
 
-            // 2. 冷碼擾動保險 (1 碼: 遺漏最高者)
-            let coldCandidate = [...scores].sort((a, b) => b.gap - a.gap)[0];
-            picked.add(coldCandidate.n);
+            // 2. 斜連/鄰號精選 (1 碼)
+            let neighborCandidate = scores.filter(s => !picked.has(s.n) && history[0].nums.some(ln => Math.abs(ln - s.n) === 1))[0];
+            if(neighborCandidate) picked.add(neighborCandidate.n);
 
-            // 3. 連莊鎖定 (1 碼)
-            let lastNums = history[0].nums;
-            let repeatBest = lastNums.map(n => scores.find(s => s.n === n)).sort((a,b)=>b.val - a.val)[0];
-            picked.add(repeatBest.n);
-
-            // 4. 熱點補位至 8 碼
+            // 3. 連莊/溫熱補位至 8 碼
             for(let s of scores) {
                 if(picked.size >= 8) break;
                 picked.add(s.n);
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.15).toFixed(2);
+            const sIndex = (scores[0].val * 1.1).toFixed(2);
             return { pred, sIndex };
         }
 
@@ -186,12 +182,12 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.1 DISRUPTOR</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.2 CALIBRATOR</span>
                     <span class="bg-white/10 px-2 rounded text-[9px]">S-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="${avg >= 1.8 ? 'text-green-400' : 'text-orange-500'} text-lg font-black">${avg} 星</span><br>
-                戰略核心: <span class="text-white font-bold text-lg">CORE-DISTURBANCE</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">維持雙尾高爆發結構，強制注入冷碼擾動與連莊鎖定，優化防禦韌性。</div>`;
+                戰略核心: <span class="text-white font-bold text-lg">NEIGHBOR-SYNC & COLD-FILTER</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">過濾極端死冷碼，強化斜連鄰號偵測，並動態校準強勢尾數權重。</div>`;
 
             const final = getEnsemblePrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
