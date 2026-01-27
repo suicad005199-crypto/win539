@@ -29,25 +29,25 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: OMNI-INTEGRATED 跨代整合引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: OMNI 跨代整合引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> v6.8-v7.3 GENE MERGED
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> GENE-INTEGRATION ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正在載入跨代數據基因，平衡進攻與防禦...</span>
+            <span class="text-orange-500/50 italic">整合 v6.85 爆發基因與 v6.90 防禦組件...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 綜合輸出 (Omni-Focus)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 整合輸出 (Omni-Focus)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">進攻核心</div>
+                <div class="text-[9px] text-orange-500 font-bold">爆發核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">共振連動</div>
+                <div class="text-[9px] text-orange-500 font-bold">鄰位共振</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
@@ -55,14 +55,14 @@
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">尾數校準</div>
+                <div class="text-[9px] text-gray-400 font-bold">結構對沖</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">整合測試：挑戰 1.85+ 均星穩定帶</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Omni 測試：跨代邏輯融合驗證</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -101,7 +101,6 @@
         function getOmniPrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
-            const prevNums = history[1].nums;
             
             let shortCounts = Array(range + 1).fill(0);
             history.slice(0, 8).forEach(r => r.nums.forEach(n => shortCounts[n]++));
@@ -116,23 +115,20 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                // v7.30 基底 + v6.85 爆發參數
+                // v7.30 骨架 + v6.85 爆發基因 (2.8x 加乘熱度)
                 let baseHeat = (shortCounts[n] * 2.8) + (longCounts[n] * 0.35);
                 let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
                 let isRepeat = lastNums.includes(n);
                 
-                // v6.85 黃金遺漏基因 (2-7期)
-                let gapBonus = (gaps[n] >= 2 && gaps[n] <= 7) ? 2.3 : 1.0;
+                // v6.85 黃金遺漏優化 (2.5x)
+                let gapBonus = (gaps[n] >= 2 && gaps[n] <= 7) ? 2.5 : 1.0;
                 
-                // v6.90 極深防禦基因 (14期+)
-                let hedgeScore = (gaps[n] >= 14) ? 2.6 : 0;
-                
-                // 動態連開懲罰
-                let penalty = (lastNums.includes(n) && prevNums.includes(n)) ? 0.75 : 1.0;
+                // v6.90 極深對沖 (15期以上強力補分)
+                let hedgeScore = (gaps[n] >= 15) ? 3.0 : 0;
                 
                 scores.push({
                     n: n,
-                    val: ((baseHeat * (isNeighbor ? 1.7 : 1.0) * (isRepeat ? 1.45 : 1.0) * gapBonus) + (5 / (gaps[n] + 1)) + hedgeScore) * penalty,
+                    val: (baseHeat * (isNeighbor ? 1.65 : 1.0) * (isRepeat ? 1.45 : 1.0) * gapBonus) + (5 / (gaps[n] + 1)) + hedgeScore,
                     gap: gaps[n],
                     tail: n % 10
                 });
@@ -141,37 +137,40 @@
 
             let picked = new Set();
             
-            // 1. 進攻核心 (3 碼)
+            // 核心組 (3 碼)
             scores.slice(0, 3).forEach(s => picked.add(s.n));
 
-            // 2. 共振連動 (3 碼) - 鄰位與同尾校準
+            // 共振組 (3 碼)：鄰位共振與尾數平衡
             let coreArray = Array.from(picked);
             let candidates = scores.filter(s => !picked.has(s.n));
             for(let s of candidates) {
                 if(picked.size >= 6) break;
+                // v6.80 強共振邏輯
                 if(coreArray.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.n % 10)) {
                     picked.add(s.n);
                 }
             }
 
-            // 3. 跨代尾數多元性校準 (2 碼)
+            // 防禦組 (2 碼)：v6.90 斷星防禦機制
             candidates = scores.filter(s => !picked.has(s.n));
+            // A. 強制補位最深號碼 (穩定度關鍵)
+            candidates.sort((a, b) => b.gap - a.gap);
+            if(candidates.length > 0) picked.add(candidates[0].n);
+            
+            // B. 結構性補強 (多樣性過濾)
+            candidates = candidates.filter(s => !picked.has(s.n));
+            candidates.sort((a, b) => b.val - a.val);
             for(let s of candidates) {
                 if(picked.size >= 8) break;
-                // 檢查目前選碼中同尾數是否已超過 2 碼，若是則跳過該熱碼，選取不同尾數的碼 (基因整合平衡)
-                let tailCount = Array.from(picked).filter(pn => pn % 10 === s.tail).length;
-                if (tailCount < 2 || picked.size >= 7) {
+                // 檢查尾數集中度，避免單一尾數過載
+                let tails = Array.from(picked).map(n => n % 10);
+                if (tails.filter(t => t === s.tail).length < 3) {
                     picked.add(s.n);
                 }
             }
 
-            // 若仍不足 8 碼(極端情況)，補足之
-            if(picked.size < 8) {
-                scores.filter(s => !picked.has(s.n)).slice(0, 8-picked.size).forEach(s => picked.add(s.n));
-            }
-
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.5).toFixed(2);
+            const sIndex = (scores[0].val * 1.52).toFixed(2);
             return { pred, sIndex };
         }
 
@@ -200,8 +199,8 @@
                     <span class="bg-white/10 px-2 rounded text-[9px]">O-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                整合狀態: <span class="text-white font-bold text-lg">v6.8-v7.3 HYBRID ACTIVE</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">跨代整合：吸納 6.85 爆發權重與 6.90 防禦深度，並透過 7.30 結構進行封裝。</div>`;
+                整合狀態: <span class="text-white font-bold text-lg">v6.85+v6.90+v7.30 MERGED</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">跨代整合：吸納歷代優勢，強化黃金區間與尾數過濾，挑戰均星回升。</div>`;
 
             const final = getOmniPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
