@@ -33,41 +33,41 @@
             <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">上傳數據</button>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-gray-500">等待數據載入，準備執行 2:4:2 溫控回測...</span>
+            <span class="text-gray-500">等待 CSV 數據以啟動遺漏值配比策略...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (熱溫冷配比)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 下期預測 (膽碼 + 拖碼佈局)</label>
         <div class="grid grid-cols-4 gap-2">
-            <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-orange-700 font-bold">第一柱(熱/冷)</div>
+            <div class="bg-orange-950/20 p-2 rounded-lg text-center border border-orange-500/30">
+                <div class="text-[9px] text-orange-500 font-bold italic">第一柱(膽)</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-orange-700 font-bold">第二柱(溫)</div>
+                <div class="text-[9px] text-gray-500 font-bold">第二柱</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-orange-700 font-bold">第三柱(溫)</div>
+                <div class="text-[9px] text-gray-500 font-bold">第三柱</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-black/40 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-orange-700 font-bold">第四柱(熱/冷)</div>
+                <div class="text-[9px] text-gray-500 font-bold">第四柱</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 近十期滾動回測明細</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Panel 2: 2-4-2 策略回測報告</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 shadow-sm">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2 font-medium">日期</th>
                         <th class="pb-2 font-medium">開獎</th>
-                        <th class="pb-2 font-medium">預測</th>
+                        <th class="pb-2 font-medium">預測組合</th>
                         <th class="pb-2 font-medium text-right">星</th>
                     </tr>
                 </thead>
@@ -112,12 +112,12 @@
 
             let stats = { count: 0, x2: 0, x3: 0, x4: 0, totalHits: 0 };
             const backtestRows = [];
-            const baseLine = 30;
+            const baseLine = 30; // 增加回測深度
 
-            for (let i = 0; i < history.length - baseLine; i++) {
+            for (let i = 0; i < Math.min(history.length - baseLine, 50); i++) {
                 const trainingData = history.slice(i + 1); 
                 const actual = history[i]; 
-                const prediction = generateGapStrategy(trainingData);
+                const prediction = generateStrategy(trainingData);
                 const flatPred = prediction.flat().map(Number);
                 const hits = actual.nums.filter(n => flatPred.includes(n));
                 
@@ -136,16 +136,17 @@
                     });
                 }
             }
-            updateLogBox(history.length, stats);
-            updatePrediction(generateGapStrategy(history));
+            updateLogBox(stats);
+            updatePrediction(generateStrategy(history));
             updateHistoryTable(backtestRows);
         }
 
-        function generateGapStrategy(data) {
+        function generateStrategy(data) {
             const range = 39;
             const gaps = Array(range + 1).fill(0);
+            const hotScores = Array(range + 1).fill(0);
             
-            // 計算目前每個號碼的遺漏值
+            // 1. 計算遺漏值 (Gaps)
             for (let n = 1; n <= range; n++) {
                 let count = 0;
                 for (let row of data) {
@@ -155,57 +156,69 @@
                 gaps[n] = count;
             }
 
-            const hot = [], warm = [], cold = [];
+            // 2. 計算近期熱度
+            data.slice(0, 15).forEach((row, idx) => {
+                row.nums.forEach(n => hotScores[n] += (15 - idx));
+            });
+
+            // 3. 分類：熱(0-3), 溫(4-9), 冷(10+)
+            let poolHot = [], poolWarm = [], poolCold = [];
             for (let n = 1; n <= range; n++) {
-                if (gaps[n] <= 3) hot.push({ n, g: gaps[n] });
-                else if (gaps[n] <= 9) warm.push({ n, g: gaps[n] });
-                else cold.push({ n, g: gaps[n] });
+                // 殺號過濾：排除連開3期號碼
+                let isSerial3 = data.slice(0,3).every(r => r.nums.includes(n));
+                if (isSerial3) continue;
+
+                if (gaps[n] <= 3) poolHot.push({n, s: hotScores[n]});
+                else if (gaps[n] <= 9) poolWarm.push({n, s: hotScores[n]});
+                else poolCold.push({n, s: hotScores[n]});
             }
 
-            // 排序：熱碼看出現頻率(權重分)，溫碼與冷碼看遺漏深度
-            const getScore = (n) => {
-                let s = 0;
-                data.slice(0, 20).forEach((r, i) => { if(r.nums.includes(n)) s += (20-i); });
-                return s;
-            };
+            // 排序
+            poolHot.sort((a,b) => b.s - a.s);
+            poolWarm.sort((a,b) => b.s - a.s);
+            poolCold.sort((a,b) => b.s - a.s);
 
-            const selectedHot = hot.sort((a,b) => getScore(b.n) - getScore(a.n)).slice(0, 2).map(x => x.n);
-            const selectedWarm = warm.sort((a,b) => b.g - a.g).slice(0, 4).map(x => x.n);
-            const selectedCold = cold.sort((a,b) => b.g - a.g).slice(0, 2).map(x => x.n);
-
-            // 補齊邏輯：若某分類不足，由其他分類遞補
-            let pool = [...selectedHot, ...selectedWarm, ...selectedCold];
-            if(pool.length < 8) {
-                const used = new Set(pool);
-                const remain = warm.concat(cold).concat(hot).filter(x => !used.has(x.n)).sort((a,b) => b.g - a.g);
-                while(pool.length < 8 && remain.length > 0) pool.push(remain.shift().n);
-            }
-
-            return packGapColumns(pool, selectedHot, selectedWarm, selectedCold);
-        }
-
-        function packGapColumns(pool, h, w, c) {
-            // 佈局策略：[熱1, 冷1], [溫1, 溫2], [溫3, 溫4], [熱2, 冷2]
-            const cols = [
-                [pool[0], pool[6]],
-                [pool[2], pool[3]],
-                [pool[4], pool[5]],
-                [pool[1], pool[7]]
+            // 4. 2:4:2 配比挑選
+            let final8 = [
+                ...poolHot.slice(0, 2).map(x => x.n),
+                ...poolWarm.slice(0, 4).map(x => x.n),
+                ...poolCold.slice(0, 2).map(x => x.n)
             ];
-            return cols.map(c => c.map(n => n?.toString().padStart(2, '0') || '01').sort());
+
+            // 補足 8 碼 (若某池不足)
+            if(final8.length < 8) {
+                let all = [...poolHot, ...poolWarm, ...poolCold].sort((a,b) => b.s - a.s);
+                for(let item of all) {
+                    if(!final8.includes(item.n)) final8.push(item.n);
+                    if(final8.length === 8) break;
+                }
+            }
+
+            return packAsBanker(final8);
         }
 
-        function updateLogBox(total, s) {
-            const avgStars = s.count > 0 ? (s.totalHits / s.count).toFixed(2) : "0.00";
+        function packAsBanker(nums) {
+            // 第一柱為膽 (最強2碼)，其餘為拖
+            const sorted = [...nums]; 
+            return [
+                [sorted[0], sorted[1]], // 膽碼柱
+                [sorted[2], sorted[3]],
+                [sorted[4], sorted[5]],
+                [sorted[6], sorted[7]]
+            ].map(c => c.map(n => n.toString().padStart(2, '0')).sort());
+        }
+
+        function updateLogBox(s) {
+            const winRate = s.count > 0 ? ((s.x2 + s.x3 + s.x4) / s.count * 100).toFixed(1) : 0;
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between">
-                    <span class="text-orange-500 font-bold">2:4:2 溫控回測 [${currentMode}]</span>
-                    <span class="text-white bg-orange-600 px-2 rounded">回測期數: ${s.count}</span>
+                    <span class="text-orange-500 font-bold">遺漏補償報告 [${currentMode}]</span>
+                    <span class="text-white bg-orange-600 px-2 rounded">勝率: ${winRate}%</span>
                 </div>
-                平均命中: <span class="text-white font-bold">${avgStars}</span> 星<br>
-                策略：排除極端過熱碼，強化「溫碼」覆蓋率<br>
+                遺漏配比: 熱2 : 溫4 : 冷2 | 殺號: 已排除連3期號碼<br>
+                佈局模式: 膽拖立柱 (核心膽碼 + 擴展拖碼)<br>
                 <span class="text-white">--------------------------------</span><br>
-                命中 2 星: <span class="text-white">${s.x2}</span> | 3 星: <span class="text-orange-400 font-bold">${s.x3}</span> | 4 星: <span class="text-orange-500 font-bold">${s.x4}</span>
+                命中統計 -> 2星: <span class="text-white">${s.x2}</span> | 3星: <span class="text-orange-400 font-bold">${s.x3}</span> | 4星: <span class="text-yellow-400 font-bold">${s.x4}</span>
             `;
         }
 
@@ -220,8 +233,8 @@
                 <tr>
                     <td class="py-3 text-gray-400 text-[10px]">${r.date}</td>
                     <td class="font-mono text-white">${r.actual}</td>
-                    <td class="text-[10px] text-gray-500">${r.pred}</td>
-                    <td class="text-right font-bold ${r.hit>=2?'text-orange-500':'text-gray-700'}">${r.hit}</td>
+                    <td class="text-[10px] text-gray-500 font-mono">${r.pred}</td>
+                    <td class="text-right font-bold ${r.hit>=3?'text-yellow-500':(r.hit===2?'text-orange-500':'text-gray-700')}">${r.hit}</td>
                 </tr>
             `).join('');
         }
