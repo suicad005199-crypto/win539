@@ -3,75 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 8.10 TRAIL-MASTER</title>
+    <title>ULTIMATE EVO 8.10 - STAR FOCUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
+        :root { --ios-orange: #f97316; --ios-bg: #000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 35px rgba(249, 115, 22, 0.6); }
+        .orange-glow { box-shadow: 0 0 30px rgba(249, 115, 22, 0.4); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
-        #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; border-left: 3px solid var(--ios-orange); }
-        #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.15); padding: 0 2px; }
+        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.2); padding: 0 2px; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.10</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
-            <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">STAR <span class="text-white">FOCUS 8.10</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
+            <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active">539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
-        <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 拖牌慣性與區間平衡分析</label>
-            <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-ping"></span> TRAIL ENGINE ACTIVE
-            </div>
-        </div>
-        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/10 leading-relaxed">
-            <span class="text-orange-500/50 italic">分析拖牌規律與尾數慣性中...</span>
+    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
+        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-xs h-24 overflow-y-auto font-mono leading-relaxed">
+            <span class="text-orange-500">初始化穩定二星策略模組...</span>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 5碼拖牌收斂 (核心 + 區間補位)</label>
-        <div class="grid grid-cols-4 gap-2">
-            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/50">
-                <div class="text-[9px] text-orange-500 font-bold">拖牌核心</div>
-                <div class="text-lg font-black text-white" id="p1">--</div>
-            </div>
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">強勢同尾</div>
-                <div class="text-lg font-black text-white" id="p2">--</div>
-            </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">區間補位</div>
-                <div class="text-lg font-black text-white" id="p3">--</div>
-            </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">冷門回補</div>
-                <div class="text-lg font-black text-white" id="p4">--</div>
-            </div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="ios-panel p-3 border-l-4 border-orange-500">
+            <div class="text-[10px] text-gray-400">核心穩定雙膽</div>
+            <div class="text-xl font-black text-white" id="p1">--</div>
+        </div>
+        <div class="ios-panel p-3 border-l-4 border-gray-500">
+            <div class="text-[10px] text-gray-400">三星攻堅組合</div>
+            <div class="text-xl font-black text-white" id="p2">--</div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">二三四星碰：30期拖牌實測驗證</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase mb-2">30期訓練模組回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 z-10">
-                    <tr class="text-left border-b border-white/10">
-                        <th class="pb-2">日期</th>
-                        <th class="pb-2">開獎號</th>
-                        <th class="pb-2">預測5碼</th>
-                        <th class="pb-2 text-right">星</th>
-                    </tr>
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 z-10 border-b border-white/10">
+                    <tr class="text-left"><th class="pb-2">日期</th><th class="pb-2">開獎號</th><th class="pb-2">預測</th><th class="pb-2 text-right">星</th></tr>
                 </thead>
                 <tbody id="historyTable" class="divide-y divide-white/5"></tbody>
             </table>
@@ -80,113 +56,96 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbys9LFrmqnTftrPqTprRhfn6YBsMH63K4BKOfZfbM7m1wAP_CxH6v9M_2RpIGtbW9cIeA/exec";
-        let currentMode = '539';
-        let fullData = [];
+        let currentMode = '539', fullData = [];
 
         async function fetchData() {
             try {
                 const response = await fetch(API_URL);
                 fullData = await response.json();
                 processData(fullData);
-            } catch (error) { document.getElementById('logBox').innerText = "數據同步失敗"; }
+            } catch (e) { document.getElementById('logBox').innerText = "連線失敗"; }
         }
 
         function switchMode(mode) {
             currentMode = mode;
-            document.getElementById('btn539').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'}`;
-            document.getElementById('btnDaily').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
-            if(fullData.length > 0) processData(fullData);
+            document.getElementById('btn539').className = `px-4 py-1.5 rounded-lg text-sm ${mode==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-4 py-1.5 rounded-lg text-sm ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
+            processData(fullData);
         }
 
-        function getTrailMasterPattern(history) {
+        function getStarFocus(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
-            let trailMap = {};
-            for (let i = 0; i < history.length - 1; i++) {
-                const current = history[i+1].nums;
-                const next = history[i].nums;
-                current.forEach(c => {
-                    if (!trailMap[c]) trailMap[c] = {};
-                    next.forEach(n => { trailMap[c][n] = (trailMap[c][n] || 0) + 1; });
+            
+            // 1. 建立連動矩陣 (找出最常一起出現的號碼)
+            let pairMap = {};
+            history.forEach(h => {
+                h.nums.forEach(a => {
+                    if(!pairMap[a]) pairMap[a] = {};
+                    h.nums.forEach(b => { if(a!==b) pairMap[a][b] = (pairMap[a][b] || 0) + 1; });
                 });
-            }
-            let weights = Array(range + 1).fill(0);
-            lastNums.forEach(ln => { if (trailMap[ln]) { for (let n in trailMap[ln]) weights[n] += trailMap[ln][n]; } });
-            let tailStats = Array(10).fill(0);
-            history.forEach(h => h.nums.forEach(n => tailStats[n % 10]++));
-            let topTail = tailStats.indexOf(Math.max(...tailStats));
-            let picked = new Set();
-            let stats = [];
-            for(let n=1; n<=range; n++) {
-                let gap = 0;
-                for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                stats.push({ n, gap, weight: weights[n] || 0 });
-            }
-            let sortedWeights = [...stats].sort((a,b) => b.weight - a.weight);
-            picked.add(sortedWeights[0].n);
-            let tailMatch = stats.filter(s => s.n % 10 === topTail && !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
-            if(tailMatch.length > 0) picked.add(tailMatch[0].n);
-            const sections = [[1, 13], [14, 26], [27, 39]];
-            sections.forEach(sec => {
-                let hasInSec = Array.from(picked).some(p => p >= sec[0] && p <= sec[1]);
-                if (!hasInSec) {
-                    let secCandidates = stats.filter(s => s.n >= sec[0] && s.n <= sec[1] && !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
-                    if (secCandidates.length > 0) picked.add(secCandidates[0].n);
+            });
+
+            // 2. 核心雙膽：上期號碼中，歷史連動最強的號碼
+            let candidates = {};
+            lastNums.forEach(n => {
+                if(pairMap[n]) {
+                    for(let m in pairMap[n]) candidates[m] = (candidates[m] || 0) + pairMap[n][m];
                 }
             });
-            let fillers = stats.filter(s => !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
-            while(picked.size < 5) { picked.add(fillers.shift().n); }
-            return {
-                pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                mainTail: topTail + "尾",
-                topTrail: sortedWeights[0].n.toString().padStart(2, '0')
-            };
+
+            let sorted = Object.keys(candidates).sort((a,b) => candidates[b] - candidates[a]);
+            let picked = new Set();
+            
+            // 取前 2 碼為穩定核心
+            picked.add(sorted[0]);
+            picked.add(sorted[1]);
+
+            // 3. 補位：選取遺漏期數 5-10 期的「溫碼」
+            let gaps = Array(range + 1).fill(0);
+            for(let n=1; n<=range; n++) {
+                for(let r of history) { if(r.nums.includes(n)) break; gaps[n]++; }
+            }
+            
+            let warmNums = [];
+            for(let n=1; n<=range; n++) { if(gaps[n] >= 3 && gaps[n] <= 12) warmNums.push(n); }
+            warmNums.sort((a,b) => candidates[b] - candidates[a]); // 溫碼中選關聯強的
+
+            while(picked.size < 5 && warmNums.length > 0) {
+                let n = warmNums.shift().toString().padStart(2, '0');
+                if(!picked.has(n)) picked.add(n);
+            }
+
+            // 若不足 5 碼則補最強關聯
+            let i = 2;
+            while(picked.size < 5) { picked.add(sorted[i++].padStart(2,'0')); }
+
+            let res = Array.from(picked).sort((a,b)=>a-b);
+            return { pred: res, core: [res[0], res[1]] };
         }
 
         function processData(data) {
-            let history = data.filter(row => row.length >= 6).map(row => ({
-                date: row[0],
-                nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+            let history = data.filter(r => r.length >= 6).map(r => ({
+                date: r[0], nums: r.slice(1,6).map(n => parseInt(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
-            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
+            if (new Date(history[0].date) < new Date(history[history.length-1].date)) history.reverse();
 
-            let stars = [0,0,0,0,0,0];
-            let rowsHtml = "";
-            const testPeriod = 30;
-
-            for (let i = 0; i < testPeriod; i++) {
-                // 以當前期的後 30 筆作為訓練模組
-                const trainingSlice = history.slice(i + 1, i + 31);
-                if(trainingSlice.length < 30) break;
-
-                const res = getTrailMasterPattern(trainingSlice);
-                const actual = history[i].nums;
-                const hits = actual.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
+            let stars = [0,0,0,0,0,0], rowsHtml = "";
+            for (let i = 0; i < 30; i++) {
+                let train = history.slice(i+1, i+31);
+                if(train.length < 30) break;
+                let res = getStarFocus(train);
+                let hits = history[i].nums.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars[hits]++;
-                
-                const predHtml = res.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                let d = history[i].date.split('T')[0].split('-').slice(1).join('/');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 text-[10px]">${d}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
+                let predHtml = res.pred.map(p => history[i].nums.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-2 text-gray-500">${history[i].date.split('T')[0].slice(5)}</td><td class="font-mono">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td><td class="font-mono text-gray-400">${predHtml}</td><td class="text-right font-bold ${hits>=2?'text-orange-500':''}">${hits}</td></tr>`;
             }
 
-            const current = getTrailMasterPattern(history.slice(0, 30));
-            const winRate = (((stars[2]+stars[3]+stars[4]+stars[5])/testPeriod)*100).toFixed(0);
-
-            document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest uppercase">Trail-Master Analysis</span>
-                    <span class="text-[10px] bg-orange-600 text-black px-1 font-bold">V8.10</span>
-                </div>
-                當期拖牌首選: <span class="text-white font-bold">${current.topTrail}</span><br>
-                熱門尾數趨勢: <span class="text-white font-bold">${current.mainTail}</span><br>
-                30期命中率 (2星+): <span class="text-orange-500 font-black text-lg">${winRate}%</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">模式：每一回測點均使用其後 30 期資料進行動態建模。</div>`;
-
-            document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
-            document.getElementById('p2').innerText = `${current.pred[2]}`;
-            document.getElementById('p3').innerText = `${current.pred[3]}`;
-            document.getElementById('p4').innerText = `${current.pred[4]}`;
+            let current = getStarFocus(history.slice(0,30));
+            document.getElementById('p1').innerText = current.pred.slice(0,2).join(', ');
+            document.getElementById('p2').innerText = current.pred.slice(2,5).join(', ');
             document.getElementById('historyTable').innerHTML = rowsHtml;
+            document.getElementById('logBox').innerHTML = `<div class="text-orange-500 font-bold">策略：連動矩陣 + 溫碼補位</div>近期二星達成率: <span class="text-white text-lg">${((stars[2]+stars[3]+stars[4])/30*100).toFixed(0)}%</span><br>三星達成次數: <span class="text-white">${stars[3]+stars[4]} 次</span>`;
         }
     </script>
 </body>
