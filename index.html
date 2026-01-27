@@ -101,34 +101,20 @@
         function getTrailMasterPattern(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
-
-            // 1. 拖牌機率矩陣 (Next-Ball Probability)
             let trailMap = {};
             for (let i = 0; i < history.length - 1; i++) {
                 const current = history[i+1].nums;
                 const next = history[i].nums;
                 current.forEach(c => {
                     if (!trailMap[c]) trailMap[c] = {};
-                    next.forEach(n => {
-                        trailMap[c][n] = (trailMap[c][n] || 0) + 1;
-                    });
+                    next.forEach(n => { trailMap[c][n] = (trailMap[c][n] || 0) + 1; });
                 });
             }
-
-            // 2. 基於上期開獎號計算本期權重
             let weights = Array(range + 1).fill(0);
-            lastNums.forEach(ln => {
-                if (trailMap[ln]) {
-                    for (let n in trailMap[ln]) weights[n] += trailMap[ln][n];
-                }
-            });
-
-            // 3. 尾數熱度
+            lastNums.forEach(ln => { if (trailMap[ln]) { for (let n in trailMap[ln]) weights[n] += trailMap[ln][n]; } });
             let tailStats = Array(10).fill(0);
-            history.slice(0, 30).forEach(h => h.nums.forEach(n => tailStats[n % 10]++));
+            history.forEach(h => h.nums.forEach(n => tailStats[n % 10]++));
             let topTail = tailStats.indexOf(Math.max(...tailStats));
-
-            // 4. 選碼與區間平衡 (01-13, 14-26, 27-39)
             let picked = new Set();
             let stats = [];
             for(let n=1; n<=range; n++) {
@@ -136,32 +122,20 @@
                 for(let r of history) { if(r.nums.includes(n)) break; gap++; }
                 stats.push({ n, gap, weight: weights[n] || 0 });
             }
-
-            // 第一步：選取最強拖牌樁腳
             let sortedWeights = [...stats].sort((a,b) => b.weight - a.weight);
             picked.add(sortedWeights[0].n);
-
-            // 第二步：選取最強尾數成員
             let tailMatch = stats.filter(s => s.n % 10 === topTail && !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
             if(tailMatch.length > 0) picked.add(tailMatch[0].n);
-
-            // 第三步：區間補位 (確保 3 個區間都有碼)
             const sections = [[1, 13], [14, 26], [27, 39]];
             sections.forEach(sec => {
                 let hasInSec = Array.from(picked).some(p => p >= sec[0] && p <= sec[1]);
                 if (!hasInSec) {
-                    let secCandidates = stats.filter(s => s.n >= sec[0] && s.n <= sec[1] && !picked.has(s.n))
-                                            .sort((a,b) => b.weight - a.weight);
+                    let secCandidates = stats.filter(s => s.n >= sec[0] && s.n <= sec[1] && !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
                     if (secCandidates.length > 0) picked.add(secCandidates[0].n);
                 }
             });
-
-            // 第四步：補足 5 碼 (選近期較熱但未選中的)
             let fillers = stats.filter(s => !picked.has(s.n)).sort((a,b) => b.weight - a.weight);
-            while(picked.size < 5) {
-                picked.add(fillers.shift().n);
-            }
-
+            while(picked.size < 5) { picked.add(fillers.shift().n); }
             return {
                 pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
                 mainTail: topTail + "尾",
@@ -181,17 +155,21 @@
             const testPeriod = 30;
 
             for (let i = 0; i < testPeriod; i++) {
-                if(!history[i+1]) break;
-                const res = getTrailMasterPattern(history.slice(i + 1));
+                // 以當前期的後 30 筆作為訓練模組
+                const trainingSlice = history.slice(i + 1, i + 31);
+                if(trainingSlice.length < 30) break;
+
+                const res = getTrailMasterPattern(trainingSlice);
                 const actual = history[i].nums;
                 const hits = actual.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars[hits]++;
+                
                 const predHtml = res.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 let d = history[i].date.split('T')[0].split('-').slice(1).join('/');
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 text-[10px]">${d}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-300 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500 animate-pulse' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const current = getTrailMasterPattern(history);
+            const current = getTrailMasterPattern(history.slice(0, 30));
             const winRate = (((stars[2]+stars[3]+stars[4]+stars[5])/testPeriod)*100).toFixed(0);
 
             document.getElementById('logBox').innerHTML = `
@@ -202,7 +180,7 @@
                 當期拖牌首選: <span class="text-white font-bold">${current.topTrail}</span><br>
                 熱門尾數趨勢: <span class="text-white font-bold">${current.mainTail}</span><br>
                 30期命中率 (2星+): <span class="text-orange-500 font-black text-lg">${winRate}%</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">核心：根據上期開獎號計算拖牌機率。佈局：區間平衡 (1:2:2) 確保分佈。</div>`;
+                <div class="mt-1 text-[9px] text-gray-500 italic">模式：每一回測點均使用其後 30 期資料進行動態建模。</div>`;
 
             document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
             document.getElementById('p2').innerText = `${current.pred[2]}`;
