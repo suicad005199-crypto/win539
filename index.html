@@ -33,7 +33,7 @@
             <button onclick="document.getElementById('csvInput').click()" class="text-xs bg-orange-600/20 text-orange-500 px-3 py-1 rounded-md border border-orange-500/30">上傳數據</button>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-gray-500">等待 CSV 數據上傳以啟動滾動回測策略...</span>
+            <span class="text-gray-500">等待 CSV 數據上傳以啟動矩陣圍堵策略...</span>
         </div>
     </div>
 
@@ -145,13 +145,13 @@
             const range = 39;
             const scores = Array(range + 1).fill(0);
             const tailStats = Array(10).fill(0);
-            const sectionStats = [0, 0, 0]; // 1-13, 14-26, 27-39
+            const sectionStats = [0, 0, 0]; // 01-13, 14-26, 27-39
             const lookback = data.slice(0, 30);
             
             lookback.forEach((row, idx) => {
                 const weight = (30 - idx) / 30;
                 row.nums.forEach(n => {
-                    scores[n] += (3 * weight);
+                    scores[n] += (5 * weight);
                     tailStats[n % 10] += weight;
                     if (n <= 13) sectionStats[0]++;
                     else if (n <= 26) sectionStats[1]++;
@@ -159,34 +159,39 @@
                 });
             });
 
-            // 539 尾數與區間強化
+            // 539 矩陣圍堵核心
             if (currentMode === '539') {
                 const topTails = tailStats.map((s, i) => ({ t: i, s })).sort((a, b) => b.s - a.s).slice(0, 3).map(x => x.t);
-                const hotSection = sectionStats.indexOf(Math.max(...sectionStats));
+                const hotSectionIdx = sectionStats.indexOf(Math.max(...sectionStats));
                 
                 for(let i=1; i<=range; i++) {
-                    if (topTails.includes(i % 10)) scores[i] *= 1.5; // 尾數矩陣加權
-                    if ( (hotSection === 0 && i <= 13) || (hotSection === 1 && i > 13 && i <= 26) || (hotSection === 2 && i > 26) ) {
-                        scores[i] *= 1.3; // 區間重心加權
-                    }
+                    // 尾數加權
+                    if (topTails.includes(i % 10)) scores[i] *= 1.8; 
+                    // 區間加權
+                    const currentSection = i <= 13 ? 0 : (i <= 26 ? 1 : 2);
+                    if (currentSection === hotSectionIdx) scores[i] *= 1.5;
                 }
-                data.slice(0, 1).forEach(row => row.nums.forEach(n => scores[n] *= 1.4)); // 連莊
+                // 連莊強制加權
+                data.slice(0, 1).forEach(row => row.nums.forEach(n => scores[n] *= 1.4));
             }
 
             const sorted = scores.map((s, i) => ({ n: i, s })).filter(x => x.n !== 0).sort((a,b) => b.s - a.s);
             let final8 = sorted.slice(0, 8).map(x => x.n);
             
-            return packColumnsSectional(final8);
+            return packColumnsAdvanced(final8);
         }
 
-        function packColumnsSectional(nums) {
+        function packColumnsAdvanced(nums) {
             const cols = [[], [], [], []];
-            // 將號碼按大小排序後，採用交錯填入法，增加立柱中獎覆蓋
             const sorted = [...nums].sort((a,b) => a - b);
-            cols[0] = [sorted[0], sorted[4]];
-            cols[1] = [sorted[1], sorted[5]];
-            cols[2] = [sorted[2], sorted[6]];
-            cols[3] = [sorted[3], sorted[7]];
+            
+            // 採用「塊狀對稱」分法：[最小, 最大], [次小, 次大]... 
+            // 這種分法在 539 容易拚出單柱雙中或整體 3 星以上
+            cols[0] = [sorted[0], sorted[7]];
+            cols[1] = [sorted[1], sorted[6]];
+            cols[2] = [sorted[2], sorted[5]];
+            cols[3] = [sorted[3], sorted[4]];
+
             return cols.map(c => c.map(n => n.toString().padStart(2, '0')).sort());
         }
 
@@ -199,11 +204,11 @@
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between">
-                    <span class="text-orange-500 font-bold">矩陣回測報告 [${currentMode}]</span>
+                    <span class="text-orange-500 font-bold">矩陣圍堵報告 [${currentMode}]</span>
                     <span class="text-white bg-orange-600 px-2 rounded">下期信心: ${confidence}</span>
                 </div>
                 回測期數: ${s.count} | 平均命中: ${avgStars} 星<br>
-                模式: 尾數矩陣 + 區間重心法<br>
+                策略: 尾數矩陣 + 區間重心 + 對稱立柱<br>
                 <span class="text-white">--------------------------------</span><br>
                 命中 2 星: <span class="text-white">${s.x2}</span> | 3 星: <span class="text-white">${s.x3}</span> | 4 星: <span class="text-white">${s.x4}</span>
             `;
