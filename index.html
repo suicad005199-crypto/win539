@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.50 DETERMINISTIC</title>
+    <title>ULTIMATE EVO v8.60 EXPECTATION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.50</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.60</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,47 +29,47 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: DETERMINISTIC 確定性引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: EXPECTATION 權重校準引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.50 <span id="strategyMode" class="ml-1 text-white">FIXED_8</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.60 <span id="strategyMode" class="ml-1 text-white">STRIKE</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">確定性權重計算中...</span>
+            <span class="text-orange-500/50 italic">高階權重計算中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (精確 8 碼)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (固定 8 碼)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">核心 A (1-2)</div>
+                <div class="text-[9px] text-orange-500 font-bold">熱門核心 (A)</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">核心 A (3-4)</div>
+                <div class="text-[9px] text-orange-500 font-bold">鄰位關聯 (A)</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">A5 + B1</div>
+                <div class="text-[9px] text-gray-400 font-bold">混合對沖</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">核心 B (2-3)</div>
+                <div class="text-[9px] text-gray-400 font-bold">極端遺漏 (B)</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.50 固定回測</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.60 實時回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">固定選碼</th>
+                        <th class="pb-2">建議選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -98,23 +98,36 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        function stableSort(list) {
+        function stableSort(list, seed = 0) {
             return list.sort((a, b) => {
-                if (b.val !== a.val) return b.val - a.val;
-                return a.n - b.n; 
+                if (Math.abs(b.val - a.val) > 0.1) return b.val - a.val;
+                // 權重相同時，加入期數種子擾動，增加覆蓋率
+                return ((a.n + seed) % 39) - ((b.n + seed) % 39);
             });
         }
 
         function get539Weights(history) {
             let scores = [];
+            const last3 = history.slice(0, 3).flatMap(h => h.nums);
+            const lastNums = history[0].nums;
+
             for (let n = 1; n <= 39; n++) {
                 let s = 0;
                 let gap = 0;
                 for (let r of history) { if (r.nums.includes(n)) break; gap++; }
-                if (gap >= 4 && gap <= 8) s += 15; 
-                if (gap === 0) s += 6;            
-                if (gap > 12) s += 8;             
-                scores.push({ n, val: s });
+
+                // 強化熱碼與連莊邏輯
+                if (lastNums.includes(n)) s += 10; 
+                if (last3.filter(x => x === n).length >= 2) s += 15; 
+                
+                // 鄰號加成 (連號預測)
+                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 8; });
+
+                // 遺漏補償
+                if (gap >= 4 && gap <= 8) s += 12;
+                if (gap > 15) s += 5; 
+
+                scores.push({ n, val: s, gap: gap });
             }
             return scores;
         }
@@ -122,34 +135,40 @@
         function getDailyWeights(history) {
             let scores = [];
             const lastNums = history[0].nums;
-            const prevNums = history[1].nums;
+            const last5 = history.slice(0, 5).flatMap(h => h.nums);
+
             for (let n = 1; n <= 39; n++) {
                 let s = 0;
-                if (prevNums.includes(n) && !lastNums.includes(n)) s += 12; 
-                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 7; }); 
-                let hits = history.slice(0, 5).filter(h => h.nums.includes(n)).length;
-                s += (hits * 3);
-                scores.push({ n, val: s });
+                let gap = 0;
+                for (let r of history) { if (r.nums.includes(n)) break; gap++; }
+
+                // 尾數拖碼邏輯
+                const tails = lastNums.map(x => x % 10);
+                if (tails.includes(n % 10)) s += 10;
+
+                // 頻次權重
+                s += last5.filter(x => x === n).length * 5;
+
+                // 鄰號
+                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 7; });
+
+                scores.push({ n, val: s, gap: gap });
             }
             return scores;
         }
 
-        function getV850Prediction(history) {
+        function getV860Prediction(history) {
             let weights = (currentMode === '539') ? get539Weights(history) : getDailyWeights(history);
-            
-            // 核心 A：固定前 5 碼
-            let coreA = stableSort([...weights]).slice(0, 5).map(x => x.n);
-            
-            // 核心 B：排除 A 後的前 3 碼 (達成總數 8 碼)
-            let weightsB = weights.map(w => ({
-                n: w.n,
-                val: coreA.includes(w.n) ? -99 : w.val
-            }));
-            let coreB = stableSort(weightsB).slice(0, 3).map(x => x.n);
+            const seed = history.length; 
 
-            // 最終 8 碼序列 (保持 A, B 順序以便 Panel 對應)
-            let final8 = [...coreA, ...coreB].map(x => x.toString().padStart(2, '0'));
-            return final8;
+            // 核心 A：選取熱度最高的前 5 名
+            let coreA = stableSort([...weights], seed).slice(0, 5).map(x => x.n);
+            
+            // 核心 B：強化冷碼對沖，選取遺漏值(gap)最高的前 3 名 (且不在 coreA 中)
+            let weightsB = weights.filter(w => !coreA.includes(w.n));
+            let coreB = weightsB.sort((a, b) => b.gap - a.gap).slice(0, 3).map(x => x.n);
+
+            return [...coreA, ...coreB].map(x => x.toString().padStart(2, '0'));
         }
 
         function processData(data) {
@@ -162,13 +181,12 @@
 
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const result8 = getV850Prediction(history.slice(i + 1));
+                const result = getV860Prediction(history.slice(i + 1));
                 const actual = history[i].nums;
-                const hits = actual.filter(n => result8.includes(n.toString().padStart(2,'0'))).length;
+                const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
                 
-                // 回測表格顯示排序後的號碼，方便閱讀
-                const sortedDisplay = [...result8].sort((a,b)=>a-b);
+                const sortedDisplay = [...result].sort((a,b)=>a-b);
                 const predHtml = sortedDisplay.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
@@ -179,22 +197,21 @@
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} DETERMINISTIC-V8.5</span>
-                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">SLOT-ALIGNED</span>
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} EXPECTATION-V8.6</span>
+                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">STRIKE-MODE</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                對沖結構: <span class="text-white font-bold italic">A(5) + B(3) = 8碼固定</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">對齊提示：Panel 顯示碼與回測碼完全同步，無遺漏項。</div>`;
+                策略: <span class="text-white font-bold italic">鄰號熱追 + 極冷對沖</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">校準提示：已強化近期連莊號碼與同尾數號碼之權重分配。</div>`;
 
-            const final8 = getV850Prediction(history);
-            // 精確映射 Panel
-            document.getElementById('p1').innerText = `${final8[0]},${final8[1]}`; // Core A 1-2
-            document.getElementById('p2').innerText = `${final8[2]},${final8[3]}`; // Core A 3-4
-            document.getElementById('p3').innerText = `${final8[4]},${final8[5]}`; // Core A 5 + Core B 1
-            document.getElementById('p4').innerText = `${final8[6]},${final8[7]}`; // Core B 2-3
+            const final = getV860Prediction(history);
+            document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
+            document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
+            document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
+            document.getElementById('p4').innerText = `${final[6]},${final[7]}`;
             
             document.getElementById('historyTable').innerHTML = rowsHtml;
-            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.50 確定性績效`;
+            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.60 校準績效`;
         }
     </script>
 </body>
