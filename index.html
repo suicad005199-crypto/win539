@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.90 CORE-INTEGRATION</title>
+    <title>ULTIMATE EVO v8.92 PENTA-STRIKE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
         .orange-glow { box-shadow: 0 0 45px rgba(249, 115, 22, 0.35); }
-        .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
+        .btn-active { background: var(--ios-orange); color: #000; font-weight: 900; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         .hit-num { color: #fff; font-weight: 900; background: var(--ios-orange); padding: 0 2px; border-radius: 3px; }
         table { table-layout: fixed; width: 100%; border-collapse: collapse; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">Evo 8.90</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">PENTA <span class="text-white">Strike 8.92</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-3 py-1.5 rounded-lg text-xs btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-3 py-1.5 rounded-lg text-xs btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,46 +29,35 @@
 
     <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/40">
         <div class="flex justify-between items-end mb-1">
-            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 核心整合策略引擎</label>
-            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-orange-600 px-1.5 rounded-full">INTEGRATED</span>
+            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">核心引擎：5 碼精確模式</label>
+            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-red-600 px-1.5 rounded-full">HIGH-PRECISION</span>
         </div>
-        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-24 overflow-y-auto font-mono border border-white/5 leading-snug">
-            整合 V.53.8 & V.42.2 算法中...
+        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-20 overflow-y-auto font-mono border border-white/5 leading-snug">
+            正在計算 5 碼最優路徑...
         </div>
     </div>
 
-    <div class="ios-panel p-3 mb-3 border-t-2 border-orange-600">
-        <div class="grid grid-cols-4 gap-1.5">
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
-                <div class="text-[8px] text-orange-500 font-bold mb-1 uppercase">軸心 A (高熱)</div>
-                <div class="text-base font-black text-white" id="p1">--</div>
-            </div>
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
-                <div class="text-[8px] text-orange-500 font-bold mb-1 uppercase">軸心 B (冷溫)</div>
-                <div class="text-base font-black text-white" id="p2">--</div>
-            </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[8px] text-gray-400 font-bold mb-1 uppercase">交叉共振</div>
-                <div class="text-base font-black text-white" id="p3">--</div>
-            </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[8px] text-gray-400 font-bold mb-1 uppercase">分區補償</div>
-                <div class="text-base font-black text-white" id="p4">--</div>
-            </div>
+    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-600">
+        <div class="flex justify-around items-center" id="nextPredBox">
+            <div class="text-2xl font-black text-white" id="n1">--</div>
+            <div class="text-2xl font-black text-white" id="n2">--</div>
+            <div class="text-2xl font-black text-white" id="n3">--</div>
+            <div class="text-2xl font-black text-white" id="n4">--</div>
+            <div class="text-2xl font-black text-white" id="n5">--</div>
         </div>
     </div>
 
     <div class="ios-panel p-3 flex-grow overflow-hidden flex flex-col">
         <div class="flex justify-between items-center mb-2">
-            <label class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">深度回測看板 (含整合預測)</label>
+            <label class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">深度回測 (5 碼實戰模擬)</label>
         </div>
         <div class="overflow-y-auto flex-grow">
             <table>
                 <thead class="sticky top-0 bg-[#1c1c1e] text-[10px] text-gray-500 border-b border-white/10">
                     <tr>
-                        <th class="w-[12%] py-1 text-left">日期</th>
-                        <th class="w-[33%] text-center">開獎結果</th>
-                        <th class="w-[45%] text-center">整合預測 (8M)</th>
+                        <th class="w-[15%] py-1 text-left">日期</th>
+                        <th class="w-[40%] text-center">開獎結果</th>
+                        <th class="w-[35%] text-center">預測 (5M)</th>
                         <th class="w-[10%] text-right">星</th>
                     </tr>
                 </thead>
@@ -86,7 +75,7 @@
                 const res = await fetch(API_URL);
                 rawData = await res.json();
                 processData(rawData[currentMode]);
-            } catch (e) { document.getElementById('logBox').innerText = "數據連線失敗"; }
+            } catch (e) { document.getElementById('logBox').innerText = "連線超時"; }
         }
 
         function switchMode(m) {
@@ -96,74 +85,37 @@
             if(rawData) processData(rawData[m]);
         }
 
-        // 核心整合算法
-        function getIntegratedLogic(history) {
+        function getPentaLogic(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
             const last = history[0].nums;
-            
-            // 1. 伴生矩陣 (天天樂 1轉2 的關鍵)
             let coMap = Array(40).fill(0).map(() => Array(40).fill(0));
-            history.slice(0, 30).forEach(h => {
+            history.slice(0, 35).forEach(h => {
                 h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) coMap[n1][n2]++; }));
             });
 
-            // 2. 尾數熱圖 (V.42.2 核心)
-            let tailMap = Array(10).fill(0);
-            history.slice(0, 15).forEach(h => h.nums.forEach(n => tailMap[n % 10]++));
-
             for(let i=1; i<=39; i++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
-                
-                // 排除長期冷碼 (V.53.8 策略)
-                if(gap > 18) continue;
+                if(gap > 15) continue; // 5碼模式必須捨棄極冷碼
 
-                // 基礎分數：鄰里與連莊
-                if(last.includes(i)) scores[i].s += 60;
-                last.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 85; });
-
-                // 天天樂增益：同尾 + 交叉熵 (V.53.8)
-                if(currentMode === 'Daily') {
-                    last.forEach(ln => { if(ln % 10 === i % 10) scores[i].s += 120; });
-                    last.forEach(ln => scores[i].s += coMap[ln][i] * 25);
-                } else {
-                    // 539 增益：分區保底與尾數熱度 (V.42.2)
-                    scores[i].s += (tailMap[i % 10] * 35);
-                    if(gap >= 1 && gap <= 4) scores[i].s += 55;
-                }
+                // 核心權重
+                last.forEach(ln => {
+                    if(Math.abs(ln-i) === 1) scores[i].s += 100; // 強鄰碼
+                    if(ln % 10 === i % 10) scores[i].s += 80;   // 同尾引力
+                    scores[i].s += coMap[ln][i] * (currentMode === 'Daily' ? 35 : 20); // 矩陣
+                });
+                if(gap <= 3) scores[i].s += 50; // 追蹤極熱
             }
 
             let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
             let final = new Set();
             
-            if(currentMode === '539') {
-                // 539 實施三階強分區 (Zone 1-13, 14-26, 27-39)
-                let zones = [[],[],[]];
-                for(let i=1; i<=39; i++) {
-                    let z = Math.min(Math.floor((i-1)/13), 2);
-                    zones[z].push(scores[i]);
-                }
-                // 每區取前 2-3 名，保證不落空
-                zones.forEach(z => {
-                    z.sort((a,b)=>b.s-a.s).slice(0, 2).forEach(x => final.add(x.n));
-                });
-                // 補足至 8 碼
-                for(let x of sorted) { if(final.size < 8) final.add(x.n); }
-            } else {
-                // 天天樂實施「軸心引力」選碼 (1星轉2星關鍵)
-                let seed1 = sorted[0].n;
-                final.add(seed1);
-                // 強制加入與種子1共開最高且同尾的號碼
-                let partners = scores.slice(1)
-                    .filter(x => x.n !== seed1)
-                    .sort((a,b) => (coMap[seed1][b.n] * 1.5 + (b.n%10===seed1%10?100:0)) - (coMap[seed1][a.n] * 1.5 + (a.n%10===seed1%10?100:0)));
-                
-                final.add(partners[0].n);
-                final.add(partners[1].n);
-                // 補充剩餘
-                for(let x of sorted) { if(final.size < 8) final.add(x.n); }
+            // 5碼模式直接選取最優前5名 (基於軸心共振)
+            for(let x of sorted) {
+                if(final.size >= 5) break;
+                final.add(x.n);
             }
             
-            return Array.from(final).slice(0, 8).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
+            return Array.from(final).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
         }
 
         function processData(data) {
@@ -178,39 +130,19 @@
             let stars = 0, hitCount = 0, rows = "";
             for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const pred = getIntegratedLogic(history.slice(i+1));
+                const pred = getPentaLogic(history.slice(i+1));
                 const hits = history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0')));
-                
                 stars += hits.length;
                 if(hits.length > 0) hitCount++;
-
                 const predHtml = pred.map(p => history[i].nums.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(' ');
-                
-                rows += `
-                <tr class="border-b border-white/5">
-                    <td class="py-2.5 text-gray-500 font-mono tracking-tighter">${history[i].date.split('-').slice(-2).join('/')}</td>
-                    <td class="text-white text-center font-bold tracking-tighter text-[11px]">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td>
-                    <td class="text-gray-400 text-center font-mono tracking-tighter text-[10.5px]">${predHtml}</td>
-                    <td class="text-right font-black ${hits.length >= 2 ? 'text-orange-500' : 'text-gray-600'}">${hits.length}</td>
-                </tr>`;
+                rows += `<tr class="border-b border-white/5"><td class="py-2.5 text-gray-500 font-mono tracking-tighter">${history[i].date.split('-').slice(-2).join('/')}</td><td class="text-white text-center font-bold tracking-tighter text-[11px]">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td><td class="text-gray-400 text-center font-mono tracking-tighter text-[11px]">${predHtml}</td><td class="text-right font-black ${hits.length>=1?'text-orange-500':'text-gray-700'}">${hits.length}</td></tr>`;
             }
 
-            const hitRate = (hitCount / 10 * 100).toFixed(0);
-            document.getElementById('hitRateBadge').innerText = `穩定度: ${hitRate}%`;
-            document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between border-b border-white/10 mb-1 pb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} INTEGRATED</span>
-                    <span class="text-white px-1 rounded bg-orange-700">CORE V8.90</span>
-                </div>
-                10期平均星數: <span class="text-orange-500 text-base font-black">${(stars/10).toFixed(2)} Stars</span><br>
-                策略焦點: <span class="text-white">${currentMode==='539'?'V.42.2 三階分區保底':'V.53.8 軸心同尾聚合'}</span><br>
-                <div class="text-[9px] text-gray-400 mt-1 italic italic">已成功整合數據匯入邏輯，強化天天樂成對率與 539 覆蓋率。</div>`;
+            document.getElementById('hitRateBadge').innerText = `穩定度: ${(hitCount/10*100).toFixed(0)}%`;
+            document.getElementById('logBox').innerHTML = `模式：<span class="text-orange-500">5 碼精確打擊</span><br>平均命中：<span class="text-white">${(stars/10).toFixed(2)} 碼</span><br>狀態：<span class="text-green-500">已壓制冗餘號碼，專注高共振軸心。</span>`;
 
-            const f = getIntegratedLogic(history);
-            document.getElementById('p1').innerText = `${f[0]},${f[1]}`;
-            document.getElementById('p2').innerText = `${f[2]},${f[3]}`;
-            document.getElementById('p3').innerText = `${f[4]},${f[5]}`;
-            document.getElementById('p4').innerText = `${f[6]},${f[7]}`;
+            const f = getPentaLogic(history);
+            f.forEach((val, idx) => { document.getElementById(`n${idx+1}`).innerText = val; });
             document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
