@@ -79,18 +79,18 @@
     </div>
 
     <script>
-        // 已更新為您的部署 ID
-        const API_URL = "https://script.google.com/macros/s/AKfycbzUpyh36LmMYQnQM2oWdTz6DfR51bmt9dM7-l8NqKyujBQ5RqyWT7qtc0GnCTqCpkBh6Q/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyzzXI3-YfaATyZSIpXamy-o5ZBJW3QZOtqlq3lijkRV574Jc4cf387EUwpcfqHYjy2PQ/exec";
         let currentMode = '539';
-        let fullData = [];
+        let apiResponse = null;
 
         async function fetchData() {
             try {
                 const response = await fetch(API_URL);
-                fullData = await response.json();
-                processData(fullData);
+                if (!response.ok) throw new Error('Network response was not ok');
+                apiResponse = await response.json();
+                renderActiveMode();
             } catch (error) { 
-                document.getElementById('logBox').innerText = "API 連結失敗，請檢查網路或部署權限。"; 
+                document.getElementById('logBox').innerHTML = `<span class="text-red-500">API 連結失敗</span><br>請確認 Script 已部署為「任何人」存取。`; 
             }
         }
 
@@ -98,18 +98,25 @@
             currentMode = mode;
             document.getElementById('btn539').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'} whitespace-nowrap`;
             document.getElementById('btnDaily').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'} whitespace-nowrap`;
-            if(fullData.length > 0) processData(fullData);
+            renderActiveMode();
+        }
+
+        function renderActiveMode() {
+            if (!apiResponse || !apiResponse[currentMode]) {
+                document.getElementById('logBox').innerText = `等待數據載入或找不到 ${currentMode} 分頁...`;
+                return;
+            }
+            processData(apiResponse[currentMode]);
         }
 
         function getApexPrediction(history) {
-            if (history.length === 0) return { pred: [], sIndex: 0 };
             const range = currentMode === '539' ? 39 : 36;
             let lastNums = history[0].nums;
             
             let shortCounts = Array(range + 1).fill(0);
-            history.slice(0, 7).forEach(r => r.nums.forEach(n => { if(n<=range) shortCounts[n]++ }));
+            history.slice(0, 7).forEach(r => r.nums.forEach(n => { if(n <= range) shortCounts[n]++ }));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 30).forEach(r => r.nums.forEach(n => { if(n<=range) longCounts[n]++ }));
+            history.slice(0, 30).forEach(r => r.nums.forEach(n => { if(n <= range) longCounts[n]++ }));
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -154,25 +161,25 @@
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0] ? (scores[0].val * 1.6).toFixed(2) : 0);
+            const sIndex = (scores[0].val * 1.6).toFixed(2);
             return { pred, sIndex };
         }
 
-        function processData(data) {
-            // 過濾非數據列並轉換格式
-            let history = data.filter(row => row.length >= 6 && !isNaN(parseInt(row[1]))).map(row => ({
-                date: String(row[0]).includes('T') ? row[0].split('T')[0] : row[0],
+        function processData(rawData) {
+            let history = rawData.filter(row => row.length >= 6 && !isNaN(parseInt(row[1]))).map(row => ({
+                date: String(row[0]).includes('T') ? row[0].split('T')[0] : String(row[0]),
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
 
-            if (history.length === 0) return;
-            // 確保日期由新到舊
+            if (history.length < 11) {
+                document.getElementById('logBox').innerText = "數據量不足以進行運算";
+                return;
+            }
+
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
             let stars = 0, rowsHtml = "", lastS = 0;
-            const limit = Math.min(10, history.length - 1);
-
-            for (let i = 0; i < limit; i++) {
+            for (let i = 0; i < 10; i++) {
                 const result = getApexPrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
@@ -183,7 +190,7 @@
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${String(history[i].date).substring(5).replace('-','/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const avg = (stars / limit).toFixed(2);
+            const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
                     <span class="text-orange-500 font-bold tracking-widest">EVO 6.90 APEX</span>
@@ -191,7 +198,7 @@
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
                 目標: <span class="text-white font-bold text-lg">STABILIZE 2.0 STAR</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">巔峰校準：已同步 Google Sheet 數據進行對沖運算。</div>`;
+                <div class="mt-1 text-[9px] text-gray-400 italic">巔峰校準：已識別 ${currentMode} 專屬分頁數據。</div>`;
 
             const final = getApexPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]||'--'},${final.pred[1]||'--'}`;
@@ -203,4 +210,3 @@
     </script>
 </body>
 </html>
-
