@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.40 RISK-CONTROL</title>
+    <title>ULTIMATE EVO v8.50 DETERMINISTIC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.40</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.50</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,13 +29,13 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: RISK-CONTROL 期望值監控</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: DETERMINISTIC 確定性引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.40 <span id="strategyMode" class="ml-1 text-white">NORMAL</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.50 <span id="strategyMode" class="ml-1 text-white">FIXED</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">風險管理模組加載中...</span>
+            <span class="text-orange-500/50 italic">確定性權重計算中...</span>
         </div>
     </div>
 
@@ -43,33 +43,33 @@
         <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (目標 $\ge 2.0$)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">對沖 A (主)</div>
+                <div class="text-[9px] text-orange-500 font-bold">核心 A (固定)</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">對沖 A (副)</div>
+                <div class="text-[9px] text-orange-500 font-bold">核心 A (輔)</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">對沖 B (主)</div>
+                <div class="text-[9px] text-gray-400 font-bold">核心 B (固定)</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">對沖 B (副)</div>
+                <div class="text-[9px] text-gray-400 font-bold">核心 B (輔)</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.40 績效</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.50 固定回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">對沖選碼</th>
+                        <th class="pb-2">固定選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -98,42 +98,66 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        // 策略核心 A：正態分佈/遺漏 (ID: GAUSS)
-        function strategyA(history, limit) {
+        // 核心排序：當 val 相同時，使用號碼 n 作為穩定排序依據 (Deterministic)
+        function stableSort(list) {
+            return list.sort((a, b) => {
+                if (b.val !== a.val) return b.val - a.val;
+                return a.n - b.n; // 分數相同時，小號碼優先
+            });
+        }
+
+        // 539 確定性策略 (GAUSS-FIXED)
+        function get539Weights(history) {
             let scores = [];
             for (let n = 1; n <= 39; n++) {
                 let s = 0;
                 let gap = 0;
                 for (let r of history) { if (r.nums.includes(n)) break; gap++; }
-                if (gap >= 3 && gap <= 7) s += 10;
-                if (gap === 0) s += 5;
-                scores.push({ n, val: s + Math.random() });
+                if (gap >= 4 && gap <= 8) s += 15; // 提高爆發期權重
+                if (gap === 0) s += 6;            // 連莊權重
+                if (gap > 12) s += 8;             // 冷碼反彈
+                scores.push({ n, val: s });
             }
-            return scores.sort((a,b)=>b.val-a.val).slice(0, limit).map(x=>x.n);
+            return scores;
         }
 
-        // 策略核心 B：跨期熱度/平衡 (ID: EQUIL)
-        function strategyB(history, limit, excludeList) {
+        // 天天樂確定性策略 (CHAIN-FIXED)
+        function getDailyWeights(history) {
             let scores = [];
+            const lastNums = history[0].nums;
+            const prevNums = history[1].nums;
             for (let n = 1; n <= 39; n++) {
                 let s = 0;
-                history.slice(0, 5).forEach(h => { if(h.nums.includes(n)) s += 5; });
-                if (excludeList.includes(n)) s -= 10; // 強制去交集
-                scores.push({ n, val: s + Math.random() });
+                if (prevNums.includes(n) && !lastNums.includes(n)) s += 12; // 跳島 A-B-A
+                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 7; }); // 鄰號
+                let hits = history.slice(0, 5).filter(h => h.nums.includes(n)).length;
+                s += (hits * 3);
+                scores.push({ n, val: s });
             }
-            return scores.sort((a,b)=>b.val-a.val).slice(0, limit).map(x=>x.n);
+            return scores;
         }
 
-        function getV840Prediction(history) {
-            // 監測近 3 期是否無 2 星
-            let window = history.slice(0, 3);
-            let recentHits = 0;
-            // 簡易模擬過往命中，若實際環境需精確比對
-            let isRiskMode = true; // 預設開啟積極模式以應對當前低迷
+        function getV850Prediction(history) {
+            // 滾動檢查近 3 期
+            let isBoost = false;
+            if (history.length >= 3) {
+                // 這裡的邏輯需與外部 processData 渲染邏輯一致以達成回測一致性
+                // 為了簡化，目前固定取 9 碼對沖以確保星數
+                isBoost = true; 
+            }
 
-            let limit = isRiskMode ? 5 : 4; // 對沖組各取碼數 (總合 8-10 碼)
-            let coreA = strategyA(history, limit);
-            let coreB = strategyB(history, limit, coreA.slice(0, 2)); // 限制交集
+            let weights = (currentMode === '539') ? get539Weights(history) : getDailyWeights(history);
+            
+            // 核心 A：取最高權重的前 5 名 (固定)
+            let coreA = stableSort([...weights]).slice(0, 5).map(x => x.n);
+            
+            // 核心 B：從剩餘號碼中取與 A 相關性低的 4-5 名
+            // 強制對沖：扣除 coreA 號碼的權重
+            let weightsB = weights.map(w => ({
+                n: w.n,
+                val: coreA.includes(w.n) ? w.val - 20 : w.val
+            }));
+            let coreB = stableSort(weightsB).slice(0, 4).map(x => x.n);
 
             let combined = [...new Set([...coreA, ...coreB])].sort((a,b)=>a-b);
             return combined.map(x => x.toString().padStart(2, '0'));
@@ -149,7 +173,7 @@
 
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const result = getV840Prediction(history.slice(i + 1));
+                const result = getV850Prediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
@@ -160,25 +184,25 @@
             const avg = (stars / 10).toFixed(2);
             const isAlert = avg < 2.0;
             
-            document.getElementById('strategyMode').innerText = isAlert ? "RISK-BOOST" : "STABLE";
-            document.getElementById('statusDot').className = `w-2 h-2 rounded-full mr-1 ${isAlert ? 'bg-orange-500 animate-ping' : 'bg-green-500'}`;
+            document.getElementById('strategyMode').innerText = "FIXED-CORE";
+            document.getElementById('statusDot').className = `w-2 h-2 rounded-full mr-1 ${isAlert ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`;
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} CONTROL-V8.4</span>
-                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">${isAlert ? 'BOOSTING' : 'OPTIMAL'}</span>
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} DETERMINISTIC-V8.5</span>
+                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">STABLE</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                對沖結構: <span class="text-white font-bold italic">GAUSS x EQUIL (交集≤2)</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">滾動監控：${isAlert ? '檢測到連損風險，已擴張覆蓋權重。' : '系統期望值回穩。'}</div>`;
+                對沖結構: <span class="text-white font-bold italic">FIXED A + B (交集排除)</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">確定性提示：相同數據將產出唯一結果，支援精準績效追蹤。</div>`;
 
-            const final = getV840Prediction(history);
+            const final = getV850Prediction(history);
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
             document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
             document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
             document.getElementById('p4').innerText = `${final[6]||'--'},${final[7]||'--'}`;
             document.getElementById('historyTable').innerHTML = rowsHtml;
-            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.40 對沖績效`;
+            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.50 確定性績效`;
         }
     </script>
 </body>
