@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.74 DIVERGENCE</title>
+    <title>ULTIMATE EVO v8.74b DIVERGENCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.74</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.74b</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,13 +29,13 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: DIVERGENCE 雙軌分流引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: DIVERGENCE 雙軌引擎</label>
             <div class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> v8.74 <span id="strategyMode" class="ml-1 text-white">READY</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> v8.74b <span id="strategyMode" class="ml-1 text-white">READY</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500">正在辨識開獎頻率並載入對應邏輯...</span>
+            載入引擎中...
         </div>
     </div>
 
@@ -62,7 +62,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">v8.74 分流效能回測</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">v8.74b 離散效能回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -85,86 +85,84 @@
         async function fetchData() {
             try {
                 const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
                 rawData = await response.json();
                 processData(rawData[currentMode]);
-            } catch (error) { document.getElementById('logBox').innerText = "數據連線異常"; }
+            } catch (error) { 
+                document.getElementById('logBox').innerHTML = `<span class="text-red-500">數據連線異常: ${error.message}</span>`; 
+            }
         }
 
         function switchMode(mode) {
             currentMode = mode;
             document.getElementById('btn539').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'} whitespace-nowrap`;
             document.getElementById('btnDaily').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'} whitespace-nowrap`;
-            if(rawData) processData(rawData[mode]);
+            if(rawData && rawData[mode]) processData(rawData[mode]);
         }
 
-        // --- 539 專用：Mesh-Coverage 網狀覆蓋引擎 ---
+        // --- 539 引擎：Mesh-Coverage (網狀覆蓋) ---
         function get539Engine(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
             let lastNums = history[0].nums;
             
-            // 權重：強化遺漏平衡與尾數分佈，削弱伴生
             for(let i=1; i<=39; i++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
-                if(lastNums.includes(i)) scores[i].s += 30; // 連莊權重降低
-                lastNums.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 40; }); // 鄰里仍強
-                if(gap > 12 && gap < 25) scores[i].s += 60; // 鎖定遺漏溫區
-                scores[i].gap = gap;
+                if(lastNums.includes(i)) scores[i].s += 25; 
+                lastNums.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 45; }); 
+                if(gap > 10 && gap < 22) scores[i].s += 55; // 捕捉溫碼反彈
             }
 
             let final = new Set();
             let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
 
-            // 分散採樣：確保尾數不重複過多
+            // 實施尾數平衡限制 (Mesh Logic)
             for(let item of sorted) {
                 let tail = item.n % 10;
                 let sameTailCount = [...final].filter(n => n % 10 === tail).length;
                 if(final.size < 8 && sameTailCount < 2) final.add(item.n);
             }
-            
-            // 補齊
             for(let item of sorted) { if(final.size < 8) final.add(item.n); }
 
             return { 
                 nums: Array.from(final).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0')),
                 strategy: "MESH-NETWORK",
-                info: `分層比例鎖定 | 尾數覆蓋率: ${new Set(Array.from(final).map(n=>n%10)).size}/10`
+                info: `網狀分散率: ${Math.round((new Set(Array.from(final).map(n=>n%10)).size/8)*100)}%`
             };
         }
 
-        // --- 天天樂專用：Momentum-Cluster 動態慣性引擎 ---
+        // --- 天天樂引擎：Momentum-Cluster (動態慣性) ---
         function getDailyEngine(history) {
-            const shortHistory = history.slice(0, 15); // 窗口縮短
+            const shortHistory = history.slice(0, 15);
             let coMatrix = Array(40).fill(0).map(() => Array(40).fill(0));
             shortHistory.forEach(h => {
                 h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) coMatrix[n1][n2]++; }));
             });
 
             let hotScores = Array(40).fill(0);
-            shortHistory.forEach(h => h.nums.forEach(n => hotScores[n] += 10));
+            shortHistory.forEach(h => h.nums.forEach(n => hotScores[n] += 15));
 
             let final = new Set();
-            let core = Array.from({length:39}, (_,i)=>i+1).sort((a,b)=>hotScores[b]-hotScores[a])[0];
+            let sortedHot = Array.from({length:39}, (_,i)=>i+1).sort((a,b)=>hotScores[b]-hotScores[a]);
+            
+            // 強聚類策略
+            let core = sortedHot[0];
             final.add(core);
-
-            // 激進聚類：取核心的前 3 名伴生碼
-            let partners = [...Array(40).keys()].slice(1)
-                            .sort((a,b) => coMatrix[core][b] - coMatrix[core][a]);
+            let partners = [...Array(40).keys()].slice(1).sort((a,b) => coMatrix[core][b] - coMatrix[core][a]);
             partners.slice(0, 3).forEach(p => final.add(p));
 
-            // 取次核心及其伴生
-            let core2 = Array.from({length:39}, (_,i)=>i+1)
-                        .filter(n => !final.has(n))
-                        .sort((a,b)=>hotScores[b]-hotScores[a])[0];
-            final.add(core2);
-            let partners2 = [...Array(40).keys()].slice(1)
-                            .filter(n => !final.has(n))
-                            .sort((a,b) => coMatrix[core2][b] - coMatrix[core2][a]);
-            partners2.slice(0, 3).forEach(p => final.add(p));
+            let core2 = sortedHot.find(n => !final.has(n));
+            if(core2) {
+                final.add(core2);
+                let partners2 = [...Array(40).keys()].slice(1).filter(n => !final.has(n)).sort((a,b) => coMatrix[core2][b] - coMatrix[core2][a]);
+                partners2.slice(0, 2).forEach(p => final.add(p));
+            }
+
+            while(final.size < 8) { final.add(sortedHot.find(n => !final.has(n))); }
 
             return { 
                 nums: Array.from(final).slice(0,8).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0')),
                 strategy: "MOMENTUM-CLUSTER",
-                info: `核心點: ${core.toString().padStart(2,'0')} | 連莊加權: ON | 窗口: 15期`
+                info: `聚類核心: ${core} | 窗口: 15期 | 慣性加權: MAX`
             };
         }
 
@@ -188,23 +186,22 @@
             }
 
             const currentEngine = currentMode === '539' ? get539Engine(history) : getDailyEngine(history);
-            const avg = (stars / 10).toFixed(avg >= 2.0 ? 2 : 2);
+            const finalAvg = (stars / 10).toFixed(2);
             
             document.getElementById('strategyMode').innerText = currentEngine.strategy;
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold">STRATEGY: ${currentEngine.strategy}</span>
-                    <span class="bg-white/10 text-white px-1 rounded text-[9px]">${currentMode === '539'?'6期/週':'7期/週'}</span>
+                    <span class="text-orange-500 font-bold uppercase">Logic: ${currentEngine.strategy}</span>
+                    <span class="bg-white/10 text-white px-1 rounded text-[9px] font-black italic">ACTIVE</span>
                 </div>
-                10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                引擎診斷: <span class="text-white italic">${currentEngine.info}</span><br>
-                <div class="mt-1 text-[9px] text-gray-500 italic">系統已根據${currentMode==='539'?'低頻網狀規律':'高頻慣性規律'}完成引擎重組。</div>`;
+                10期平均命中: <span class="text-orange-500 text-lg font-black">${finalAvg} 星</span><br>
+                引擎回饋: <span class="text-white font-bold">${currentEngine.info}</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">模式切換：已自動匹配${currentMode==='539'?'週六開獎':'每日開獎'}特徵。</div>`;
 
-            // UI Label 切換
-            document.getElementById('t1').innerText = currentMode === '539' ? '熱點分區' : '核心聚簇';
-            document.getElementById('t2').innerText = currentMode === '539' ? '溫感分區' : '伴生聚簇';
-            document.getElementById('t3').innerText = currentMode === '539' ? '冷碼島嶼' : '跳島冷補';
-            document.getElementById('t4').innerText = currentMode === '539' ? '尾數擾動' : '慣性擾動';
+            document.getElementById('t1').innerText = currentMode === '539' ? '網格區 A' : '核心聚簇';
+            document.getElementById('t2').innerText = currentMode === '539' ? '網格區 B' : '伴生聚簇';
+            document.getElementById('t3').innerText = currentMode === '539' ? '離散補償' : '短線冷碼';
+            document.getElementById('t4').innerText = currentMode === '539' ? '擾動平衡' : '慣性擾動';
 
             const final = currentEngine.nums;
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
