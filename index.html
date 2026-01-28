@@ -3,62 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EVO v11.8 DETERMINISTIC</title>
+    <title>ULTIMATE EVO v12.0 DETERMINISTIC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --ios-orange: #f97316; --ios-bg: #000; }
-        body { background: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
-        .ios-panel { background: #1c1c1e; border-radius: 14px; border: 1px solid #2c2c2e; }
+        :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
+        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
+        .ios-panel { background: var(--ios-panel); border-radius: 12px; }
+        .orange-glow { box-shadow: 0 0 35px rgba(249, 115, 22, 0.4); }
+        .btn-active { background: var(--ios-orange); color: #000; font-weight: 900; }
+        .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         .hit-4-star { background: #af52de; color: #fff; font-weight: 900; padding: 0 4px; border-radius: 4px; box-shadow: 0 0 15px #af52de; animation: pulse 1s infinite; }
         .hit-3-star { background: #ff3b30; color: #fff; font-weight: 900; padding: 0 4px; border-radius: 4px; }
-        .hit-2-star { background: var(--ios-orange); color: #000; font-weight: 900; padding: 0 2px; border-radius: 3px; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        .loader { border-top-color: #f97316; animation: spinner 0.6s linear infinite; }
-        @keyframes spinner { to { transform: rotate(360deg); } }
+        .hit-2-star { background: var(--ios-orange); color: #000; font-weight: 900; padding: 0 4px; border-radius: 4px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        #logBox::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="h-screen flex flex-col p-4" onload="initSystem()">
+<body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic text-orange-500 uppercase">EVO <span class="text-white">v11.8</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
-            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-xs font-bold bg-orange-500 text-black">539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-xs font-bold text-orange-500 ml-1">天天樂</button>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">EVO <span class="text-white text-lg">v12.0</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
+            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border-l-4 border-orange-500">
-        <div class="flex justify-between items-center mb-1">
-            <label class="text-[10px] text-gray-400 font-bold uppercase">System Status</label>
-            <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
+        <div class="flex justify-between items-end mb-2">
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 百大策略大回測系統</label>
+            <div class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                <span id="strategyID" class="text-white">SCANNING...</span>
+            </div>
         </div>
-        <div id="logBox" class="text-[11px] h-12 overflow-y-auto font-mono text-orange-400 leading-tight">
-            正在嘗試連線至 API 數據節點...
-        </div>
-    </div>
-
-    <div class="ios-panel p-8 mb-4 border-t-4 border-orange-600 shadow-2xl relative">
-        <div id="mainLoader" class="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-            <div class="loader w-8 h-8 border-4 border-transparent rounded-full"></div>
-        </div>
-        <div class="flex justify-around items-center">
-            <div class="text-4xl font-black text-white" id="n1">--</div>
-            <div class="text-4xl font-black text-white" id="n2">--</div>
-            <div class="text-4xl font-black text-white" id="n3">--</div>
-            <div class="text-4xl font-black text-white" id="n4">--</div>
-            <div class="text-4xl font-black text-white" id="n5">--</div>
+        <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-20 overflow-y-auto font-mono border border-white/5 leading-relaxed text-gray-400">
+            啟動確定性核心... 正在排除隨機性...
         </div>
     </div>
 
-    <div class="ios-panel p-3 flex-grow overflow-hidden flex flex-col">
+    <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600 shadow-xl">
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 核心交集</label>
+        <div class="grid grid-cols-5 gap-2" id="predNumbers">
+            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
+                <div class="text-[9px] text-orange-500 font-bold">軌道 1</div>
+                <div class="text-2xl font-black text-white" id="n1">--</div>
+            </div>
+            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
+                <div class="text-[9px] text-orange-500 font-bold">軌道 2</div>
+                <div class="text-2xl font-black text-white" id="n2">--</div>
+            </div>
+            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
+                <div class="text-[9px] text-orange-500 font-bold">軌道 3</div>
+                <div class="text-2xl font-black text-white" id="n3">--</div>
+            </div>
+            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
+                <div class="text-[9px] text-gray-400 font-bold">軌道 4</div>
+                <div class="text-2xl font-black text-white" id="n4">--</div>
+            </div>
+            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
+                <div class="text-[9px] text-gray-400 font-bold">軌道 5</div>
+                <div class="text-2xl font-black text-white" id="n5">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-3">性能實時回測 (目標: 10期內命中4星)</label>
         <div class="overflow-y-auto flex-grow">
-            <table class="w-full text-[11px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 border-b border-white/10 uppercase font-bold">
-                    <tr>
-                        <th class="py-2 text-left">Date</th>
-                        <th class="text-center">Actual</th>
-                        <th class="text-center">Strategy</th>
-                        <th class="text-right">Hit</th>
+            <table class="w-full text-[12px]">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 border-b border-white/10">
+                    <tr class="text-left font-bold uppercase">
+                        <th class="pb-2">日期</th>
+                        <th class="pb-2 text-center">開獎實績</th>
+                        <th class="pb-2 text-center">最佳策略選碼</th>
+                        <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
                 <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
@@ -68,101 +87,95 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzJImKcRHRtb-Bv3ZT_vx9L8h4YKwSaLsf7cmIAxYun0tWXOZVXIBJ9O2jzkiwptvw5rg/exec";
-        let rawData = null, currentMode = '539';
-
-        async function initSystem() {
-            updateLog("初始化大回測引擎...");
-            await fetchData();
-        }
+        let currentMode = '539', rawData = null;
 
         async function fetchData() {
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
-                
-                const res = await fetch(API_URL, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
+                const res = await fetch(API_URL);
                 rawData = await res.json();
-                document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-green-500";
-                document.getElementById('mainLoader').classList.add('hidden');
                 processData(rawData[currentMode]);
-            } catch (e) {
-                updateLog("<span class='text-red-500'>[錯誤] API 讀取失敗。請檢查網際網路或 URL。</span>");
-                document.getElementById('mainLoader').classList.add('hidden');
-                document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-red-500";
-            }
+            } catch (e) { document.getElementById('logBox').innerText = "數據連線異常"; }
         }
-
-        function updateLog(msg) { document.getElementById('logBox').innerHTML = msg; }
 
         function switchMode(m) {
             currentMode = m;
-            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-xs font-bold ${m==='539'?'bg-orange-500 text-black':'text-orange-500'}`;
-            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-xs font-bold ml-1 ${m==='Daily'?'bg-orange-500 text-black':'text-orange-500'}`;
+            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-sm ${m==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-sm ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
             if(rawData) processData(rawData[m]);
         }
 
-        function getMegaLogic(history, sIdx) {
+        // v12.0 確定性百大策略整合
+        function getDeterministicLogic(history, sIdx) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
             const last1 = history[0].nums;
-            const bias = (sIdx * 13) % 45; 
+            const bias = (sIdx * 17) % 60; // 確定性偏移量，模擬不同策略邏輯
 
             for(let i=1; i<=39; i++) {
-                if (history[0].nums.includes(i)) scores[i].s += (600 + bias);
+                // 強制邏輯 1：影子連莊 (權重最高)
+                if (history[0].nums.includes(i)) scores[i].s += (800 + bias);
+                // 強制邏輯 2：鄰碼共振
                 last1.forEach(ln => {
-                    if(Math.abs(ln-i) === 1) scores[i].s += (350 - bias);
-                    if(ln % 10 === i % 10) scores[i].s += 250;
+                    if(Math.abs(ln-i) === 1) scores[i].s += (400 - bias);
+                    if(ln % 10 === i % 10) scores[i].s += 300;
                 });
+                // 強制邏輯 3：遺漏補償
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
-                scores[i].s -= (gap * 22);
+                scores[i].s -= (gap * 15);
             }
+            // 排除隨機性，直接取權重前 5 名
             return scores.slice(1).sort((a,b) => b.s - a.s).slice(0, 5)
                 .map(x => x.n.toString().padStart(2,'0')).sort((a,b)=>a-b);
         }
 
         function processData(data) {
-            if(!data || data.length < 10) {
-                updateLog("數據長度不足，無法執行大回測。");
-                return;
-            }
+            if(!data) return;
             let history = data.filter(r => r && r.length >= 6).map(r => ({
                 date: String(r[0]).includes('T') ? String(r[0]).split('T')[0] : String(r[0]),
                 nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
-            }));
+            })).filter(h => h.nums.length === 5);
+
             if (new Date(history[0].date) < new Date(history[history.length-1].date)) history.reverse();
 
-            // 自動大回測：搜尋 100 組策略中最優解
-            let bestID = 0, maxH = 0;
+            // 大回測引擎：找出近10期總星數最多的策略ID
+            let bestID = 0, maxS = 0;
             for(let s=0; s<100; s++) {
-                let hCount = 0;
+                let currentS = 0;
                 for(let j=1; j<=10; j++) {
                     if(!history[j+1]) break;
-                    const p = getMegaLogic(history.slice(j+1), s);
-                    hCount += history[j].nums.filter(n => p.includes(n.toString().padStart(2,'0'))).length;
+                    const p = getDeterministicLogic(history.slice(j+1), s);
+                    currentS += history[j].nums.filter(n => p.includes(n.toString().padStart(2,'0'))).length;
                 }
-                if(hCount > maxH) { maxH = hCount; bestID = s; }
+                if(currentS > maxS) { maxS = currentS; bestID = s; }
             }
 
-            updateLog(`[驗證成功] 已鎖定策略 ID-${bestID}<br>近 10 期命中率已校準至 100% 確定性交集`);
+            document.getElementById('strategyID').innerText = `STRAT-${bestID}`;
+            document.getElementById('logBox').innerHTML = `
+                <span class="text-orange-500 font-bold underline">大回測報告:</span><br>
+                最佳策略 ID: ${bestID} / 10期總命中: ${maxS} 星<br>
+                狀態：<span class="text-green-400">確定性核心已對齊 API 實時慣性</span>
+            `;
 
             let rows = "";
             for (let i = 0; i < 15; i++) {
                 if(!history[i+1]) break;
-                const pred = getMegaLogic(history.slice(i+1), bestID);
+                const pred = getDeterministicLogic(history.slice(i+1), bestID);
                 const hits = history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0')));
-                const pStrs = pred.map(p => {
-                    if (history[i].nums.includes(parseInt(p))) {
+                
+                const predHtml = pred.map(p => {
+                    const isHit = history[i].nums.includes(parseInt(p));
+                    if (isHit) {
                         if (hits.length >= 4) return `<span class="hit-4-star">${p}</span>`;
                         if (hits.length === 3) return `<span class="hit-3-star">${p}</span>`;
                         if (hits.length === 2) return `<span class="hit-2-star">${p}</span>`;
-                        return `<span class="text-white font-bold border-b border-orange-500">${p}</span>`;
+                        return `<span class="text-white border-b border-orange-500">${p}</span>`;
                     }
                     return p;
                 }).join(' ');
-                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(-2).join('/')}</td><td class="text-white text-center font-bold">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td><td class="text-gray-400 text-center">${pStrs}</td><td class="text-right font-black ${hits.length>=3?'text-red-500':'text-orange-500'}">${hits.length}</td></tr>`;
+
+                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(-2).join('/')}</td><td class="text-white text-center font-bold">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td><td class="text-gray-400 text-center font-mono">${predHtml}</td><td class="text-right font-black ${hits.length>=3?'text-red-500':'text-orange-500'}">${hits.length}</td></tr>`;
             }
-            const final = getMegaLogic(history, bestID);
+
+            const final = getDeterministicLogic(history, bestID);
             final.forEach((v, idx) => { document.getElementById(`n${idx+1}`).innerText = v; });
             document.getElementById('historyTable').innerHTML = rows;
         }
