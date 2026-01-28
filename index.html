@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v7.00</title>
+    <title>ULTIMATE EVO v7.50 MATRIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.00</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.50</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: DIFFUSION 擴散演算引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: MATRIX 矩陣鎖死引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> v7.00 ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> v7.50 TARGETING 2.0+
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">系統校準中...</span>
+            <span class="text-orange-500/50 italic">矩陣掃描中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 集成輸出 (空間平衡佈局)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 鎖死輸出 (尾數對碰佈局)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">熱點核心</div>
+                <div class="text-[9px] text-orange-500 font-bold">熱碼對碰</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">空間對碰</div>
+                <div class="text-[9px] text-orange-500 font-bold">尾數共振</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">冷熱對沖</div>
+                <div class="text-[9px] text-gray-400 font-bold">同尾補位</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">結構補位</div>
+                <div class="text-[9px] text-gray-400 font-bold">奇兵對沖</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v7.00 績效回測</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v7.50 矩陣績效</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -98,15 +98,20 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getV7Prediction(history) {
+        function getV75Prediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             const lastNums = history[0].nums;
             
-            let shortCounts = Array(range + 1).fill(0);
-            history.slice(0, 7).forEach(r => r.nums.forEach(n => shortCounts[n]++));
-            
+            // 1. 尾數矩陣掃描 (近5期)
+            let tailCounts = Array(10).fill(0);
+            history.slice(0, 5).forEach(r => r.nums.forEach(n => tailCounts[n % 10]++));
+            let topTails = tailCounts.map((c, i) => ({tail: i, count: c}))
+                                     .sort((a,b) => b.count - a.count)
+                                     .slice(0, 3).map(t => t.tail);
+
+            // 2. 共生矩陣 (近20期核心對碰)
             let coMatrix = {};
-            history.slice(0, 40).forEach(h => {
+            history.slice(0, 20).forEach(h => {
                 h.nums.forEach(n1 => {
                     if(!coMatrix[n1]) coMatrix[n1] = {};
                     h.nums.forEach(n2 => { if(n1!==n2) coMatrix[n1][n2] = (coMatrix[n1][n2] || 0) + 1; });
@@ -121,50 +126,49 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                let heat = shortCounts[n] * 2.5;
+                let tail = n % 10;
+                let tailBonus = topTails.includes(tail) ? 3.0 : 1.0;
+                let gapBonus = (gaps[n] >= 2 && gaps[n] <= 8) ? 2.0 : 0.5;
                 let coScore = 0;
                 lastNums.forEach(ln => { if(coMatrix[ln] && coMatrix[ln][n]) coScore += coMatrix[ln][n]; });
-                
-                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 9) ? 2.0 : 1.0;
-                let repeatBonus = lastNums.includes(n) ? 1.5 : 1.0; // 防守連莊位
-                
+
                 scores.push({
                     n: n,
-                    val: (heat * gapBonus * repeatBonus) + (coScore * 0.8),
-                    gap: gaps[n],
-                    zone: Math.ceil(n / (range/3)) // 1:頭 2:中 3:尾
+                    val: (tailBonus * gapBonus) + (coScore * 1.2),
+                    tail: tail,
+                    gap: gaps[n]
                 });
             }
 
             let picked = new Set();
             scores.sort((a, b) => b.val - a.val);
 
-            // 1. 強攻頭中尾熱點 (確保空間覆蓋)
-            [1, 2, 3].forEach(z => {
-                let zoneBest = scores.find(s => s.zone === z);
-                if(zoneBest) picked.add(zoneBest.n);
+            // 柱1 & 2: 熱碼對碰 (選取共生最高的兩顆碼)
+            picked.add(scores[0].n);
+            picked.add(scores[1].n);
+
+            // 柱3 - 6: 尾數強制覆蓋 (3大熱門尾數各選補位碼)
+            topTails.forEach(t => {
+                let bestOfTail = scores.find(s => s.tail === t && !picked.has(s.n));
+                if(bestOfTail && picked.size < 6) picked.add(bestOfTail.n);
             });
 
-            // 2. 補充共生最強
+            // 柱7: 結構同尾加強 (確保有一組同尾對碰)
+            let firstNum = Array.from(picked)[0];
+            let sameTail = scores.find(s => s.tail === (firstNum % 10) && !picked.has(s.n));
+            if(sameTail) picked.add(sameTail.n);
+
+            // 柱8: 斷龍對沖 (僅存 1 碼冷碼)
+            let coldOne = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.gap - a.gap)[0];
+            if(coldOne) picked.add(coldOne.n);
+
+            // 補足
             let remain = scores.filter(s => !picked.has(s.n));
-            picked.add(remain[0].n);
-            picked.add(remain[1].n);
-
-            // 3. 冷熱平衡對沖
-            remain = scores.filter(s => !picked.has(s.n));
-            remain.sort((a,b) => b.gap - a.gap);
-            picked.add(remain[0].n); 
-
-            // 4. 補齊至8碼
-            remain = scores.filter(s => !picked.has(s.n));
-            remain.sort((a,b) => b.val - a.val);
-            while(picked.size < 8) {
-                picked.add(remain.shift().n);
-            }
+            while(picked.size < 8) { picked.add(remain.shift().n); }
 
             return { 
                 pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                sIndex: (scores[0].val / 5).toFixed(1)
+                sIndex: (tailCounts[topTails[0]] * 2.5).toFixed(1)
             };
         }
 
@@ -177,7 +181,7 @@
 
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const result = getV7Prediction(history.slice(i + 1));
+                const result = getV75Prediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
@@ -188,14 +192,14 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest uppercase">v7.00 CORE REPORT</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">S-IDX: ${(stars*1.2).toFixed(1)}</span>
+                    <span class="text-orange-500 font-bold tracking-widest uppercase">v7.50 MATRIX REPORT</span>
+                    <span class="bg-orange-600 text-black px-1 rounded text-[9px] font-bold">LOCKED</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略狀態: <span class="text-white font-bold italic">DIFFUSION (空間擴散)</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">已強制執行頭中尾跨區選碼，並回補連莊位防守。</div>`;
+                目標: <span class="text-white font-bold italic">MIN HIT ≥ 2 (鎖死底線)</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">MATRIX：已鎖死熱門尾數矩陣，強制 8 碼進行尾數對碰佈局。</div>`;
 
-            const final = getV7Prediction(history);
+            const final = getV75Prediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
             document.getElementById('p2').innerText = `${final.pred[2]},${final.pred[3]}`;
             document.getElementById('p3').innerText = `${final.pred[4]},${final.pred[5]}`;
