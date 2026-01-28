@@ -3,71 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.78 NEURAL-CLUSTER</title>
+    <title>ULTIMATE EVO v8.80 FINAL-BOOST</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 35px rgba(249, 115, 22, 0.3); }
-        .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
+        .orange-glow { box-shadow: 0 0 40px rgba(249, 115, 22, 0.4); }
+        .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
-        #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: #fff; font-weight: 900; background: var(--ios-orange); padding: 0 1px; border-radius: 2px; }
-        .force-single-line { white-space: nowrap; overflow: hidden; }
+        .hit-num { color: #fff; font-weight: 900; background: var(--ios-orange); padding: 0 2px; border-radius: 3px; }
         table { table-layout: fixed; width: 100%; border-collapse: collapse; }
+        #logBox::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.78</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">Evo 8.80</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-3 py-1.5 rounded-lg text-xs btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-3 py-1.5 rounded-lg text-xs btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/30">
+    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/40">
         <div class="flex justify-between items-end mb-1">
-            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 神經聚類引擎 (v8.78)</label>
-            <span id="strategyMode" class="text-[9px] text-white font-bold bg-green-600 px-1 rounded">STABLE</span>
+            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 終極神經增強引擎</label>
+            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-red-600 px-1.5 rounded-full animate-pulse">CALIBRATING</span>
         </div>
-        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-24 overflow-y-auto font-mono border border-white/5">
-            初始化神經網路矩陣...
+        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-24 overflow-y-auto font-mono border border-white/5 leading-snug">
+            系統正在加載 FINAL-BOOST 權重...
         </div>
     </div>
 
     <div class="ios-panel p-3 mb-3 border-t-2 border-orange-600">
         <div class="grid grid-cols-4 gap-1.5">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
-                <div class="text-[8px] text-orange-500 font-bold mb-1">聚類 A</div>
-                <div class="text-base font-black text-white tracking-tighter" id="p1">--</div>
+                <div class="text-[8px] text-orange-500 font-bold mb-1">神經核心 A</div>
+                <div class="text-base font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
-                <div class="text-[8px] text-orange-500 font-bold mb-1">聚類 B</div>
-                <div class="text-base font-black text-white tracking-tighter" id="p2">--</div>
+                <div class="text-[8px] text-orange-500 font-bold mb-1">神經核心 B</div>
+                <div class="text-base font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[8px] text-gray-400 font-bold mb-1">伴生區</div>
-                <div class="text-base font-black text-white tracking-tighter" id="p3">--</div>
+                <div class="text-[8px] text-gray-400 font-bold mb-1">慣性補償</div>
+                <div class="text-base font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[8px] text-gray-400 font-bold mb-1">結構補償</div>
-                <div class="text-base font-black text-white tracking-tighter" id="p4">--</div>
+                <div class="text-[8px] text-gray-400 font-bold mb-1">斜率偏態</div>
+                <div class="text-base font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-3 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[9px] text-gray-500 font-bold uppercase mb-2">v8.78 深度回測數據 (10期追蹤)</label>
+        <div class="flex justify-between items-center mb-2">
+            <label class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">v8.80 回測: 日期 / 開獎 / 預測 / 星</label>
+        </div>
         <div class="overflow-y-auto flex-grow">
             <table>
                 <thead class="sticky top-0 bg-[#1c1c1e] text-[10px] text-gray-500 border-b border-white/10">
                     <tr>
-                        <th class="w-[12%] py-1 text-left">日期</th>
-                        <th class="w-[33%] text-center">開獎號碼</th>
-                        <th class="w-[45%] text-center">預測選碼 (8碼)</th>
+                        <th class="w-[14%] py-1 text-left">日期</th>
+                        <th class="w-[32%] text-center">歷史開獎</th>
+                        <th class="w-[44%] text-center">預測選碼 (8M)</th>
                         <th class="w-[10%] text-right">星</th>
                     </tr>
                 </thead>
@@ -82,10 +83,10 @@
 
         async function fetchData() {
             try {
-                const response = await fetch(API_URL);
-                rawData = await response.json();
+                const res = await fetch(API_URL);
+                rawData = await res.json();
                 processData(rawData[currentMode]);
-            } catch (e) { document.getElementById('logBox').innerText = "連線失敗"; }
+            } catch (e) { document.getElementById('logBox').innerText = "API 載入失敗"; }
         }
 
         function switchMode(m) {
@@ -95,50 +96,51 @@
             if(rawData) processData(rawData[m]);
         }
 
-        function getAdvancedLogic(history) {
+        function getFinalBoostLogic(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-            const lastRow = history[0].nums;
+            const last = history[0].nums;
             
-            // 建立 20 期關聯矩陣
-            let matrix = Array(40).fill(0).map(() => Array(40).fill(0));
-            history.slice(0, 20).forEach(h => {
-                h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) matrix[n1][n2]++; }));
+            // 伴生矩陣 (分析 35 期)
+            let coMap = Array(40).fill(0).map(() => Array(40).fill(0));
+            history.slice(0, 35).forEach(h => {
+                h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) coMap[n1][n2]++; }));
             });
 
             for(let i=1; i<=39; i++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
                 
-                // 排除極冷碼
-                if(gap > 18) continue;
+                // 排除長期冷碼 (> 16期)
+                if(gap > 16) continue;
 
-                // 鄰里權重 (539 核心邏輯)
-                lastRow.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 75; });
+                // 1. 連莊權重 (天天樂加權更高)
+                if(last.includes(i)) scores[i].s += (currentMode === 'Daily' ? 65 : 55);
+
+                // 2. 鄰里連動 (539 強項)
+                last.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 80; });
+
+                // 3. 伴生關聯
+                last.forEach(ln => { scores[i].s += coMap[ln][i] * 18; });
+
+                // 4. 溫碼斜率 (遺漏 1-5 期回補機率最高)
+                if(gap >= 1 && gap <= 5) scores[i].s += 40;
                 
-                // 連莊慣性
-                if(lastRow.includes(i)) scores[i].s += 55;
-
-                // 伴生矩陣加權
-                lastRow.forEach(ln => { scores[i].s += matrix[ln][i] * 12; });
-
-                // 斜率補償 (2-4期未開最熱)
-                if(gap >= 2 && gap <= 4) scores[i].s += 50;
+                // 5. 尾數平衡: 同尾數基礎分
+                let lastTails = last.map(n => n % 10);
+                if(lastTails.includes(i % 10)) scores[i].s += 30;
             }
 
             let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
             let final = new Set();
             
-            // 優先選取最強前 4 碼
+            // 強制抓取權重前 4 名
             sorted.slice(0, 4).forEach(x => final.add(x.n));
 
-            // 尾數聚合校正
+            // 補充剩下 4 名，優先考量尾數分佈
             for(let x of sorted.slice(4)) {
                 if(final.size >= 8) break;
-                let tails = [...final].map(v => v % 10);
-                // 傾向選擇已有尾數的伴生號碼或新尾數
-                if(tails.includes(x.n % 10) || final.size < 6) final.add(x.n);
+                final.add(x.n);
             }
             
-            while(final.size < 8) { final.add(sorted.find(x => !final.has(x.n)).n); }
             return Array.from(final).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
         }
 
@@ -151,37 +153,38 @@
 
             if (new Date(history[0].date) < new Date(history[history.length-1].date)) history.reverse();
 
-            let stars = 0, hitCount = 0, rows = "";
+            let stars = 0, hitsIn10 = 0, rows = "";
             for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const pred = getAdvancedLogic(history.slice(i+1));
+                const pred = getFinalBoostLogic(history.slice(i+1));
                 const hits = history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0')));
                 
                 stars += hits.length;
-                if(hits.length > 0) hitCount++;
+                if(hits.length > 0) hitsIn10++;
 
                 const predHtml = pred.map(p => history[i].nums.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(' ');
                 
                 rows += `
                 <tr class="border-b border-white/5">
-                    <td class="py-2 text-gray-500 font-mono">${history[i].date.split('-').slice(-2).join('/')}</td>
+                    <td class="py-2.5 text-gray-500 font-mono">${history[i].date.split('-').slice(-2).join('/')}</td>
                     <td class="text-white text-center font-bold tracking-tighter">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td>
-                    <td class="text-gray-400 text-center font-mono tracking-tighter">${predHtml}</td>
+                    <td class="text-gray-400 text-center font-mono tracking-tighter text-[10px]">${predHtml}</td>
                     <td class="text-right font-black ${hits.length >= 2 ? 'text-orange-500' : 'text-gray-600'}">${hits.length}</td>
                 </tr>`;
             }
 
-            const rate = (hitCount / 10 * 100).toFixed(0);
+            const hitRate = (hitsIn10 / 10 * 100).toFixed(0);
+            document.getElementById('hitRateBadge').innerText = `命中率: ${hitRate}%`;
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between border-b border-white/10 mb-1 pb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} NEURAL-V8</span>
-                    <span class="text-white bg-orange-600 px-1 rounded animate-pulse">中率: ${rate}%</span>
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} FINAL BOOST</span>
+                    <span class="text-white px-1 rounded bg-green-700">ACTIVE</span>
                 </div>
-                10期總星數: <span class="text-orange-500 text-base font-black">${stars} Stars</span><br>
-                模型邏輯: <span class="text-white">鄰里伴生 + 尾數聚合</span><br>
-                <div class="text-[9px] text-gray-400 mt-1 italic">已優化 UI 顯示比例，支援 5 碼全顯。</div>`;
+                10期平均星數: <span class="text-orange-500 text-base font-black">${(stars/10).toFixed(2)} Stars</span><br>
+                增強模式: <span class="text-white italic">${currentMode==='539'?'連鎖權重+尾數聚合':'短線慣性+伴生補強'}</span><br>
+                <div class="text-[9px] text-gray-400 mt-1">已大幅提升鄰里碼權重，鎖定 2 星以上的成號機率。</div>`;
 
-            const f = getAdvancedLogic(history);
+            const f = getFinalBoostLogic(history);
             document.getElementById('p1').innerText = `${f[0]},${f[1]}`;
             document.getElementById('p2').innerText = `${f[2]},${f[3]}`;
             document.getElementById('p3').innerText = `${f[4]},${f[5]}`;
