@@ -3,202 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.60 EXPECTATION</title>
+    <title>EVO v8.60 ULTIMATE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
-        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
-        .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 30px rgba(249, 115, 22, 0.4); }
-        .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
-        .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
-        #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
-        #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.2); padding: 0 2px; }
+        :root { --ios-orange: #f97316; --ios-bg: #000; }
+        body { background: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
+        .ios-panel { background: #1c1c1e; border-radius: 14px; border: 1px solid #2c2c2e; }
+        .orange-glow { box-shadow: 0 0 40px rgba(249, 115, 22, 0.4); }
+        .hit-4-star { background: #af52de; color: #fff; font-weight: 900; padding: 0 4px; border-radius: 4px; box-shadow: 0 0 20px #af52de; animation: pulse 0.8s infinite; }
+        .hit-3-star { background: #ff3b30; color: #fff; font-weight: 900; padding: 0 4px; border-radius: 4px; box-shadow: 0 0 10px rgba(255, 59, 48, 0.5); }
+        .hit-2-star { background: var(--ios-orange); color: #000; font-weight: 900; padding: 0 4px; border-radius: 4px; }
+        .btn-active { background: var(--ios-orange); color: #000; font-weight: 900; box-shadow: 0 0 10px var(--ios-orange); }
+        .btn-inactive { background: #2c2c2e; color: var(--ios-orange); opacity: 0.6; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .scan-line { width: 100%; height: 2px; background: var(--ios-orange); position: absolute; top: 0; opacity: 0.5; animation: scan 2s linear infinite; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
     </style>
 </head>
-<body class="h-screen flex flex-col p-4" onload="fetchData()">
+<body class="h-screen flex flex-col p-4" onload="initSystem()">
 
-    <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.60</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
-            <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-black italic text-orange-500 uppercase tracking-tighter">EVO <span class="text-white text-lg">v8.60</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
+            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
+    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30 relative overflow-hidden">
+        <div class="scan-line"></div>
         <div class="flex justify-between items-end mb-2">
             <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: EXPECTATION 權重校準引擎</label>
-            <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.60 <span id="strategyMode" class="ml-1 text-white">STRIKE</span>
-            </div>
+            <span id="statusTag" class="text-[10px] text-white bg-green-600 px-2 rounded-full font-black italic">V8.60 STRIKE</span>
         </div>
-        <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">高階權重計算中...</span>
+        <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-20 overflow-y-auto font-mono text-gray-300 leading-tight border border-white/5">
+            初始化對沖結構中...
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (固定 8 碼)</label>
-        <div class="grid grid-cols-4 gap-2">
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖聚合解</label>
+        <div class="grid grid-cols-5 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">熱門核心 (A)</div>
-                <div class="text-lg font-black text-white" id="p1">--</div>
+                <div class="text-[9px] text-orange-500 font-bold">核心 1</div>
+                <div class="text-2xl font-black text-white" id="n1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">鄰位關聯 (A)</div>
-                <div class="text-lg font-black text-white" id="p2">--</div>
+                <div class="text-[9px] text-orange-500 font-bold">核心 2</div>
+                <div class="text-2xl font-black text-white" id="n2">--</div>
+            </div>
+            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
+                <div class="text-[9px] text-orange-500 font-bold">核心 3</div>
+                <div class="text-2xl font-black text-white" id="n3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">混合對沖</div>
-                <div class="text-lg font-black text-white" id="p3">--</div>
+                <div class="text-[9px] text-gray-400 font-bold">對沖 1</div>
+                <div class="text-2xl font-black text-white" id="n4">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">極端遺漏 (B)</div>
-                <div class="text-lg font-black text-white" id="p4">--</div>
+                <div class="text-[9px] text-gray-400 font-bold">對沖 2</div>
+                <div class="text-2xl font-black text-white" id="n5">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.60 實時回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
-                    <tr class="text-left border-b border-white/10">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500 border-b border-white/10 font-bold">
+                    <tr class="text-left uppercase">
                         <th class="pb-2">日期</th>
-                        <th class="pb-2">開獎</th>
-                        <th class="pb-2">建議選碼</th>
+                        <th class="pb-2 text-center">實績</th>
+                        <th class="pb-2 text-center">建議選碼 (8碼)</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
-                <tbody id="historyTable" class="divide-y divide-white/5"></tbody>
+                <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
             </table>
         </div>
     </div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzJImKcRHRtb-Bv3ZT_vx9L8h4YKwSaLsf7cmIAxYun0tWXOZVXIBJ9O2jzkiwptvw5rg/exec";
-        let currentMode = '539';
-        let rawData = null;
+        let rawData = null, currentMode = '539';
+
+        async function initSystem() { await fetchData(); }
 
         async function fetchData() {
             try {
-                const response = await fetch(API_URL);
-                rawData = await response.json();
+                const res = await fetch(API_URL);
+                rawData = await res.json();
                 processData(rawData[currentMode]);
-            } catch (error) { document.getElementById('logBox').innerText = "數據連線異常"; }
+            } catch (e) { document.getElementById('logBox').innerText = "數據連線失敗"; }
         }
 
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('btn539').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'} whitespace-nowrap`;
-            document.getElementById('btnDaily').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'} whitespace-nowrap`;
-            if(rawData) processData(rawData[mode]);
+        function switchMode(m) {
+            currentMode = m;
+            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-sm ${m==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-sm ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
+            if(rawData) processData(rawData[m]);
         }
 
-        function stableSort(list, seed = 0) {
-            return list.sort((a, b) => {
-                if (Math.abs(b.val - a.val) > 0.1) return b.val - a.val;
-                return ((a.n + seed) % 39) - ((b.n + seed) % 39);
-            });
-        }
-
-        function get539Weights(history) {
+        // v8.60 核心對沖邏輯
+        function getV860Weights(history) {
             let scores = [];
+            const lastNums = history[0].nums;
             const last3 = history.slice(0, 3).flatMap(h => h.nums);
-            const lastNums = history[0].nums;
-
-            for (let n = 1; n <= 39; n++) {
-                let s = 0;
-                let gap = 0;
-                for (let r of history) { if (r.nums.includes(n)) break; gap++; }
-
-                if (lastNums.includes(n)) s += 10; 
-                if (last3.filter(x => x === n).length >= 2) s += 15; 
-                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 8; });
-
-                if (gap >= 4 && gap <= 8) s += 12;
-                if (gap > 15) s += 5; 
-
-                scores.push({ n, val: s, gap: gap });
-            }
-            return scores;
-        }
-
-        function getDailyWeights(history) {
-            let scores = [];
-            const lastNums = history[0].nums;
             const last5 = history.slice(0, 5).flatMap(h => h.nums);
 
             for (let n = 1; n <= 39; n++) {
-                let s = 0;
-                let gap = 0;
+                let s = 0, gap = 0;
                 for (let r of history) { if (r.nums.includes(n)) break; gap++; }
 
-                const tails = lastNums.map(x => x % 10);
-                if (tails.includes(n % 10)) s += 10;
-                s += last5.filter(x => x === n).length * 5;
-                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 7; });
-
+                if (currentMode === '539') {
+                    if (lastNums.includes(n)) s += 10;
+                    if (last3.filter(x => x === n).length >= 2) s += 15;
+                    lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 8; });
+                    if (gap >= 4 && gap <= 8) s += 12;
+                } else {
+                    const tails = lastNums.map(x => x % 10);
+                    if (tails.includes(n % 10)) s += 10;
+                    s += last5.filter(x => x === n).length * 5;
+                    lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 7; });
+                }
                 scores.push({ n, val: s, gap: gap });
             }
             return scores;
         }
 
         function getV860Prediction(history) {
-            let weights = (currentMode === '539') ? get539Weights(history) : getDailyWeights(history);
-            const seed = history.length; 
+            let weights = getV860Weights(history);
+            const seed = history.length;
+            
+            let coreA = weights.sort((a, b) => {
+                if (Math.abs(b.val - a.val) > 0.1) return b.val - a.val;
+                return ((a.n + seed) % 39) - ((b.n + seed) % 39);
+            }).slice(0, 5).map(x => x.n);
 
-            let coreA = stableSort([...weights], seed).slice(0, 5).map(x => x.n);
             let weightsB = weights.filter(w => !coreA.includes(w.n));
             let coreB = weightsB.sort((a, b) => b.gap - a.gap).slice(0, 3).map(x => x.n);
 
-            return [...coreA, ...coreB].map(x => x.toString().padStart(2, '0'));
+            return [...coreA, ...coreB].map(x => parseInt(x));
         }
 
         function processData(data) {
-            if(!data) return;
-            let history = data.filter(row => row.length >= 6).map(row => ({
-                date: String(row[0]).split('T')[0],
-                nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
-            })).filter(h => h.nums.length === 5);
-            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
+            let history = data.filter(r => r && r.length >= 6 && !isNaN(parseInt(r[1]))).map(r => ({
+                date: r[0].includes('T') ? r[0].split('T')[0] : String(r[0]),
+                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            }));
+            if (new Date(history[0].date) < new Date(history[history.length-1].date)) history.reverse();
 
-            let stars = 0, rowsHtml = "";
-            for (let i = 0; i < 10; i++) {
-                const result = getV860Prediction(history.slice(i + 1));
-                const actual = history[i].nums;
-                const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
-                stars += hits;
-                
-                const sortedDisplay = [...result].sort((a,b)=>a-b);
-                const predHtml = sortedDisplay.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
+            let totalHits = 0;
+            let rows = "";
+            for (let i = 0; i < 12; i++) {
+                if(!history[i+1]) break;
+                const pred = getV860Prediction(history.slice(i+1));
+                const hits = history[i].nums.filter(n => pred.includes(n));
+                totalHits += hits.length;
+
+                const predHtml = [...pred].sort((a,b)=>a-b).map(p => {
+                    const s = p.toString().padStart(2, '0');
+                    if (history[i].nums.includes(p)) {
+                        if (hits.length >= 3) return `<span class="hit-3-star">${s}</span>`;
+                        if (hits.length === 2) return `<span class="hit-2-star">${s}</span>`;
+                        return `<span class="text-orange-500 underline font-bold">${s}</span>`;
+                    }
+                    return s;
+                }).join(',');
+
+                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.substring(5)}</td><td class="text-white text-center opacity-40">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td><td class="text-gray-400 text-center text-[11px]">${predHtml}</td><td class="text-right font-black text-orange-500">${hits.length}</td></tr>`;
             }
 
-            const avg = (stars / 10).toFixed(2);
-            document.getElementById('statusDot').className = `w-2 h-2 rounded-full mr-1 ${avg < 2.0 ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`;
-
+            const avg = (totalHits / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} EXPECTATION-V8.6</span>
-                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">STRIKE-MODE</span>
-                </div>
-                10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略: <span class="text-white font-bold italic">鄰號熱追 + 極冷對沖</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">校準提示：已恢復 v8.60 權重邏輯，強化歷史穩定性。</div>`;
+                <span class="text-orange-400 font-black">v8.60 校準完成</span><br>
+                10期平均命中：<span class="text-white">${avg} 星</span><br>
+                模式：<span class="text-blue-400 italic">鄰號熱追 + 極冷對沖 (8碼結構)</span><br>
+                狀態：穩定性優先權重已載入。
+            `;
 
             const final = getV860Prediction(history);
-            document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
-            document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
-            document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
-            document.getElementById('p4').innerText = `${final[6]},${final[7]}`;
-            
-            document.getElementById('historyTable').innerHTML = rowsHtml;
-            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.60 校準績效`;
+            // Panel 3 填入前 5 碼（核心）
+            [1,2,3,4,5].forEach(idx => {
+                document.getElementById(`n${idx}`).innerText = final[idx-1].toString().padStart(2, '0');
+            });
+            document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
 </body>
