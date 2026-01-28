@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.95 PHANTOM</title>
+    <title>ULTIMATE EVO 6.90 APEX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.95</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.90</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: CORE-X 幻影同步引擎</label>
+            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: CORE-X APEX 巔峰校準引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> PHANTOM SYNC ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> APEX STABLE ACTIVE
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">正執行尾數集群過濾與幻影補位...</span>
+            <span class="text-orange-500/50 italic">啟動負載平衡對沖機制...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: PHANTOM 集成組合 (Burst Optimized)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 集成組合 (Balanced Output)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">主核序</div>
+                <div class="text-[9px] text-orange-500 font-bold">熱點核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">共振位</div>
+                <div class="text-[9px] text-orange-500 font-bold">影子共振</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">幻影鏈</div>
+                <div class="text-[9px] text-gray-400 font-bold">冷熱對沖</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">對沖層</div>
+                <div class="text-[9px] text-gray-400 font-bold">結構補位</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X PHANTOM 績效數據</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X APEX 績效趨勢</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -98,14 +98,14 @@
             if(fullData.length > 0) processData(fullData);
         }
 
-        function getPhantomPrediction(history) {
+        function getApexPrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             let lastNums = history[0].nums;
             
             let shortCounts = Array(range + 1).fill(0);
-            history.slice(0, 8).forEach(r => r.nums.forEach(n => shortCounts[n]++));
+            history.slice(0, 7).forEach(r => r.nums.forEach(n => shortCounts[n]++));
             let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 35).forEach(r => r.nums.forEach(n => longCounts[n]++));
+            history.slice(0, 30).forEach(r => r.nums.forEach(n => longCounts[n]++));
 
             let gaps = Array(range + 1).fill(0);
             for(let n=1; n<=range; n++) {
@@ -115,15 +115,16 @@
 
             let scores = [];
             for(let n=1; n<=range; n++) {
-                let heat = (shortCounts[n] * 1.8) + (longCounts[n] * 0.25);
+                let heat = (shortCounts[n] * 1.7) + (longCounts[n] * 0.3);
                 let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
                 let isRepeat = lastNums.includes(n);
-                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 11) ? 1.8 : 1.0;
-                let hedgeScore = (gaps[n] >= 14) ? 2.8 : 0; 
+                // 擴大黃金遺漏區間，並對「極深遺漏」給予對沖分數
+                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 10) ? 1.75 : 1.0;
+                let hedgeScore = (gaps[n] >= 15) ? 2.5 : 0; 
                 
                 scores.push({
                     n: n,
-                    val: (heat * (isNeighbor ? 1.5 : 1.0) * (isRepeat ? 1.35 : 1.0) * gapBonus) + (4 / (gaps[n] + 1)) + hedgeScore,
+                    val: (heat * (isNeighbor ? 1.45 : 1.0) * (isRepeat ? 1.3 : 1.0) * gapBonus) + (3 / (gaps[n] + 1)) + hedgeScore,
                     gap: gaps[n],
                     tail: n % 10
                 });
@@ -131,46 +132,36 @@
             scores.sort((a, b) => b.val - a.val);
 
             let picked = new Set();
-            let tailCount = {}; 
+            
+            // 1. 強攻核心 (4 碼): 絕對熱點
+            scores.slice(0, 4).forEach(s => picked.add(s.n));
 
-            // 輔助函式：檢查尾數多樣性
-            const canAdd = (num) => {
-                let t = num % 10;
-                if ((tailCount[t] || 0) >= 2) return false; // 限制單一尾數最多 2 個，強迫發散提升 3 星機率
-                return true;
-            };
-
-            // 1. 核心幻影 (5 碼): 綜合 val 與尾數過濾
-            for(let s of scores) {
-                if(picked.size >= 5) break;
-                if(canAdd(s.n)) {
-                    picked.add(s.n);
-                    tailCount[s.n % 10] = (tailCount[s.n % 10] || 0) + 1;
-                }
-            }
-
-            // 2. 影子共振鏈 (3 碼): 
-            let coreArray = Array.from(picked);
+            // 2. 影子與對沖平衡 (4 碼): 
+            // - 2 碼 影子碼 (同尾/鄰號)
+            // - 2 碼 結構補位 (由非核心區與深遺漏組成)
             let candidates = scores.filter(s => !picked.has(s.n));
             
-            // 優先找與核心具備「伴生性」的號碼 (鄰號或同尾補位)
+            // 影子碼選取
+            let coreArray = Array.from(picked);
             for(let s of candidates) {
-                if(picked.size >= 8) break;
-                let isPhantom = coreArray.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.n % 10);
-                if(isPhantom && canAdd(s.n)) {
-                    picked.add(s.n);
-                    tailCount[s.n % 10] = (tailCount[s.n % 10] || 0) + 1;
-                }
+                if(picked.size >= 6) break;
+                if(coreArray.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.n % 10)) picked.add(s.n);
             }
 
-            // 最終補齊 (若因尾數過濾太嚴導致不足 8 碼)
-            for(let s of scores) {
+            // 對沖/結構補位選取 (選取剩餘候選人中 Gap 最大的或是 val 最高的)
+            candidates = scores.filter(s => !picked.has(s.n));
+            candidates.sort((a, b) => b.gap - a.gap); // 優先抓冷
+            if(candidates.length > 0) picked.add(candidates[0].n);
+            
+            // 最後補齊
+            candidates.sort((a, b) => b.val - a.val);
+            for(let s of candidates) {
                 if(picked.size >= 8) break;
-                if(!picked.has(s.n)) picked.add(s.n);
+                picked.add(s.n);
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.65).toFixed(2);
+            const sIndex = (scores[0].val * 1.6).toFixed(2);
             return { pred, sIndex };
         }
 
@@ -183,26 +174,26 @@
 
             let stars = 0, rowsHtml = "", lastS = 0;
             for (let i = 0; i < 10; i++) {
-                const result = getPhantomPrediction(history.slice(i + 1));
+                const result = getApexPrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
                 if(i===0) lastS = result.sIndex;
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 3 ? 'text-orange-500 animate-pulse' : (hits === 2 ? 'text-orange-400' : 'text-gray-700')}">${hits}</td></tr>`;
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.95 PHANTOM</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">P-INDEX: ${lastS}</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.90 APEX</span>
+                    <span class="bg-white/10 px-2 rounded text-[9px]">A-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略目標: <span class="text-white font-bold text-lg">BOOST 3-STAR BURST</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">幻影同步：實施動態尾數避讓，強迫核心碼發散以捕捉集群共振。</div>`;
+                目標: <span class="text-white font-bold text-lg">STABILIZE 2.0 STAR</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">巔峰校準：引入冷熱對沖 (Hedge)，強行拉升 0-1 星低潮期。</div>`;
 
-            const final = getPhantomPrediction(history);
+            const final = getApexPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
             document.getElementById('p2').innerText = `${final.pred[2]},${final.pred[3]}`;
             document.getElementById('p3').innerText = `${final.pred[4]},${final.pred[5]}`;
