@@ -3,80 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.76 HIGH-PRESSURE</title>
+    <title>ULTIMATE EVO v8.78 NEURAL-CLUSTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 40px rgba(249, 115, 22, 0.4); }
+        .orange-glow { box-shadow: 0 0 35px rgba(249, 115, 22, 0.3); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
-        #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
         #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: #fff; font-weight: 900; background: var(--ios-orange); padding: 0 2px; border-radius: 3px; }
-        /* 確保不換行的核心 CSS */
-        .force-single-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        table { table-layout: fixed; width: 100%; }
+        .hit-num { color: #fff; font-weight: 900; background: var(--ios-orange); padding: 0 1px; border-radius: 2px; }
+        .force-single-line { white-space: nowrap; overflow: hidden; }
+        table { table-layout: fixed; width: 100%; border-collapse: collapse; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
-    <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">Evo 8.76</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
-            <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.78</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
+            <button id="btn539" onclick="switchMode('539')" class="px-3 py-1.5 rounded-lg text-xs btn-active whitespace-nowrap">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-3 py-1.5 rounded-lg text-xs btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
-        <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 高壓聚類打擊引擎</label>
-            <div class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> v8.76 <span id="strategyMode" class="ml-1 text-white">ACTIVE</span>
-            </div>
+    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/30">
+        <div class="flex justify-between items-end mb-1">
+            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 神經聚類引擎 (v8.78)</label>
+            <span id="strategyMode" class="text-[9px] text-white font-bold bg-green-600 px-1 rounded">STABLE</span>
         </div>
-        <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            正在計算聚類權重...
+        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-24 overflow-y-auto font-mono border border-white/5">
+            初始化神經網路矩陣...
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label id="panel3Title" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 核心注碼分佈</label>
-        <div class="grid grid-cols-4 gap-2">
-            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold" id="t1">核心區 A</div>
-                <div class="text-lg font-black text-white" id="p1">--</div>
+    <div class="ios-panel p-3 mb-3 border-t-2 border-orange-600">
+        <div class="grid grid-cols-4 gap-1.5">
+            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
+                <div class="text-[8px] text-orange-500 font-bold mb-1">聚類 A</div>
+                <div class="text-base font-black text-white tracking-tighter" id="p1">--</div>
             </div>
-            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold" id="t2">核心區 B</div>
-                <div class="text-lg font-black text-white" id="p2">--</div>
+            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
+                <div class="text-[8px] text-orange-500 font-bold mb-1">聚類 B</div>
+                <div class="text-base font-black text-white tracking-tighter" id="p2">--</div>
             </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold" id="t3">伴生補償</div>
-                <div class="text-lg font-black text-white" id="p3">--</div>
+            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
+                <div class="text-[8px] text-gray-400 font-bold mb-1">伴生區</div>
+                <div class="text-base font-black text-white tracking-tighter" id="p3">--</div>
             </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold" id="t4">擾動修正</div>
-                <div class="text-lg font-black text-white" id="p4">--</div>
+            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
+                <div class="text-[8px] text-gray-400 font-bold mb-1">結構補償</div>
+                <div class="text-base font-black text-white tracking-tighter" id="p4">--</div>
             </div>
         </div>
     </div>
 
-    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">v8.76 實測回報 (命中率目標 60%↑)</label>
+    <div class="ios-panel p-3 flex-grow overflow-hidden flex flex-col">
+        <label class="text-[9px] text-gray-500 font-bold uppercase mb-2">v8.78 深度回測數據 (10期追蹤)</label>
         <div class="overflow-y-auto flex-grow">
-            <table class="w-full text-[11px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
-                    <tr class="text-left border-b border-white/10">
-                        <th class="w-10 pb-2">日期</th>
-                        <th class="w-24 pb-2 text-center">開獎</th>
-                        <th class="pb-2 text-center">聚類選碼</th>
-                        <th class="w-6 pb-2 text-right">星</th>
+            <table>
+                <thead class="sticky top-0 bg-[#1c1c1e] text-[10px] text-gray-500 border-b border-white/10">
+                    <tr>
+                        <th class="w-[12%] py-1 text-left">日期</th>
+                        <th class="w-[33%] text-center">開獎號碼</th>
+                        <th class="w-[45%] text-center">預測選碼 (8碼)</th>
+                        <th class="w-[10%] text-right">星</th>
                     </tr>
                 </thead>
-                <tbody id="historyTable" class="divide-y divide-white/5"></tbody>
+                <tbody id="historyTable" class="divide-y divide-white/5 text-[10.5px]"></tbody>
             </table>
         </div>
     </div>
@@ -90,114 +85,108 @@
                 const response = await fetch(API_URL);
                 rawData = await response.json();
                 processData(rawData[currentMode]);
-            } catch (error) { 
-                document.getElementById('logBox').innerText = "數據連線異常，檢查網路環境。"; 
-            }
+            } catch (e) { document.getElementById('logBox').innerText = "連線失敗"; }
         }
 
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('btn539').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'} whitespace-nowrap`;
-            document.getElementById('btnDaily').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'} whitespace-nowrap`;
-            if(rawData) processData(rawData[mode]);
+        function switchMode(m) {
+            currentMode = m;
+            document.getElementById('btn539').className = `px-3 py-1.5 rounded-lg text-xs ${m==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-3 py-1.5 rounded-lg text-xs ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
+            if(rawData) processData(rawData[m]);
         }
 
-        // --- v8.76 高壓聚類邏輯 ---
-        function getHighPressureLogic(history) {
+        function getAdvancedLogic(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
             const lastRow = history[0].nums;
             
-            // 建立伴生矩陣 (過去 30 期)
-            let coMatrix = Array(40).fill(0).map(() => Array(40).fill(0));
-            history.slice(0, 30).forEach(h => {
-                h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) coMatrix[n1][n2]++; }));
+            // 建立 20 期關聯矩陣
+            let matrix = Array(40).fill(0).map(() => Array(40).fill(0));
+            history.slice(0, 20).forEach(h => {
+                h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) matrix[n1][n2]++; }));
             });
 
             for(let i=1; i<=39; i++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
                 
-                // 1. 強力連莊與鄰里 (權重最高)
-                if(lastRow.includes(i)) scores[i].s += 60;
-                lastRow.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 70; });
+                // 排除極冷碼
+                if(gap > 18) continue;
 
-                // 2. 伴生關聯 (聚類核心)
-                lastRow.forEach(ln => { scores[i].s += coMatrix[ln][i] * 15; });
+                // 鄰里權重 (539 核心邏輯)
+                lastRow.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 75; });
+                
+                // 連莊慣性
+                if(lastRow.includes(i)) scores[i].s += 55;
 
-                // 3. 溫碼回補 (遺漏 2-5 期)
-                if(gap >= 2 && gap <= 5) scores[i].s += 50;
+                // 伴生矩陣加權
+                lastRow.forEach(ln => { scores[i].s += matrix[ln][i] * 12; });
+
+                // 斜率補償 (2-4期未開最熱)
+                if(gap >= 2 && gap <= 4) scores[i].s += 50;
             }
 
             let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
             let final = new Set();
             
-            // 強制選取前 4 名作為「聚類核心」
+            // 優先選取最強前 4 碼
             sorted.slice(0, 4).forEach(x => final.add(x.n));
-            
-            // 剩下的 4 名則補足不同尾數以防止極端偏態
-            for(let i=4; i<sorted.length && final.size < 8; i++) {
-                let tail = sorted[i].n % 10;
-                let sameTail = [...final].filter(v => v % 10 === tail).length;
-                if(sameTail < 2) final.add(sorted[i].n);
+
+            // 尾數聚合校正
+            for(let x of sorted.slice(4)) {
+                if(final.size >= 8) break;
+                let tails = [...final].map(v => v % 10);
+                // 傾向選擇已有尾數的伴生號碼或新尾數
+                if(tails.includes(x.n % 10) || final.size < 6) final.add(x.n);
             }
             
-            // 最終防禦：若不足 8 碼則按分數補足
             while(final.size < 8) { final.add(sorted.find(x => !final.has(x.n)).n); }
-
             return Array.from(final).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
         }
 
         function processData(data) {
             if(!data) return;
-            let history = data.filter(row => row && row.length >= 6).map(row => ({
-                date: String(row[0]).includes('T') ? String(row[0]).split('T')[0] : String(row[0]),
-                nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+            let history = data.filter(r => r && r.length >= 6).map(r => ({
+                date: String(r[0]).includes('T') ? String(r[0]).split('T')[0] : String(r[0]),
+                nums: r.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
 
-            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
+            if (new Date(history[0].date) < new Date(history[history.length-1].date)) history.reverse();
 
-            let stars = 0, hitRounds = 0, rowsHtml = "";
-            const testLimit = 10;
-
-            for (let i = 0; i < testLimit; i++) {
+            let stars = 0, hitCount = 0, rows = "";
+            for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const result = getHighPressureLogic(history.slice(i+1));
-                const hits = history[i].nums.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
+                const pred = getAdvancedLogic(history.slice(i+1));
+                const hits = history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0')));
                 
-                stars += hits;
-                if(hits > 0) hitRounds++;
+                stars += hits.length;
+                if(hits.length > 0) hitCount++;
 
-                const predHtml = result.map(p => {
-                    const isHit = history[i].nums.includes(parseInt(p));
-                    return isHit ? `<span class="hit-num">${p}</span>` : p;
-                }).join(' ');
+                const predHtml = pred.map(p => history[i].nums.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(' ');
                 
-                rowsHtml += `
+                rows += `
                 <tr class="border-b border-white/5">
-                    <td class="py-2.5 text-gray-500 force-single-line">${history[i].date.split('-').slice(-2).join('/')}</td>
-                    <td class="font-mono text-white text-center force-single-line">${history[i].nums.map(n => n.toString().padStart(2,'0')).join(' ')}</td>
-                    <td class="font-mono text-gray-400 text-center text-[10px] force-single-line">${predHtml}</td>
-                    <td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-600'}">${hits}</td>
+                    <td class="py-2 text-gray-500 font-mono">${history[i].date.split('-').slice(-2).join('/')}</td>
+                    <td class="text-white text-center font-bold tracking-tighter">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td>
+                    <td class="text-gray-400 text-center font-mono tracking-tighter">${predHtml}</td>
+                    <td class="text-right font-black ${hits.length >= 2 ? 'text-orange-500' : 'text-gray-600'}">${hits.length}</td>
                 </tr>`;
             }
 
-            const hitRate = (hitRounds / testLimit * 100).toFixed(0);
-            const avg = (stars / testLimit).toFixed(2);
-            
+            const rate = (hitCount / 10 * 100).toFixed(0);
             document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} HIGH-PRESSURE</span>
-                    <span class="bg-orange-600 text-white px-1 rounded text-[9px] font-black">聚類命中: ${hitRate}%</span>
+                <div class="flex justify-between border-b border-white/10 mb-1 pb-1">
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} NEURAL-V8</span>
+                    <span class="text-white bg-orange-600 px-1 rounded animate-pulse">中率: ${rate}%</span>
                 </div>
-                10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略狀態: <span class="text-white font-bold italic">已強化核心注碼聚合度</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">警告：本模式會捨棄邊緣冷碼，專攻強勢連鎖區塊。</div>`;
+                10期總星數: <span class="text-orange-500 text-base font-black">${stars} Stars</span><br>
+                模型邏輯: <span class="text-white">鄰里伴生 + 尾數聚合</span><br>
+                <div class="text-[9px] text-gray-400 mt-1 italic">已優化 UI 顯示比例，支援 5 碼全顯。</div>`;
 
-            const final = getHighPressureLogic(history);
-            document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
-            document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
-            document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
-            document.getElementById('p4').innerText = `${final[6]},${final[7]}`;
-            document.getElementById('historyTable').innerHTML = rowsHtml;
+            const f = getAdvancedLogic(history);
+            document.getElementById('p1').innerText = `${f[0]},${f[1]}`;
+            document.getElementById('p2').innerText = `${f[2]},${f[3]}`;
+            document.getElementById('p3').innerText = `${f[4]},${f[5]}`;
+            document.getElementById('p4').innerText = `${f[6]},${f[7]}`;
+            document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
 </body>
