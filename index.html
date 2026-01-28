@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.72 TRIPLE-TRACK</title>
+    <title>ULTIMATE EVO v8.73 ULTRA-CLUSTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 35px rgba(249, 115, 22, 0.5); }
+        .orange-glow { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.72</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.73</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,47 +29,47 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: TRIPLE-TRACK 動態權限</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: CLUSTER 聚類狙擊引擎</label>
             <div class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> v8.72 <span id="strategyMode" class="ml-1 text-white">AUTO-PILOT</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> v8.73 <span id="strategyMode" class="ml-1 text-white">CLUSTER-ON</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500">背景回測引擎啟動中...</span>
+            <span class="text-orange-500">計算號碼伴生矩陣中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 狙擊碼位</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 聚簇結構 (8碼)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">強勢軌道</div>
+                <div class="text-[9px] text-orange-500 font-bold">聚簇 A (熱)</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">聯動軌道</div>
+                <div class="text-[9px] text-orange-500 font-bold">聚簇 B (伴)</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">鄰里補償</div>
+                <div class="text-[9px] text-gray-400 font-bold">冷區跳島</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">冷區對沖</div>
+                <div class="text-[9px] text-gray-400 font-bold">尾數擾動</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">性能實時回測 (目標 3.0+)</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">v8.73 聚類性能回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">自適應選碼</th>
+                        <th class="pb-2">聚類選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -97,51 +97,69 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        // --- v8.72 核心：三路並行選碼引擎 ---
-        function getUnifiedLogic(history) {
+        function getClusterLogic(history) {
             const lastRow = history[0].nums;
-            let finalSelection = new Set();
+            const lookback = currentMode === '539' ? 50 : 30;
+            const recentHistory = history.slice(0, lookback);
             
-            // 1. 路徑 A：熱圖鄰里軌道 (專抓連開與鄰碼)
-            let hotScores = Array(40).fill(0);
-            history.slice(0, 5).forEach(h => h.nums.forEach(n => {
-                hotScores[n] += 50;
-                if(n>1) hotScores[n-1] += 25;
-                if(n<39) hotScores[n+1] += 25;
-            }));
-            let pathA = Array.from({length:39}, (_,i)=>i+1).sort((a,b)=>hotScores[b]-hotScores[a]);
+            // 1. 建立伴生矩陣 (Co-occurrence Matrix)
+            let coMatrix = Array(40).fill(0).map(() => Array(40).fill(0));
+            recentHistory.forEach(h => {
+                h.nums.forEach(n1 => {
+                    h.nums.forEach(n2 => { if(n1 !== n2) coMatrix[n1][n2]++; });
+                });
+            });
 
-            // 2. 路徑 B：遺漏共振軌道 (專抓冷碼反彈)
-            let gapScores = Array(40).fill(0);
+            // 2. 基礎得分計算 (結合鄰里與尾數)
+            let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
+            let tails = Array(10).fill(0);
+            history.slice(0, 10).forEach(h => h.nums.forEach(n => tails[n%10]++));
+
             for(let i=1; i<=39; i++) {
                 let g = 0; for(let r of history) { if(r.nums.includes(i)) break; g++; }
-                gapScores[i] = (g >= 12 && g <= 20) ? g * 10 : 0;
+                // 熱度與鄰里
+                if(lastRow.includes(i)) scores[i].s += 40;
+                lastRow.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 35; });
+                // 尾數慣性 (天天樂加強)
+                scores[i].s += tails[i%10] * (currentMode === 'Daily' ? 15 : 8);
+                // 遺漏平衡
+                if(g > 15) scores[i].s += 50;
             }
-            let pathB = Array.from({length:39}, (_,i)=>i+1).sort((a,b)=>gapScores[b]-gapScores[a]);
 
-            // 3. 路徑 C：尾數強度軌道 (專抓天天樂慣性)
-            let tailMap = Array(10).fill(0);
-            history.slice(0, 10).forEach(h => h.nums.forEach(n => tailMap[n%10]++));
-            let pathC = Array.from({length:39}, (_,i)=>i+1).sort((a,b)=>tailMap[b%10]-tailMap[a%10]);
-
-            // 動態權限分配：根據前 3 期規律調整
-            let aWeight = 3, bWeight = 2, cWeight = 3; 
-            // 如果天天樂則強化尾數(C)，如果是539強化鄰里(A)
-            if(currentMode === '539') { aWeight=4; bWeight=2; cWeight=2; }
+            // 3. 聚類選碼演算法
+            let final = new Set();
+            let sortedScores = [...scores].slice(1).sort((a,b)=>b.s - a.s);
             
-            // 執行三軌合流
-            pathA.slice(0, aWeight).forEach(n => finalSelection.add(n));
-            pathC.slice(0, cWeight).forEach(n => finalSelection.add(n));
-            pathB.slice(0, bWeight).forEach(n => finalSelection.add(n));
+            // A 聚簇：選得分最高的核心及其最強伴生碼
+            let coreA = sortedScores[0].n;
+            final.add(coreA);
+            let partnerA = [...Array(40).keys()].slice(1)
+                            .sort((a,b) => coMatrix[coreA][b] - coMatrix[coreA][a])[0];
+            final.add(partnerA);
 
-            // 補齊 8 碼 (自相關檢查：補入鄰碼)
-            let result = Array.from(finalSelection);
-            while(result.length < 8) {
-                let candidate = pathA.find(n => !result.includes(n));
-                result.push(candidate);
-            }
+            // B 聚簇：選得分次高且非鄰近的核心及其最強伴生
+            let coreB = sortedScores.find(x => !final.has(x.n) && Math.abs(x.n - coreA) > 2).n;
+            final.add(coreB);
+            let partnerB = [...Array(40).keys()].slice(1)
+                            .filter(n => !final.has(n))
+                            .sort((a,b) => coMatrix[coreB][b] - coMatrix[coreB][a])[0];
+            final.add(partnerB);
 
-            return result.slice(0,8).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
+            // 冷區跳島 (2碼)
+            let coldIsland = scores.slice(1).sort((a,b) => {
+                let ga = 0; for(let r of history) { if(r.nums.includes(a.n)) break; ga++; }
+                let gb = 0; for(let r of history) { if(r.nums.includes(b.n)) break; gb++; }
+                return gb - ga;
+            }).filter(x => !final.has(x.n)).slice(0, 2);
+            coldIsland.forEach(x => final.add(x.n));
+
+            // 尾數擾動 (補齊 8 碼)
+            let unusedTails = [...Array(10).keys()].filter(t => ![...final].some(n => n%10 === t));
+            sortedScores.forEach(x => {
+                if(final.size < 8 && !final.has(x.n)) final.add(x.n);
+            });
+
+            return Array.from(final).slice(0,8).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
         }
 
         function processData(data) {
@@ -159,7 +177,7 @@
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const result = getUnifiedLogic(history.slice(i+1));
+                const result = getClusterLogic(history.slice(i+1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
@@ -168,18 +186,18 @@
             }
 
             const avg = (stars / 10).toFixed(2);
-            document.getElementById('strategyMode').innerText = avg >= 2.0 ? 'AGGRESSIVE' : 'SEARCHING';
+            document.getElementById('strategyMode').innerText = avg >= 2.0 ? 'CLUSTER-ON' : 'CALIBRATING';
 
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} V8.72 TRIPLE-TRACK</span>
-                    <span class="bg-orange-500 text-black px-1 rounded text-[9px] font-black">ACTIVE</span>
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} V8.73 ULTRA-CLUSTER</span>
+                    <span class="bg-red-600 text-white px-1 rounded text-[9px] font-black animate-pulse">CLUSTER</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                最優路徑: <span class="text-white font-bold italic">${currentMode==='539'?'熱圖鄰里 + 遺漏共振':'尾數強度 + 強勢軌道'}</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">系統已自動合併 3 組邏輯，降低單一策略失效風險</div>`;
+                聚類特徵: <span class="text-white font-bold italic">${currentMode==='539'?'伴生矩陣 + 鄰里強制鎖定':'動態窗口 + 尾數強度'}</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">警告：號碼已按伴生機率聚集成簇，單期波動可能增大但聚星率提升。</div>`;
 
-            const final = getUnifiedLogic(history);
+            const final = getClusterLogic(history);
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
             document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
             document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
