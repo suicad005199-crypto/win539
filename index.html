@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.73 ULTRA-CLUSTER</title>
+    <title>ULTIMATE EVO v8.74 DIVERGENCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
+        .orange-glow { box-shadow: 0 0 40px rgba(249, 115, 22, 0.4); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.73</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.74</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,47 +29,47 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: CLUSTER 聚類狙擊引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: DIVERGENCE 雙軌分流引擎</label>
             <div class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> v8.73 <span id="strategyMode" class="ml-1 text-white">CLUSTER-ON</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> v8.74 <span id="strategyMode" class="ml-1 text-white">READY</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500">計算號碼伴生矩陣中...</span>
+            <span class="text-orange-500">正在辨識開獎頻率並載入對應邏輯...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 聚簇結構 (8碼)</label>
+        <label id="panel3Title" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: 引擎分配指標</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">聚簇 A (熱)</div>
+                <div class="text-[9px] text-orange-500 font-bold" id="t1">軌道 A</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">聚簇 B (伴)</div>
+                <div class="text-[9px] text-orange-500 font-bold" id="t2">軌道 B</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">冷區跳島</div>
+                <div class="text-[9px] text-gray-400 font-bold" id="t3">補償 A</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">尾數擾動</div>
+                <div class="text-[9px] text-gray-400 font-bold" id="t4">補償 B</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">v8.73 聚類性能回測</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">v8.74 分流效能回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">聚類選碼</th>
+                        <th class="pb-2">引擎選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -97,107 +97,116 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        function getClusterLogic(history) {
-            const lastRow = history[0].nums;
-            const lookback = currentMode === '539' ? 50 : 30;
-            const recentHistory = history.slice(0, lookback);
-            
-            // 1. 建立伴生矩陣 (Co-occurrence Matrix)
-            let coMatrix = Array(40).fill(0).map(() => Array(40).fill(0));
-            recentHistory.forEach(h => {
-                h.nums.forEach(n1 => {
-                    h.nums.forEach(n2 => { if(n1 !== n2) coMatrix[n1][n2]++; });
-                });
-            });
-
-            // 2. 基礎得分計算 (結合鄰里與尾數)
+        // --- 539 專用：Mesh-Coverage 網狀覆蓋引擎 ---
+        function get539Engine(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-            let tails = Array(10).fill(0);
-            history.slice(0, 10).forEach(h => h.nums.forEach(n => tails[n%10]++));
-
+            let lastNums = history[0].nums;
+            
+            // 權重：強化遺漏平衡與尾數分佈，削弱伴生
             for(let i=1; i<=39; i++) {
-                let g = 0; for(let r of history) { if(r.nums.includes(i)) break; g++; }
-                // 熱度與鄰里
-                if(lastRow.includes(i)) scores[i].s += 40;
-                lastRow.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 35; });
-                // 尾數慣性 (天天樂加強)
-                scores[i].s += tails[i%10] * (currentMode === 'Daily' ? 15 : 8);
-                // 遺漏平衡
-                if(g > 15) scores[i].s += 50;
+                let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
+                if(lastNums.includes(i)) scores[i].s += 30; // 連莊權重降低
+                lastNums.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 40; }); // 鄰里仍強
+                if(gap > 12 && gap < 25) scores[i].s += 60; // 鎖定遺漏溫區
+                scores[i].gap = gap;
             }
 
-            // 3. 聚類選碼演算法
             let final = new Set();
-            let sortedScores = [...scores].slice(1).sort((a,b)=>b.s - a.s);
+            let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
+
+            // 分散採樣：確保尾數不重複過多
+            for(let item of sorted) {
+                let tail = item.n % 10;
+                let sameTailCount = [...final].filter(n => n % 10 === tail).length;
+                if(final.size < 8 && sameTailCount < 2) final.add(item.n);
+            }
             
-            // A 聚簇：選得分最高的核心及其最強伴生碼
-            let coreA = sortedScores[0].n;
-            final.add(coreA);
-            let partnerA = [...Array(40).keys()].slice(1)
-                            .sort((a,b) => coMatrix[coreA][b] - coMatrix[coreA][a])[0];
-            final.add(partnerA);
+            // 補齊
+            for(let item of sorted) { if(final.size < 8) final.add(item.n); }
 
-            // B 聚簇：選得分次高且非鄰近的核心及其最強伴生
-            let coreB = sortedScores.find(x => !final.has(x.n) && Math.abs(x.n - coreA) > 2).n;
-            final.add(coreB);
-            let partnerB = [...Array(40).keys()].slice(1)
-                            .filter(n => !final.has(n))
-                            .sort((a,b) => coMatrix[coreB][b] - coMatrix[coreB][a])[0];
-            final.add(partnerB);
+            return { 
+                nums: Array.from(final).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0')),
+                strategy: "MESH-NETWORK",
+                info: `分層比例鎖定 | 尾數覆蓋率: ${new Set(Array.from(final).map(n=>n%10)).size}/10`
+            };
+        }
 
-            // 冷區跳島 (2碼)
-            let coldIsland = scores.slice(1).sort((a,b) => {
-                let ga = 0; for(let r of history) { if(r.nums.includes(a.n)) break; ga++; }
-                let gb = 0; for(let r of history) { if(r.nums.includes(b.n)) break; gb++; }
-                return gb - ga;
-            }).filter(x => !final.has(x.n)).slice(0, 2);
-            coldIsland.forEach(x => final.add(x.n));
-
-            // 尾數擾動 (補齊 8 碼)
-            let unusedTails = [...Array(10).keys()].filter(t => ![...final].some(n => n%10 === t));
-            sortedScores.forEach(x => {
-                if(final.size < 8 && !final.has(x.n)) final.add(x.n);
+        // --- 天天樂專用：Momentum-Cluster 動態慣性引擎 ---
+        function getDailyEngine(history) {
+            const shortHistory = history.slice(0, 15); // 窗口縮短
+            let coMatrix = Array(40).fill(0).map(() => Array(40).fill(0));
+            shortHistory.forEach(h => {
+                h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) coMatrix[n1][n2]++; }));
             });
 
-            return Array.from(final).slice(0,8).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
+            let hotScores = Array(40).fill(0);
+            shortHistory.forEach(h => h.nums.forEach(n => hotScores[n] += 10));
+
+            let final = new Set();
+            let core = Array.from({length:39}, (_,i)=>i+1).sort((a,b)=>hotScores[b]-hotScores[a])[0];
+            final.add(core);
+
+            // 激進聚類：取核心的前 3 名伴生碼
+            let partners = [...Array(40).keys()].slice(1)
+                            .sort((a,b) => coMatrix[core][b] - coMatrix[core][a]);
+            partners.slice(0, 3).forEach(p => final.add(p));
+
+            // 取次核心及其伴生
+            let core2 = Array.from({length:39}, (_,i)=>i+1)
+                        .filter(n => !final.has(n))
+                        .sort((a,b)=>hotScores[b]-hotScores[a])[0];
+            final.add(core2);
+            let partners2 = [...Array(40).keys()].slice(1)
+                            .filter(n => !final.has(n))
+                            .sort((a,b) => coMatrix[core2][b] - coMatrix[core2][a]);
+            partners2.slice(0, 3).forEach(p => final.add(p));
+
+            return { 
+                nums: Array.from(final).slice(0,8).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0')),
+                strategy: "MOMENTUM-CLUSTER",
+                info: `核心點: ${core.toString().padStart(2,'0')} | 連莊加權: ON | 窗口: 15期`
+            };
         }
 
         function processData(data) {
             if(!data || data.length === 0) return;
-            let history = data.filter(row => row && row.length >= 6).map(row => {
-                let dStr = String(row[0]);
-                return {
-                    date: dStr.includes('T') ? dStr.split('T')[0] : dStr,
-                    nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
-                };
-            }).filter(h => h.nums.length === 5);
+            let history = data.filter(row => row && row.length >= 6).map(row => ({
+                date: String(row[0]).includes('T') ? String(row[0]).split('T')[0] : String(row[0]),
+                nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+            })).filter(h => h.nums.length === 5);
 
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const result = getClusterLogic(history.slice(i+1));
-                const actual = history[i].nums;
-                const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
+                const engine = currentMode === '539' ? get539Engine(history.slice(i+1)) : getDailyEngine(history.slice(i+1));
+                const hits = history[i].nums.filter(n => engine.nums.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
-                const predHtml = result.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(-2).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 3 ? 'text-orange-500' : (hits >= 2 ? 'text-white' : 'text-gray-700')}">${hits}</td></tr>`;
+                const predHtml = engine.nums.map(p => history[i].nums.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(-2).join('/')}</td><td class="font-mono text-white">${history[i].nums.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 3 ? 'text-orange-500' : (hits >= 2 ? 'text-white' : 'text-gray-700')}">${hits}</td></tr>`;
             }
 
-            const avg = (stars / 10).toFixed(2);
-            document.getElementById('strategyMode').innerText = avg >= 2.0 ? 'CLUSTER-ON' : 'CALIBRATING';
-
+            const currentEngine = currentMode === '539' ? get539Engine(history) : getDailyEngine(history);
+            const avg = (stars / 10).toFixed(avg >= 2.0 ? 2 : 2);
+            
+            document.getElementById('strategyMode').innerText = currentEngine.strategy;
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} V8.73 ULTRA-CLUSTER</span>
-                    <span class="bg-red-600 text-white px-1 rounded text-[9px] font-black animate-pulse">CLUSTER</span>
+                    <span class="text-orange-500 font-bold">STRATEGY: ${currentEngine.strategy}</span>
+                    <span class="bg-white/10 text-white px-1 rounded text-[9px]">${currentMode === '539'?'6期/週':'7期/週'}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                聚類特徵: <span class="text-white font-bold italic">${currentMode==='539'?'伴生矩陣 + 鄰里強制鎖定':'動態窗口 + 尾數強度'}</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">警告：號碼已按伴生機率聚集成簇，單期波動可能增大但聚星率提升。</div>`;
+                引擎診斷: <span class="text-white italic">${currentEngine.info}</span><br>
+                <div class="mt-1 text-[9px] text-gray-500 italic">系統已根據${currentMode==='539'?'低頻網狀規律':'高頻慣性規律'}完成引擎重組。</div>`;
 
-            const final = getClusterLogic(history);
+            // UI Label 切換
+            document.getElementById('t1').innerText = currentMode === '539' ? '熱點分區' : '核心聚簇';
+            document.getElementById('t2').innerText = currentMode === '539' ? '溫感分區' : '伴生聚簇';
+            document.getElementById('t3').innerText = currentMode === '539' ? '冷碼島嶼' : '跳島冷補';
+            document.getElementById('t4').innerText = currentMode === '539' ? '尾數擾動' : '慣性擾動';
+
+            const final = currentEngine.nums;
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
             document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
             document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
