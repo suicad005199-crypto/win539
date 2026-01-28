@@ -3,66 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v7.85 MATRIX</title>
+    <title>ULTIMATE EVO v8.00 NEURAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 25px rgba(249, 115, 22, 0.4); }
+        .orange-glow { box-shadow: 0 0 30px rgba(249, 115, 22, 0.5); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
         #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.1); padding: 0 1px; }
+        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; background: rgba(249,115,22,0.2); padding: 0 2px; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 7.85</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.00</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
+    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: MATRIX 鎖死引擎 (39-Ball Fix)</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: NEURAL-LOCK 神經鎖定引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> v7.85 ACTIVE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> v8.00 STABLE
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">數據同步中...</span>
+            <span class="text-orange-500/50 italic">神經元網路計算中...</span>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 鎖死輸出 (同尾/鄰號/連莊)</label>
+    <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 鎖死輸出 (遺漏補償/黃金對碰)</label>
         <div class="grid grid-cols-4 gap-2">
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">熱點核心</div>
+            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
+                <div class="text-[9px] text-orange-500 font-bold">核心對碰 A</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">鄰號聯動</div>
+            <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
+                <div class="text-[9px] text-orange-500 font-bold">核心對碰 B</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">尾數共振</div>
+            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
+                <div class="text-[9px] text-gray-400 font-bold">熱尾鎖定</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">結構補位</div>
+            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
+                <div class="text-[9px] text-gray-400 font-bold">遺漏補償</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期績效回測</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.00 績效回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -98,51 +98,69 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        function getV785Prediction(history) {
-            const range = 39; // 天天樂與539皆為39球
+        function getV800Prediction(history) {
+            const range = 39;
             const lastNums = history[0].nums;
-            
-            // 建立鄰號池 (±1)
-            let neighborPool = [];
-            lastNums.forEach(n => {
-                if(n > 1) neighborPool.push(n - 1);
-                if(n < 39) neighborPool.push(n + 1);
-            });
 
-            let tailCounts = Array(10).fill(0);
-            history.slice(0, 5).forEach(r => r.nums.forEach(n => tailCounts[n % 10]++));
-            let topTails = tailCounts.map((c, i) => ({tail: i, count: c}))
-                                     .sort((a,b) => b.count - a.count).slice(0, 3).map(t => t.tail);
-
-            let scores = [];
-            for(let n=1; n<=range; n++) {
-                let tail = n % 10;
-                let tailBonus = topTails.includes(tail) ? 2.5 : 1.0;
-                // 天天樂模式下強化鄰號權重
-                let neighborBonus = neighborPool.includes(n) ? (currentMode === 'Daily' ? 2.5 : 1.8) : 1.0;
-                let repeatBonus = lastNums.includes(n) ? (currentMode === 'Daily' ? 1.6 : 1.4) : 1.0;
-                
-                scores.push({ n: n, val: (tailBonus * neighborBonus * repeatBonus), tail: tail });
+            // 1. 計算遺漏值 (Gaps)
+            let gaps = Array(range + 1).fill(0);
+            for (let n = 1; n <= range; n++) {
+                let g = 0;
+                for (let r of history) { if (r.nums.includes(n)) break; g++; }
+                gaps[n] = g;
             }
 
-            let picked = new Set();
-            scores.sort((a, b) => b.val - a.val);
+            // 2. 尾數強度 (近10期)
+            let tailStrength = Array(10).fill(0);
+            history.slice(0, 10).forEach(r => r.nums.forEach(n => tailStrength[n % 10]++));
 
-            // 核心與鄰號
-            picked.add(scores[0].n);
-            picked.add(scores[1].n);
-
-            // 尾數覆蓋
-            topTails.forEach(t => {
-                let best = scores.find(s => s.tail === t && !picked.has(s.n));
-                if(best && picked.size < 6) picked.add(best.n);
+            // 3. 鄰號池
+            let neighbors = new Set();
+            lastNums.forEach(n => {
+                if(n > 1) neighbors.add(n - 1);
+                if(n < 39) neighbors.add(n + 1);
             });
 
-            // 補位至8碼
-            let remain = scores.filter(s => !picked.has(s.n));
-            while(picked.size < 8) { picked.add(remain.shift().n); }
+            // 4. NEURAL 綜合評分
+            let scores = [];
+            for (let n = 1; n <= range; n++) {
+                let s = 0;
+                // 遺漏補償邏輯：偏好遺漏 2-7 期的「爆發碼」
+                if (gaps[n] >= 2 && gaps[n] <= 7) s += 4.5;
+                // 尾數加成
+                s += (tailStrength[n % 10] * 0.8);
+                // 鄰號與連莊
+                if (neighbors.has(n)) s += 3.0;
+                if (lastNums.includes(n)) s += 2.0;
+                
+                // 天天樂模式額外加成近期熱碼
+                if (currentMode === 'Daily' && gaps[n] === 0) s += 2.0;
 
-            return Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
+                scores.push({ n: n, val: s, tail: n % 10, gap: gaps[n] });
+            }
+
+            scores.sort((a, b) => b.val - a.val);
+
+            // 5. 鎖定輸出
+            let picked = [];
+            // 強制選取評分前二為「核心對碰」
+            picked.push(scores[0].n, scores[1].n);
+            
+            // 尋找不同尾數的熱碼
+            let usedTails = new Set(picked.map(n => n % 10));
+            for (let s of scores.slice(2)) {
+                if (picked.length < 6 && !usedTails.has(s.tail)) {
+                    picked.push(s.n);
+                    usedTails.add(s.tail);
+                }
+            }
+
+            // 補足 8 碼 (遺漏補償碼)
+            for (let s of scores) {
+                if (picked.length < 8 && !picked.includes(s.n)) picked.push(s.n);
+            }
+
+            return picked.sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
         }
 
         function processData(data) {
@@ -155,7 +173,7 @@
 
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const result = getV785Prediction(history.slice(i + 1));
+                const result = getV800Prediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
@@ -166,20 +184,20 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest uppercase">${currentMode} MATRIX</span>
-                    <span class="bg-white/10 px-1 rounded text-[9px]">v7.85</span>
+                    <span class="text-orange-500 font-bold tracking-widest uppercase">${currentMode} NEURAL-V8</span>
+                    <span class="bg-orange-600 text-black px-1 rounded text-[9px] font-bold">LOCKED</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略狀態: <span class="text-white font-bold italic">${currentMode === 'Daily' ? '鄰號加強型 (39球)' : '共生穩定型 (39球)'}</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">已校正天天樂為 39 球制，並優化鄰號捕獲權重。</div>`;
+                策略模式: <span class="text-white font-bold italic">遺漏補償 + 二次尾數過濾</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">v8.00：大幅強化遺漏 2-7 期之爆發碼權重，鎖定 2.0 星目標。</div>`;
 
-            const final = getV785Prediction(history);
+            const final = getV800Prediction(history);
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
             document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
             document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
             document.getElementById('p4').innerText = `${final[6]},${final[7]}`;
             document.getElementById('historyTable').innerHTML = rowsHtml;
-            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} 績效回測`;
+            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.00 績效`;
         }
     </script>
 </body>
