@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.80 PATTERN</title>
+    <title>ULTIMATE EVO v8.80 PATTERN-RECOGNITION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: PATTERN RECOGNITION 規律識別引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: PATTERN-RECOGNITION 模式識別引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.80 <span id="strategyMode" class="ml-1 text-white">CLUSTER</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.80 <span id="strategyMode" class="ml-1 text-white">RECOGNIZER</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">落點密集度分析中...</span>
+            <span class="text-orange-500/50 italic">模式落點掃描中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: STRATIFIED HEDGING 階梯式對沖 (8 碼)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (密集 8 碼)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">熱路組 (Tier 1)</div>
+                <div class="text-[9px] text-orange-500 font-bold">熱路組 (A)</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">活水組 (Tier 2)</div>
+                <div class="text-[9px] text-orange-500 font-bold">活水組 (A)</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">混合/尾數</div>
+                <div class="text-[9px] text-gray-400 font-bold">活水 + 冷壁</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">冷壁組 (Tier 3)</div>
+                <div class="text-[9px] text-gray-400 font-bold">冷壁防禦 (B)</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.80 階梯回測</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.80 模式回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -98,63 +98,48 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        function getWeightedData(history) {
-            let stats = [];
+        function getV880Prediction(history) {
+            let weights = [];
             const lastNums = history[0].nums;
-            const tails = lastNums.map(n => n % 10);
-            
-            // 區域密集度分析
-            let zoneHeat = { 0:0, 1:0, 2:0, 3:0 }; 
-            history.slice(0, 3).flatMap(h => h.nums).forEach(n => zoneHeat[Math.floor(n/10)]++);
+            const last5Nums = history.slice(0, 5).flatMap(h => h.nums);
+            const tails = lastNums.map(x => x % 10);
 
             for (let n = 1; n <= 39; n++) {
                 let s = 0;
                 let gap = 0;
                 for (let r of history) { if (r.nums.includes(n)) break; gap++; }
 
-                // 1. 基礎遺漏分數 (正向趨勢)
-                if (gap === 0) s += 15; // 連莊
-                if (gap === 1) s += 10; // 隔期
-                if (gap >= 3 && gap <= 7) s += 8; // 均值區
+                // 核心：密集落點追蹤 (不再強制分散區間)
+                if (lastNums.includes(n)) s += 15; // 連莊權重提升
+                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 10; }); // 鄰號
+                
+                // 尾數垂直加乘 (天天樂優化)
+                if (currentMode === 'Daily' && tails.includes(n % 10)) s += 12;
+                
+                // 頻次補償
+                s += last5Nums.filter(x => x === n).length * 5;
 
-                // 2. 區域密集加成 (落點集中)
-                s += zoneHeat[Math.floor(n/10)] * 2;
-
-                // 3. 539/天天樂 差異化邏輯
-                if (currentMode === '539') {
-                    lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 12; }); // 鄰號
-                } else {
-                    if (tails.includes(n % 10)) s += 15; // 尾數串連
-                }
-
-                stats.push({ n, val: s, gap });
+                weights.push({ n, s, gap });
             }
-            return stats;
-        }
 
-        function getV880Prediction(history) {
-            let stats = getWeightedData(history);
-            
             // 階梯式配比 (3:3:2)
-            // Tier 1: 熱路組 (Gap 0-2)
-            let tier1 = stats.filter(x => x.gap <= 2).sort((a,b) => b.val - a.val).slice(0, 3).map(x => x.n);
-            
-            // Tier 2: 活水組 (Gap 3-9)
-            let tier2 = stats.filter(x => x.gap >= 3 && x.gap <= 9 && !tier1.includes(x.n))
-                             .sort((a,b) => b.val - a.val).slice(0, 3).map(x => x.n);
-            
-            // Tier 3: 冷壁組 (Gap 10+)
-            let tier3 = stats.filter(x => x.gap >= 10 && !tier1.includes(x.n) && !tier2.includes(x.n))
-                             .sort((a,b) => b.val - a.val).slice(0, 2).map(x => x.n);
+            // 1. 熱路組 (Gap 0-2)
+            let hotGroup = weights.filter(w => w.gap <= 2).sort((a,b) => b.s - a.s).slice(0, 3);
+            // 2. 活水組 (Gap 3-9)
+            let activeGroup = weights.filter(w => w.gap >= 3 && w.gap <= 9).sort((a,b) => b.s - a.s).slice(0, 3);
+            // 3. 冷壁組 (Gap 10+)
+            let coldGroup = weights.filter(w => w.gap >= 10).sort((a,b) => b.s - a.s).slice(0, 2);
 
-            // 兜底處理：如果某層不足，由其他層補足
-            let final8 = [...tier1, ...tier2, ...tier3];
-            if (final8.length < 8) {
-                let remain = stats.filter(x => !final8.includes(x.n)).sort((a,b) => b.val - a.val);
-                final8 = final8.concat(remain.slice(0, 8 - final8.length).map(x => x.n));
+            // 整合並補足 (若某組不足則由全域權重補齊)
+            let combined = [...hotGroup, ...activeGroup, ...coldGroup];
+            let result = combined.map(w => w.n);
+            
+            if (result.length < 8) {
+                let fallback = weights.filter(w => !result.includes(w.n)).sort((a,b) => b.s - a.s);
+                result = [...result, ...fallback.slice(0, 8 - result.length).map(w => w.n)];
             }
 
-            return final8.map(x => x.toString().padStart(2, '0'));
+            return result.slice(0, 8).map(x => x.toString().padStart(2, '0'));
         }
 
         function processData(data) {
@@ -181,19 +166,19 @@
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
                     <span class="text-orange-500 font-bold uppercase">${currentMode} PATTERN-V8.8</span>
-                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">STRATIFIED</span>
+                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">RECOGNIZER</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                架構: <span class="text-white font-bold italic">階梯遺漏配比 (3:3:2)</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">模式提示：已停用區間平衡，轉向區域密集度追蹤與尾數垂直對齊。</div>`;
+                架構: <span class="text-white font-bold italic">階梯式配比 (3:3:2) 已就緒</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">系統提示：已關閉強制區間平衡，目前全力追蹤「遺漏分層」密集規律。</div>`;
 
             const final = getV880Prediction(history);
-            document.getElementById('p1').innerText = `${final[0]},${final[1]},${final[2]}`;
-            document.getElementById('p2').innerText = `${final[3]},${final[4]}`;
-            document.getElementById('p3').innerText = `${final[5]}`;
+            document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
+            document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
+            document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
             document.getElementById('p4').innerText = `${final[6]},${final[7]}`;
             document.getElementById('historyTable').innerHTML = rowsHtml;
-            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.80 階梯績效`;
+            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.80 模式回測`;
         }
     </script>
 </body>
