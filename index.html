@@ -31,31 +31,31 @@
         <div class="flex justify-between items-end mb-2">
             <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: EXPECTATION 權重校準引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.60 <span id="strategyMode" class="ml-1 text-white">STRIKE</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.60 <span id="strategyMode" class="ml-1 text-white">AI-OPTIMIZED</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">高階權重計算中...</span>
+            <span class="text-orange-500/50 italic">深度權重運算中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (固定 8 碼)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (動態 8 碼)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">熱門核心 (A)</div>
+                <div class="text-[9px] text-orange-500 font-bold">核心權重</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">鄰位關聯 (A)</div>
+                <div class="text-[9px] text-orange-500 font-bold">版路聯動</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">混合對沖</div>
+                <div class="text-[9px] text-gray-400 font-bold">環境感知</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">極端遺漏 (B)</div>
+                <div class="text-[9px] text-gray-400 font-bold">對沖遺漏</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
@@ -98,49 +98,76 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        function stableSort(list, seed = 0) {
-            return list.sort((a, b) => {
-                if (Math.abs(b.val - a.val) > 0.1) return b.val - a.val;
-                return ((a.n + seed) % 39) - ((b.n + seed) % 39);
-            });
+        // 環境感知：分析近期冷熱分佈
+        function getEnvironmentalContext(history) {
+            const last3 = history.slice(0, 3).flatMap(h => h.nums);
+            const hotCount = last3.length;
+            const uniqueCount = new Set(last3).size;
+            // 重複率高代表走熱門，重複率低代表走冷門/遺漏
+            const repeatRate = (hotCount - uniqueCount) / hotCount;
+            return { repeatRate, isHotTrend: repeatRate > 0.2 };
         }
 
+        // --- 今彩 539 獨立權重模型 ---
         function get539Weights(history) {
             let scores = [];
-            const last3 = history.slice(0, 3).flatMap(h => h.nums);
             const lastNums = history[0].nums;
+            const prevNums = history[1].nums;
+            const last3Flat = history.slice(0, 3).flatMap(h => h.nums);
+            const tails = lastNums.map(n => n % 10);
 
             for (let n = 1; n <= 39; n++) {
                 let s = 0;
                 let gap = 0;
                 for (let r of history) { if (r.nums.includes(n)) break; gap++; }
 
-                if (lastNums.includes(n)) s += 10; 
-                if (last3.filter(x => x === n).length >= 2) s += 15; 
-                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 8; });
+                // 1. 指數連莊加權
+                const repeatCount = last3Flat.filter(x => x === n).length;
+                if (repeatCount > 0) s += Math.pow(repeatCount, 2) * 8;
 
-                if (gap >= 4 && gap <= 8) s += 12;
-                if (gap > 15) s += 5; 
+                // 2. 版路規律：斜連號偵測 (10-11-? -> 12)
+                lastNums.forEach(ln => {
+                    prevNums.forEach(pn => {
+                        if (ln - pn === 1 && n - ln === 1) s += 15; // 正斜連
+                        if (pn - ln === 1 && ln - n === 1) s += 15; // 倒斜連
+                    });
+                    if (Math.abs(ln - n) === 1) s += 6; // 基礎鄰號
+                });
+
+                // 3. 尾數規律
+                if (tails.includes(n % 10)) s += 7;
+
+                // 4. 遺漏補償 (539 常用黃金遺漏區 5-9期)
+                if (gap >= 5 && gap <= 9) s += 10;
 
                 scores.push({ n, val: s, gap: gap });
             }
             return scores;
         }
 
+        // --- 天天樂 獨立權重模型 ---
         function getDailyWeights(history) {
             let scores = [];
             const lastNums = history[0].nums;
-            const last5 = history.slice(0, 5).flatMap(h => h.nums);
-
+            const last5Flat = history.slice(0, 5).flatMap(h => h.nums);
+            
             for (let n = 1; n <= 39; n++) {
                 let s = 0;
                 let gap = 0;
                 for (let r of history) { if (r.nums.includes(n)) break; gap++; }
 
-                const tails = lastNums.map(x => x % 10);
-                if (tails.includes(n % 10)) s += 10;
-                s += last5.filter(x => x === n).length * 5;
-                lastNums.forEach(ln => { if (Math.abs(ln - n) === 1) s += 7; });
+                // 1. 天天樂特性：熱號極熱 (加重近期頻率權重)
+                const freq = last5Flat.filter(x => x === n).length;
+                s += freq * 9;
+
+                // 2. 鄰號與同尾
+                lastNums.forEach(ln => {
+                    if (Math.abs(ln - n) === 1) s += 5;
+                    if (ln % 10 === n % 10) s += 8;
+                });
+
+                // 3. 長期遺漏反彈 (天天樂遺漏大於12期易反彈)
+                if (gap > 12) s += 12;
 
                 scores.push({ n, val: s, gap: gap });
             }
@@ -148,14 +175,20 @@
         }
 
         function getV860Prediction(history) {
+            const ctx = getEnvironmentalContext(history);
             let weights = (currentMode === '539') ? get539Weights(history) : getDailyWeights(history);
-            const seed = history.length; 
+            
+            // 排序與選碼
+            const sortedWeights = [...weights].sort((a, b) => b.val - a.val);
+            
+            // 根據環境感知動態分配：若趨勢走熱，增加權重碼；若趨勢走冷，增加遺漏碼
+            let coreSize = ctx.isHotTrend ? 6 : 4;
+            let coreA = sortedWeights.slice(0, coreSize).map(x => x.n);
+            
+            let remaining = weights.filter(w => !coreA.includes(w.n));
+            let coreB = remaining.sort((a, b) => b.gap - a.gap).slice(0, 8 - coreSize).map(x => x.n);
 
-            let coreA = stableSort([...weights], seed).slice(0, 5).map(x => x.n);
-            let weightsB = weights.filter(w => !coreA.includes(w.n));
-            let coreB = weightsB.sort((a, b) => b.gap - a.gap).slice(0, 3).map(x => x.n);
-
-            return [...coreA, ...coreB].map(x => x.toString().padStart(2, '0'));
+            return [...coreA, ...coreB].sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
         }
 
         function processData(data) {
@@ -173,23 +206,23 @@
                 const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
                 
-                const sortedDisplay = [...result].sort((a,b)=>a-b);
-                const predHtml = sortedDisplay.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+                const predHtml = result.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
             const avg = (stars / 10).toFixed(2);
-            document.getElementById('statusDot').className = `w-2 h-2 rounded-full mr-1 ${avg < 2.0 ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`;
+            const ctx = getEnvironmentalContext(history);
 
+            document.getElementById('statusDot').className = `w-2 h-2 rounded-full mr-1 ${avg < 1.1 ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`;
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} EXPECTATION-V8.6</span>
-                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">STRIKE-MODE</span>
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} V8.6 AI-CORE</span>
+                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">${ctx.isHotTrend ? 'HOT-TREND' : 'GAP-REBOUND'}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略: <span class="text-white font-bold italic">鄰號熱追 + 極冷對沖</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">校準提示：已恢復 v8.60 權重邏輯，強化歷史穩定性。</div>`;
+                感知狀態: <span class="text-white font-bold italic">${ctx.isHotTrend ? '熱度連動中' : '遺漏值補償中'}</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">模式：${currentMode === '539' ? '版路斜連 + 尾數追蹤' : '頻率優先 + 長期遺漏對沖'}</div>`;
 
             const final = getV860Prediction(history);
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
@@ -198,7 +231,7 @@
             document.getElementById('p4').innerText = `${final[6]},${final[7]}`;
             
             document.getElementById('historyTable').innerHTML = rowsHtml;
-            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.60 校準績效`;
+            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.60 優化績效`;
         }
     </script>
 </body>
