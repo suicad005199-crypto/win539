@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.93 BINARY-THRESHOLD</title>
+    <title>ULTIMATE EVO v8.95 QUAD-CORE STRIKE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 45px rgba(249, 115, 22, 0.3); }
+        .orange-glow { box-shadow: 0 0 50px rgba(249, 115, 22, 0.4); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 900; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
-        /* 命中樣式設定 */
         .hit-2-star { color: #000; font-weight: 900; background: var(--ios-orange); padding: 0 2px; border-radius: 3px; }
         .hit-1-star { color: #fff; font-weight: 900; border-bottom: 2px solid #fff; }
         table { table-layout: fixed; width: 100%; border-collapse: collapse; }
@@ -22,20 +21,20 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">PENTA <span class="text-white">v8.93</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">v8.95</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-3 py-1.5 rounded-lg text-xs btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-3 py-1.5 rounded-lg text-xs btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/40">
+    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-1">
-            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">分析引擎：2星門檻模式</label>
-            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-orange-600 px-1.5 rounded-full">THRESHOLD SET</span>
+            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">目標：4星結構打擊 (5M Mode)</label>
+            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-red-600 px-1.5 rounded-full">QUAD-TARGET</span>
         </div>
-        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-20 overflow-y-auto font-mono border border-white/5 leading-snug">
-            整合軸心數據中...
+        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-20 overflow-y-auto font-mono border border-white/5 leading-snug text-green-400">
+            四星算法加載完畢... 偵測結構共振中...
         </div>
     </div>
 
@@ -51,15 +50,15 @@
 
     <div class="ios-panel p-3 flex-grow overflow-hidden flex flex-col">
         <div class="flex justify-between items-center mb-2">
-            <label class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">深度回測 (中2碼觸發橘燈)</label>
+            <label class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">深度回測 (中2碼橘亮 / 挑戰3-4星)</label>
         </div>
         <div class="overflow-y-auto flex-grow">
             <table>
                 <thead class="sticky top-0 bg-[#1c1c1e] text-[10px] text-gray-500 border-b border-white/10">
                     <tr>
                         <th class="w-[15%] py-1 text-left">日期</th>
-                        <th class="w-[35%] text-center">開獎</th>
-                        <th class="w-[40%] text-center">預測 (5M)</th>
+                        <th class="w-[35%] text-center">歷史開獎</th>
+                        <th class="w-[40%] text-center">5碼衝擊 (8M)</th>
                         <th class="w-[10%] text-right">星</th>
                     </tr>
                 </thead>
@@ -70,14 +69,14 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzJImKcRHRtb-Bv3ZT_vx9L8h4YKwSaLsf7cmIAxYun0tWXOZVXIBJ9O2jzkiwptvw5rg/exec";
-        let currentMode = '539', rawData = null;
+        let rawData = null, currentMode = '539';
 
         async function fetchData() {
             try {
                 const res = await fetch(API_URL);
                 rawData = await res.json();
                 processData(rawData[currentMode]);
-            } catch (e) { document.getElementById('logBox').innerText = "連線失敗"; }
+            } catch (e) { document.getElementById('logBox').innerText = "DATA ERROR"; }
         }
 
         function switchMode(m) {
@@ -87,32 +86,59 @@
             if(rawData) processData(rawData[m]);
         }
 
-        function getPentaLogic(history) {
+        function getQuadStrikeLogic(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
             const last = history[0].nums;
-            let coMap = Array(40).fill(0).map(() => Array(40).fill(0));
-            history.slice(0, 35).forEach(h => {
-                h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) coMap[n1][n2]++; }));
+            
+            // 建立 40 期深度關聯矩陣 (4星的核心在於對對碰)
+            let matrix = Array(40).fill(0).map(() => Array(40).fill(0));
+            history.slice(0, 40).forEach(h => {
+                h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) matrix[n1][n2]++; }));
             });
 
+            // 1. 強化單碼基礎權重
             for(let i=1; i<=39; i++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
-                if(gap > 15) continue;
+                if(gap > 16) continue;
                 last.forEach(ln => {
-                    if(Math.abs(ln-i) === 1) scores[i].s += 100;
-                    if(ln % 10 === i % 10) scores[i].s += 85;
-                    scores[i].s += coMap[ln][i] * (currentMode === 'Daily' ? 38 : 22);
+                    if(Math.abs(ln-i) === 1) scores[i].s += 120; // 極限鄰碼
+                    if(ln % 10 === i % 10) scores[i].s += 90;   // 結構同尾
+                    scores[i].s += matrix[ln][i] * (currentMode === 'Daily' ? 45 : 30);
                 });
-                if(gap <= 3) scores[i].s += 50;
+                if(gap <= 2) scores[i].s += 60; // 極熱追蹤
             }
 
-            let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
-            let final = new Set();
-            for(let x of sorted) {
-                if(final.size >= 5) break;
-                final.add(x.n);
+            // 2. 獲取最優前 12 名作為候選種子
+            let candidates = scores.slice(1).sort((a,b) => b.s - a.s).slice(0, 12).map(x => x.n);
+            
+            // 3. 結構聚合算法 (核心：尋找內部共振最強的 5 碼組)
+            let bestGroup = [];
+            let maxResonance = -1;
+
+            // 隨機採樣法優化計算，從候選中尋找最強關聯子組
+            for(let i=0; i<150; i++) {
+                let sample = [];
+                let tempCandidates = [...candidates];
+                while(sample.length < 5) {
+                    let idx = Math.floor(Math.random() * tempCandidates.length);
+                    sample.push(tempCandidates.splice(idx, 1)[0]);
+                }
+                
+                // 計算此 5 碼組的內部共開總和
+                let currentRes = 0;
+                for(let a=0; a<5; a++) {
+                    for(let b=a+1; b<5; b++) {
+                        currentRes += matrix[sample[a]][sample[b]];
+                    }
+                }
+                
+                if(currentRes > maxResonance) {
+                    maxResonance = currentRes;
+                    bestGroup = sample;
+                }
             }
-            return Array.from(final).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
+
+            return bestGroup.sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
         }
 
         function processData(data) {
@@ -124,37 +150,30 @@
 
             if (new Date(history[0].date) < new Date(history[history.length-1].date)) history.reverse();
 
-            let stars = 0, hitRounds = 0, rows = "";
+            let stars = 0, hit2plus = 0, rows = "";
             for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const pred = getPentaLogic(history.slice(i+1));
+                const pred = getQuadStrikeLogic(history.slice(i+1));
                 const hits = history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0')));
-                
                 stars += hits.length;
-                if(hits.length >= 2) hitRounds++;
+                if(hits.length >= 2) hit2plus++;
 
-                // 核心邏輯：中2碼橘色，中1碼白色加粗
                 const predHtml = pred.map(p => {
                     const isHit = history[i].nums.includes(parseInt(p));
-                    if (isHit) {
-                        return hits.length >= 2 ? `<span class="hit-2-star">${p}</span>` : `<span class="hit-1-star">${p}</span>`;
-                    }
+                    if (isHit) return hits.length >= 2 ? `<span class="hit-2-star">${p}</span>` : `<span class="hit-1-star">${p}</span>`;
                     return p;
                 }).join(' ');
 
-                rows += `
-                <tr class="border-b border-white/5">
-                    <td class="py-2.5 text-gray-500 font-mono tracking-tighter">${history[i].date.split('-').slice(-2).join('/')}</td>
-                    <td class="text-white text-center font-bold tracking-tighter text-[11px]">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td>
-                    <td class="text-gray-400 text-center font-mono tracking-tighter text-[11px]">${predHtml}</td>
-                    <td class="text-right font-black ${hits.length >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits.length}</td>
-                </tr>`;
+                rows += `<tr class="border-b border-white/5"><td class="py-2.5 text-gray-500 font-mono tracking-tighter">${history[i].date.split('-').slice(-2).join('/')}</td><td class="text-white text-center font-bold tracking-tighter text-[11px]">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td><td class="text-gray-400 text-center font-mono tracking-tighter text-[11px]">${predHtml}</td><td class="text-right font-black ${hits.length>=2?'text-orange-500':'text-gray-700'}">${hits.length}</td></tr>`;
             }
 
-            document.getElementById('hitRateBadge').innerText = `二星率: ${(hitRounds/10*100).toFixed(0)}%`;
-            document.getElementById('logBox').innerHTML = `目標：<span class="text-orange-500">5碼成對 (2★)</span><br>平均：<span class="text-white">${(stars/10).toFixed(2)} 碼</span><br>說明：<span class="text-gray-400">僅二星(含)以上觸發橘色警示。</span>`;
+            document.getElementById('hitRateBadge').innerText = `二星率: ${(hit2plus/10*100).toFixed(0)}%`;
+            document.getElementById('logBox').innerHTML = `
+                模式：<span class="text-orange-500">Quad-Strike 4星擊穿模式</span><br>
+                策略：<span class="text-white">已鎖定內部最強共振 5 碼組。</span><br>
+                目標：<span class="text-red-500 font-bold">極大化 2-4 星群聚效益。</span>`;
 
-            const f = getPentaLogic(history);
+            const f = getQuadStrikeLogic(history);
             f.forEach((val, idx) => { document.getElementById(`n${idx+1}`).innerText = val; });
             document.getElementById('historyTable').innerHTML = rows;
         }
