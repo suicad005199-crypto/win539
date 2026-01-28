@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.95 QUAD-CORE STRIKE</title>
+    <title>ULTIMATE EVO v8.98 PENTA-HYPERION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 50px rgba(249, 115, 22, 0.4); }
+        .orange-glow { box-shadow: 0 0 50px rgba(249, 115, 22, 0.45); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 900; }
         .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
         .hit-2-star { color: #000; font-weight: 900; background: var(--ios-orange); padding: 0 2px; border-radius: 3px; }
@@ -21,20 +21,20 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">v8.95</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">v8.98</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-3 py-1.5 rounded-lg text-xs btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-3 py-1.5 rounded-lg text-xs btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/50">
+    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/60">
         <div class="flex justify-between items-end mb-1">
-            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">目標：4星結構打擊 (5M Mode)</label>
-            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-red-600 px-1.5 rounded-full">QUAD-TARGET</span>
+            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">策略：PENTA-HYPERION 4星強化</label>
+            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-red-600 px-1.5 rounded-full">ULTRA-PRECISION</span>
         </div>
-        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-20 overflow-y-auto font-mono border border-white/5 leading-snug text-green-400">
-            四星算法加載完畢... 偵測結構共振中...
+        <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-20 overflow-y-auto font-mono border border-white/5 leading-snug text-orange-400">
+            共振引擎已升級... 深度鎖定連莊碼中...
         </div>
     </div>
 
@@ -50,7 +50,7 @@
 
     <div class="ios-panel p-3 flex-grow overflow-hidden flex flex-col">
         <div class="flex justify-between items-center mb-2">
-            <label class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">深度回測 (中2碼橘亮 / 挑戰3-4星)</label>
+            <label class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">深度回測 (500次共振模擬/4星衝擊)</label>
         </div>
         <div class="overflow-y-auto flex-grow">
             <table>
@@ -58,7 +58,7 @@
                     <tr>
                         <th class="w-[15%] py-1 text-left">日期</th>
                         <th class="w-[35%] text-center">歷史開獎</th>
-                        <th class="w-[40%] text-center">5碼衝擊 (8M)</th>
+                        <th class="w-[40%] text-center">強化預測 (5M)</th>
                         <th class="w-[10%] text-right">星</th>
                     </tr>
                 </thead>
@@ -86,37 +86,41 @@
             if(rawData) processData(rawData[m]);
         }
 
-        function getQuadStrikeLogic(history) {
+        function getHyperionLogic(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
             const last = history[0].nums;
             
-            // 建立 40 期深度關聯矩陣 (4星的核心在於對對碰)
             let matrix = Array(40).fill(0).map(() => Array(40).fill(0));
-            history.slice(0, 40).forEach(h => {
+            history.slice(0, 50).forEach(h => {
                 h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) matrix[n1][n2]++; }));
             });
 
-            // 1. 強化單碼基礎權重
             for(let i=1; i<=39; i++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
-                if(gap > 16) continue;
+                if(gap > 18) continue;
+
+                // 基礎分數
                 last.forEach(ln => {
-                    if(Math.abs(ln-i) === 1) scores[i].s += 120; // 極限鄰碼
-                    if(ln % 10 === i % 10) scores[i].s += 90;   // 結構同尾
-                    scores[i].s += matrix[ln][i] * (currentMode === 'Daily' ? 45 : 30);
+                    if(Math.abs(ln-i) === 1) scores[i].s += 130; // 鄰碼增強
+                    if(ln % 10 === i % 10) scores[i].s += 100;   // 同尾結構
+                    scores[i].s += matrix[ln][i] * (currentMode === 'Daily' ? 50 : 35);
                 });
-                if(gap <= 2) scores[i].s += 60; // 極熱追蹤
+                
+                // 加強項：連莊碼鎖定 (提升4星核心)
+                if(last.includes(i)) scores[i].s += 150; 
+                
+                // 加強項：冷熱交替補償
+                if(gap >= 1 && gap <= 4) scores[i].s += 80; 
             }
 
-            // 2. 獲取最優前 12 名作為候選種子
-            let candidates = scores.slice(1).sort((a,b) => b.s - a.s).slice(0, 12).map(x => x.n);
+            // 選取前 15 名候選號 (增加多樣性以利 500 次模擬)
+            let candidates = scores.slice(1).sort((a,b) => b.s - a.s).slice(0, 15).map(x => x.n);
             
-            // 3. 結構聚合算法 (核心：尋找內部共振最強的 5 碼組)
             let bestGroup = [];
             let maxResonance = -1;
 
-            // 隨機採樣法優化計算，從候選中尋找最強關聯子組
-            for(let i=0; i<150; i++) {
+            // 深度共振模擬 (500次迭代)
+            for(let i=0; i<500; i++) {
                 let sample = [];
                 let tempCandidates = [...candidates];
                 while(sample.length < 5) {
@@ -124,7 +128,6 @@
                     sample.push(tempCandidates.splice(idx, 1)[0]);
                 }
                 
-                // 計算此 5 碼組的內部共開總和
                 let currentRes = 0;
                 for(let a=0; a<5; a++) {
                     for(let b=a+1; b<5; b++) {
@@ -132,6 +135,10 @@
                     }
                 }
                 
+                // 區間分布懲罰 (避免 5 碼全集中在極小範圍，除非共振極強)
+                let zones = new Set(sample.map(n => Math.floor((n-1)/13)));
+                if(zones.size < 2) currentRes *= 0.7; 
+
                 if(currentRes > maxResonance) {
                     maxResonance = currentRes;
                     bestGroup = sample;
@@ -153,7 +160,7 @@
             let stars = 0, hit2plus = 0, rows = "";
             for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const pred = getQuadStrikeLogic(history.slice(i+1));
+                const pred = getHyperionLogic(history.slice(i+1));
                 const hits = history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0')));
                 stars += hits.length;
                 if(hits.length >= 2) hit2plus++;
@@ -169,11 +176,11 @@
 
             document.getElementById('hitRateBadge').innerText = `二星率: ${(hit2plus/10*100).toFixed(0)}%`;
             document.getElementById('logBox').innerHTML = `
-                模式：<span class="text-orange-500">Quad-Strike 4星擊穿模式</span><br>
-                策略：<span class="text-white">已鎖定內部最強共振 5 碼組。</span><br>
-                目標：<span class="text-red-500 font-bold">極大化 2-4 星群聚效益。</span>`;
+                模式：<span class="text-orange-500 font-black">HYPERION 4星強化</span><br>
+                策略：<span class="text-white">500次共振模擬 + 連莊碼加壓</span><br>
+                狀態：<span class="text-green-500">結構動態分布已啟用。</span>`;
 
-            const f = getQuadStrikeLogic(history);
+            const f = getHyperionLogic(history);
             f.forEach((val, idx) => { document.getElementById(`n${idx+1}`).innerText = val; });
             document.getElementById('historyTable').innerHTML = rows;
         }
