@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.61 PRECISE</title>
+    <title>ULTIMATE EVO v8.70 ADAPTIVE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.61</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.70</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,47 +29,47 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: EXPECTATION 權重校準引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: ADAPTIVE 引擎狀態</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.61 <span id="strategyMode" class="ml-1 text-white">CROSS-ENTROPY</span>
+                <span id="statusDot" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> v8.70 <span id="strategyMode" class="ml-1 text-white">SELF-ADAPT</span>
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">深度權重運算中...</span>
+            <span class="text-orange-500/50 italic">同步近期命中偏差值...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 對沖下注結構 (動態 8 碼)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: HEDGING 結構 (自適應 8 碼)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold" id="label_p1">核心權重</div>
+                <div class="text-[9px] text-orange-500 font-bold" id="label_p1">核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold" id="label_p2">版路聯動</div>
+                <div class="text-[9px] text-orange-500 font-bold" id="label_p2">聯動</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold" id="label_p3">環境感知</div>
+                <div class="text-[9px] text-gray-400 font-bold" id="label_p3">平衡</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold" id="label_p4">對沖遺漏</div>
+                <div class="text-[9px] text-gray-400 font-bold" id="label_p4">對沖</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.61 實時回測</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期性能追蹤</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
                     <tr class="text-left border-b border-white/10">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">建議選碼</th>
+                        <th class="pb-2">自適應選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -98,128 +98,103 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        // --- 核心優化：539 V.42.2 三區分佈引擎 ---
-        function get539V422Logic(history) {
-            let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0 }));
-            const lastRow = history[0].nums;
-            const last15 = history.slice(0, 15);
-            
-            // 1. 遺漏值加權 (V.42.2 修正版)
-            for(let i=1; i<=39; i++) {
-                let gap = 0;
-                for(let k=0; k<history.length; k++) {
-                    if(!history[k].nums.includes(i)) gap++; else break;
-                }
-                stats[i].score += (gap <= 12) ? (gap * 3.0) : Math.max(0, 38 - gap);
+        function getAdaptiveMultiplier(history) {
+            let recentHits = 0;
+            for(let i=0; i<3; i++) {
+                const pred = (currentMode === '539') ? get539V870(history.slice(i+1), 1) : getDailyV870(history.slice(i+1), 1);
+                recentHits += history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
             }
-
-            // 2. 尾數權重 (V.42.2 tailMap)
-            let tailMap = Array(10).fill(0);
-            last15.forEach(d => d.nums.forEach(n => tailMap[n%10]++));
-            for(let i=1; i<=39; i++) stats[i].score += (tailMap[i%10] * 3.2);
-
-            // 3. 鄰號與連莊
-            lastRow.forEach(ln => {
-                if(ln > 1) stats[ln-1].score += 20;
-                if(ln < 39) stats[ln+1].score += 20;
-                stats[ln].score += 15;
-            });
-
-            // 4. 三區過濾 (1-13, 14-26, 27-39)
-            let zones = [[],[],[]];
-            for(let i=1; i<=39; i++) {
-                let z = Math.min(Math.floor((i-1)/13), 2);
-                zones[z].push(stats[i]);
-            }
-
-            let pool = [];
-            zones.forEach(z => pool.push(...z.sort((a,b)=>b.score-a.score).slice(0, 3)));
-            return pool.sort((a,b)=>b.score-a.score).slice(0, 8).map(x=>x.n.toString().padStart(2,'0')).sort();
+            return (recentHits < 3) ? 2.5 : 1.0; // 若3期命中低於3星，切換進攻模式(倍率2.5)
         }
 
-        // --- 核心優化：天天樂 V.53.8 交叉熵/強集中引擎 ---
-        function getDailyV538Logic(history) {
+        function get539V870(history, mult = 1.0) {
+            let stats = Array(40).fill(0).map((_, i) => ({ n: i, score: 0, gap: 0 }));
             const lastRow = history[0].nums;
-            let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0, gap: 0 }));
+            const last10 = history.slice(0, 10);
+            
+            for(let i=1; i<=39; i++) {
+                let g = 0; for(let k=0; k<history.length; k++) { if(!history[k].nums.includes(i)) g++; else break; }
+                stats[i].gap = g;
+                stats[i].score += (g >= 10) ? (g * 4.5 * mult) : (g * 2.0); // 進攻倍率影響冷號
+                lastRow.forEach(ln => { if(Math.abs(ln-i) === 1) stats[i].score += 25; }); // 鄰號
+                let tailCount = 0; last10.forEach(d => d.nums.forEach(n => { if(n%10 === i%10) tailCount++; }));
+                stats[i].score += tailCount * 3.5; // 尾數
+            }
+
+            let zones = [[],[],[]];
+            for(let i=1; i<=39; i++) { zones[Math.min(Math.floor((i-1)/13), 2)].push(stats[i]); }
+
+            let p1_p2 = stats.sort((a,b)=>b.score-a.score).slice(0, 4).map(x=>x.n); // 核心4碼
+            let p3 = []; zones.forEach(z => p3.push(z.sort((a,b)=>b.gap-a.gap)[0].n)); // 三區補冷2碼(取前2)
+            let p4 = stats.filter(x => !p1_p2.includes(x.n) && !p3.includes(x.n)).sort((a,b)=>b.score-a.score).slice(0, 2).map(x=>x.n);
+
+            return [...p1_p2, ...p3.slice(0,2), ...p4].map(x=>x.toString().padStart(2,'0')).sort();
+        }
+
+        function getDailyV870(history, mult = 1.0) {
+            const lastRow = history[0].nums;
+            let stats = Array(40).fill(0).map((_, i) => ({ n: i, s: 0, gap: 0 }));
+            
+            // 計算分佈密集度
+            let avgPos = lastRow.reduce((a,b)=>a+b,0)/5;
+            let radius = (avgPos < 15 || avgPos > 25) ? 5 : 3; // 動態跳島半徑
 
             for(let i=1; i<=39; i++) {
-                let gap = 0; for(let k=0; k<history.length; k++) { if(!history[k].nums.includes(i)) gap++; else break; }
-                scores[i].gap = gap;
-                if(gap >= 18 && gap <= 32) scores[i].s += 800; // 虛空補償
-                let hot = 0; history.slice(0,10).forEach(d => { if(d.nums.includes(i)) hot++; });
-                scores[i].s += hot * 210;
-                lastRow.forEach(ln => { 
-                    if(Math.abs(ln - i) === 1) scores[i].s += 310; 
-                    if(ln % 10 === i % 10) scores[i].s += 320; 
-                });
+                let g = 0; for(let k=0; k<history.length; k++) { if(!history[k].nums.includes(i)) g++; else break; }
+                stats[i].gap = g;
+                let hot = 0; history.slice(0,8).forEach(d => { if(d.nums.includes(i)) hot++; });
+                stats[i].s += hot * 25 * mult;
+                // 幾何級數尾數加權
+                let tailFreq = history.slice(0,3).filter(d => d.nums.some(n=>n%10 === i%10)).length;
+                stats[i].s += Math.pow(tailFreq, 2) * 40;
             }
 
             let final = new Set();
-            // A核心：4碼 (冷熱交叉)
-            let coldCandidates = [...scores].sort((a,b)=>b.gap - a.gap).slice(0, 12).sort((a,b)=>b.s - a.s);
-            final.add(coldCandidates[0].n);
-            [coldCandidates[0].n-1, coldCandidates[0].n+1, (coldCandidates[0].n+10)%40].filter(n=>n>0&&n<40).forEach(n=>{ if(final.size < 4) final.add(n); });
-
-            // B核心：4碼 (跳島覆蓋)
-            let hotCandidates = [...scores].sort((a,b)=>b.s - a.s);
-            for(let x of hotCandidates) {
-                if(!final.has(x.n) && ![...final].some(fn => Math.abs(fn-x.n) < 3)) {
-                    final.add(x.n);
-                    if(final.size >= 8) break;
-                }
+            let sorted = stats.sort((a,b)=>b.s-a.s);
+            // 核心交叉
+            final.add(sorted[0].n);
+            final.add([...stats].sort((a,b)=>b.gap-a.gap)[0].n);
+            // 動態跳島
+            for(let x of sorted) {
+                if(final.size >= 8) break;
+                if(![...final].some(fn => Math.abs(fn-x.n) < radius)) final.add(x.n);
             }
-            // 補位
-            if(final.size < 8) hotCandidates.forEach(h => { if(final.size < 8) final.add(h.n); });
+            while(final.size < 8) { final.add(sorted.find(x=>!final.has(x.n)).n); }
 
-            return Array.from(final).slice(0, 8).sort((a,b) => a-b).map(x=>x.toString().padStart(2,'0'));
+            return Array.from(final).sort((a,b)=>a-b).map(x=>x.toString().padStart(2,'0'));
         }
 
         function processData(data) {
             if(!data) return;
             let history = data.filter(row => row.length >= 6).map(row => ({
                 date: String(row[0]).split('T')[0],
-                nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
-            })).filter(h => h.nums.length === 5);
-            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
+                nums: row.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            }));
+            if (new Date(history[0].date) < new Date(history[history.length-1].date)) history.reverse();
 
+            const mult = getAdaptiveMultiplier(history);
             let stars = 0, rowsHtml = "";
+
             for (let i = 0; i < 10; i++) {
-                const histSlice = history.slice(i + 1);
-                const result = (currentMode === '539') ? get539V422Logic(histSlice) : getDailyV538Logic(histSlice);
+                const res = (currentMode === '539') ? get539V870(history.slice(i+1), mult) : getDailyV870(history.slice(i+1), mult);
                 const actual = history[i].nums;
-                const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
+                const hits = actual.filter(n => res.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
-                
-                const predHtml = result.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+                const predHtml = res.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.split('-').slice(1).join('/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const avg = (stars / 10).toFixed(2);
-            document.getElementById('statusDot').className = `w-2 h-2 rounded-full mr-1 ${avg < 1.1 ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`;
-            
-            // UI 文字切換
-            if(currentMode === '539') {
-                document.getElementById('label_p1').innerText = "一區(頭)";
-                document.getElementById('label_p2').innerText = "二區(中)";
-                document.getElementById('label_p3').innerText = "三區(尾)";
-                document.getElementById('label_p4').innerText = "權重補位";
-            } else {
-                document.getElementById('label_p1').innerText = "冷熱核心";
-                document.getElementById('label_p2').innerText = "跳島結構";
-                document.getElementById('label_p3').innerText = "交叉過濾";
-                document.getElementById('label_p4').innerText = "動態對沖";
-            }
-
+            document.getElementById('statusDot').className = `w-2 h-2 rounded-full mr-1 ${mult > 1 ? 'bg-red-500 animate-ping' : 'bg-green-500'}`;
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} V8.61 CORE</span>
-                    <span class="bg-white text-black px-1 rounded text-[9px] font-black">AI-OPTIMIZED</span>
+                    <span class="text-orange-500 font-bold">${currentMode} V8.70 ADAPTIVE</span>
+                    <span class="bg-orange-500 text-black px-1 rounded text-[9px] font-black">${mult > 1 ? '進攻模式' : '規律模式'}</span>
                 </div>
-                10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略引擎: <span class="text-white font-bold italic">${currentMode === '539' ? 'V.42.2 三區平衡' : 'V.53.8 強集中核心'}</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">模式：已強化${currentMode === '539' ? '區間遺漏' : '交叉熵'}運算參數</div>`;
+                10期平均: <span class="text-orange-500 text-lg font-black">${(stars/10).toFixed(2)}星</span> | 乘數: ${mult}x<br>
+                引擎特徵: <span class="text-white italic">${currentMode === '539' ? '4-2-2 三區聯動' : '動態半徑跳島'}</span><br>
+                <div class="mt-1 text-[9px] text-gray-400">系統自動依近 3 期命中率調整冷熱權重比</div>`;
 
-            const final = (currentMode === '539') ? get539V422Logic(history) : getDailyV538Logic(history);
+            const final = (currentMode === '539') ? get539V870(history, mult) : getDailyV870(history, mult);
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
             document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
             document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
