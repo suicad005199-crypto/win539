@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.85 AXIAL-GRAVITY</title>
+    <title>ULTIMATE EVO v8.88 AXIAL-RESONANCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -21,7 +21,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">Evo 8.85</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 uppercase">Ultimate <span class="text-white">Evo 8.88</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-3 py-1.5 rounded-lg text-xs btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-3 py-1.5 rounded-lg text-xs btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -30,30 +30,30 @@
 
     <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-1">
-            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 軸心引力矩陣引擎</label>
-            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-red-600 px-1.5 rounded">CALIBRATING</span>
+            <label class="text-[9px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: 軸心共振矩陣引擎</label>
+            <span id="hitRateBadge" class="text-[9px] text-white font-black bg-red-600 px-1.5 rounded">SYNERGY ACTIVE</span>
         </div>
         <div id="logBox" class="bg-black/50 p-2 rounded-lg text-[11px] h-24 overflow-y-auto font-mono border border-white/5 leading-snug">
-            正在計算軸心引力權重...
+            正在校準矩陣權重...
         </div>
     </div>
 
     <div class="ios-panel p-3 mb-3 border-t-2 border-orange-600">
         <div class="grid grid-cols-4 gap-1.5">
             <div class="bg-orange-500/15 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[8px] text-orange-500 font-bold mb-1 uppercase">軸心 A</div>
+                <div class="text-[8px] text-orange-500 font-bold mb-1">主共振 A</div>
                 <div class="text-base font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/15 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[8px] text-orange-500 font-bold mb-1 uppercase">軸心 B</div>
+                <div class="text-[8px] text-orange-500 font-bold mb-1">主共振 B</div>
                 <div class="text-base font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[8px] text-gray-400 font-bold mb-1 uppercase">伴生矩陣</div>
+                <div class="text-[8px] text-gray-400 font-bold mb-1">協作矩陣</div>
                 <div class="text-base font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[8px] text-gray-400 font-bold mb-1 uppercase">引力補償</div>
+                <div class="text-[8px] text-gray-400 font-bold mb-1">階梯防護</div>
                 <div class="text-base font-black text-white" id="p4">--</div>
             </div>
         </div>
@@ -61,15 +61,15 @@
 
     <div class="ios-panel p-3 flex-grow overflow-hidden flex flex-col">
         <div class="flex justify-between items-center mb-1">
-            <label class="text-[9px] text-gray-500 font-bold uppercase">v8.85 回測回報 (星數目標 70%↑)</label>
+            <label class="text-[9px] text-gray-500 font-bold uppercase">v8.88 深度回測回報 (星數目標 75%↑)</label>
         </div>
         <div class="overflow-y-auto flex-grow">
             <table>
                 <thead class="sticky top-0 bg-[#1c1c1e] text-[9.5px] text-gray-500 border-b border-white/10">
                     <tr>
                         <th class="w-[12%] py-1 text-left">日期</th>
-                        <th class="w-[33%] text-center">開獎</th>
-                        <th class="w-[45%] text-center">引力選碼 (8M)</th>
+                        <th class="w-[33%] text-center">歷史開獎</th>
+                        <th class="w-[45%] text-center">軸心選碼 (8M)</th>
                         <th class="w-[10%] text-right">星</th>
                     </tr>
                 </thead>
@@ -87,7 +87,7 @@
                 const res = await fetch(API_URL);
                 rawData = await res.json();
                 processData(rawData[currentMode]);
-            } catch (e) { document.getElementById('logBox').innerText = "數據連線異常"; }
+            } catch (e) { document.getElementById('logBox').innerText = "API ERROR"; }
         }
 
         function switchMode(m) {
@@ -97,11 +97,11 @@
             if(rawData) processData(rawData[m]);
         }
 
-        function getAxialGravityLogic(history) {
+        function getResonanceLogic(history) {
             let scores = Array(40).fill(0).map((_, i) => ({ n: i, s: 0 }));
-            const lastRow = history[0].nums;
+            const last = history[0].nums;
             
-            // 伴生矩陣 (45期深度)
+            // 建立 45 期深度共振矩陣
             let matrix = Array(40).fill(0).map(() => Array(40).fill(0));
             history.slice(0, 45).forEach(h => {
                 h.nums.forEach(n1 => h.nums.forEach(n2 => { if(n1 !== n2) matrix[n1][n2]++; }));
@@ -109,41 +109,45 @@
 
             for(let i=1; i<=39; i++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(i)) break; gap++; }
-                if(gap > 17) continue;
+                if(gap > 18) continue;
 
-                // 核心引力權重
-                if(lastRow.includes(i)) scores[i].s += 65;
-                lastRow.forEach(ln => { 
-                    if(Math.abs(ln-i) === 1) scores[i].s += 90; // 強鄰里
-                    scores[i].s += matrix[ln][i] * (currentMode === 'Daily' ? 22 : 14); // 伴生
+                // 基礎引力：連莊與鄰里
+                if(last.includes(i)) scores[i].s += 70;
+                last.forEach(ln => { if(Math.abs(ln-i) === 1) scores[i].s += 95; });
+
+                // 核心：共振強度 (提升聚合力)
+                last.forEach(ln => { 
+                    let res = matrix[ln][i];
+                    scores[i].s += (currentMode === 'Daily' ? res * 28 : res * 16);
                 });
 
-                // 溫碼保護 (539 確保不落空的核心)
-                if(gap >= 1 && gap <= 3) scores[i].s += 60;
-                if(gap >= 4 && gap <= 6) scores[i].s += 45;
+                // 防落空階梯加成
+                if(gap >= 1 && gap <= 3) scores[i].s += 50; // 近熱碼
+                if(gap >= 4 && gap <= 7) scores[i].s += 35; // 轉折溫碼
             }
 
             let sorted = scores.slice(1).sort((a,b) => b.s - a.s);
             let final = new Set();
             
-            // 軸心選取
-            let seed1 = sorted[0].n;
-            let seed2 = sorted[1].n;
-            final.add(seed1);
-            final.add(seed2);
+            // 鎖定軸心 A, B
+            let seedA = sorted[0].n;
+            let seedB = sorted[1].n;
+            final.add(seedA);
+            final.add(seedB);
 
-            // 天天樂加強：尋找與軸心 A, B 聯動最強的號碼 (2星轉3星關鍵)
-            let coSeeds = scores.slice(1)
+            // 天天樂增強：尋找軸心共振最強號碼
+            let coRes = scores.slice(1)
                 .filter(x => !final.has(x.n))
-                .sort((a,b) => (matrix[seed1][b.n] + matrix[seed2][b.n]) - (matrix[seed1][a.n] + matrix[seed2][a.n]));
+                .sort((a,b) => (matrix[seedA][b.n] + matrix[seedB][b.n]) - (matrix[seedA][a.n] + matrix[seedB][a.n]));
             
-            final.add(coSeeds[0].n);
-            final.add(coSeeds[1].n);
+            final.add(coRes[0].n);
+            final.add(coRes[1].n);
 
-            // 補足剩餘，539 模式下強化尾數多樣性
+            // 539 增強：確保階梯覆蓋
             for(let x of sorted) {
                 if(final.size >= 8) break;
                 if(currentMode === '539') {
+                    // 檢查尾數多樣性，防止號碼過度堆疊
                     let tails = [...final].map(v => v % 10);
                     if(tails.filter(t => t === x.n % 10).length < 2) final.add(x.n);
                 } else {
@@ -167,7 +171,7 @@
             let stars = 0, hitRounds = 0, rows = "";
             for (let i = 0; i < 10; i++) {
                 if(!history[i+1]) break;
-                const pred = getAxialGravityLogic(history.slice(i+1));
+                const pred = getResonanceLogic(history.slice(i+1));
                 const hits = history[i].nums.filter(n => pred.includes(n.toString().padStart(2,'0')));
                 
                 stars += hits.length;
@@ -177,9 +181,9 @@
                 
                 rows += `
                 <tr class="border-b border-white/5">
-                    <td class="py-2 text-gray-500 font-mono tracking-tightest">${history[i].date.split('-').slice(-2).join('/')}</td>
+                    <td class="py-2.5 text-gray-500 font-mono tracking-tightest">${history[i].date.split('-').slice(-2).join('/')}</td>
                     <td class="text-white text-center font-bold tracking-tightest text-[11px]">${history[i].nums.map(n=>n.toString().padStart(2,'0')).join(' ')}</td>
-                    <td class="text-gray-400 text-center font-mono tracking-tightest text-[10.2px]">${predHtml}</td>
+                    <td class="text-gray-400 text-center font-mono tracking-tightest text-[10.5px]">${predHtml}</td>
                     <td class="text-right font-black ${hits.length >= 2 ? 'text-orange-500' : 'text-gray-400'}">${hits.length}</td>
                 </tr>`;
             }
@@ -188,14 +192,14 @@
             document.getElementById('hitRateBadge').innerText = `穩定度: ${hitRate}%`;
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between border-b border-white/10 mb-1 pb-1">
-                    <span class="text-orange-500 font-bold uppercase">${currentMode} AXIAL-GRAVITY</span>
-                    <span class="text-green-500 text-[10px] font-bold">● ONLINE</span>
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} RESONANCE-V8</span>
+                    <span class="text-white px-1 rounded bg-green-700">STABLE</span>
                 </div>
-                10期平均命中: <span class="text-orange-500 text-base font-black">${(stars/10).toFixed(2)} 星</span><br>
-                引擎狀態: <span class="text-white">${currentMode==='539'?'冷熱保底分佈 + 鄰里鎖定':'雙軸心伴生引力矩陣'}</span><br>
+                10期均星: <span class="text-orange-500 text-base font-black">${(stars/10).toFixed(2)} Stars</span><br>
+                增強機制: <span class="text-white">${currentMode==='539'?'三階防護 + 尾數多樣性':'雙軸心引力共振矩陣'}</span><br>
                 <div class="text-[9px] text-gray-400 mt-1 italic">已優化天天樂聚合算法，鎖定共同出號機率最強組合。</div>`;
 
-            const f = getAxialGravityLogic(history);
+            const f = getResonanceLogic(history);
             document.getElementById('p1').innerText = `${f[0]},${f[1]}`;
             document.getElementById('p2').innerText = `${f[2]},${f[3]}`;
             document.getElementById('p3').innerText = `${f[4]},${f[5]}`;
