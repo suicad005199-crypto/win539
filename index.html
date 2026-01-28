@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO v8.00 NEURAL</title>
+    <title>ULTIMATE EVO v8.20 DUAL-CORE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,7 +20,7 @@
 <body class="h-screen flex flex-col p-4" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.00</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 8.20</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -29,40 +29,40 @@
 
     <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/50">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: NEURAL-LOCK 神經鎖定引擎</label>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Panel 1: DUAL-CORE 獨立演算引擎</label>
             <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> v8.00 STABLE
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> v8.20 OPTIMIZED
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">神經元網路計算中...</span>
+            <span class="text-orange-500/50 italic">策略引擎初始化中...</span>
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-4 border-t-2 border-orange-600">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 鎖死輸出 (遺漏補償/黃金對碰)</label>
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 獨立分流輸出 (狙擊保底目標 $\ge 2$)</label>
         <div class="grid grid-cols-4 gap-2">
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">核心對碰 A</div>
+                <div class="text-[9px] text-orange-500 font-bold">狙擊一</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
             <div class="bg-orange-500/20 p-2 rounded-lg text-center border border-orange-500/40">
-                <div class="text-[9px] text-orange-500 font-bold">核心對碰 B</div>
+                <div class="text-[9px] text-orange-500 font-bold">狙擊二</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">熱尾鎖定</div>
+                <div class="text-[9px] text-gray-400 font-bold">配套三</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/10">
-                <div class="text-[9px] text-gray-400 font-bold">遺漏補償</div>
+                <div class="text-[9px] text-gray-400 font-bold">配套四</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.00 績效回測</label>
+        <label id="historyTitle" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 v8.20 績效回測</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
@@ -88,7 +88,7 @@
                 const response = await fetch(API_URL);
                 rawData = await response.json();
                 processData(rawData[currentMode]);
-            } catch (error) { document.getElementById('logBox').innerText = "API 錯誤"; }
+            } catch (error) { document.getElementById('logBox').innerText = "API 連線失敗"; }
         }
 
         function switchMode(mode) {
@@ -98,68 +98,51 @@
             if(rawData) processData(rawData[mode]);
         }
 
-        function getV800Prediction(history) {
+        // 核心：分流演算法
+        function getV820Prediction(history) {
             const range = 39;
             const lastNums = history[0].nums;
-
-            // 1. 計算遺漏值 (Gaps)
-            let gaps = Array(range + 1).fill(0);
-            for (let n = 1; n <= range; n++) {
-                let g = 0;
-                for (let r of history) { if (r.nums.includes(n)) break; g++; }
-                gaps[n] = g;
-            }
-
-            // 2. 尾數強度 (近10期)
-            let tailStrength = Array(10).fill(0);
-            history.slice(0, 10).forEach(r => r.nums.forEach(n => tailStrength[n % 10]++));
-
-            // 3. 鄰號池
-            let neighbors = new Set();
-            lastNums.forEach(n => {
-                if(n > 1) neighbors.add(n - 1);
-                if(n < 39) neighbors.add(n + 1);
-            });
-
-            // 4. NEURAL 綜合評分
             let scores = [];
-            for (let n = 1; n <= range; n++) {
-                let s = 0;
-                // 遺漏補償邏輯：偏好遺漏 2-7 期的「爆發碼」
-                if (gaps[n] >= 2 && gaps[n] <= 7) s += 4.5;
-                // 尾數加成
-                s += (tailStrength[n % 10] * 0.8);
-                // 鄰號與連莊
-                if (neighbors.has(n)) s += 3.0;
-                if (lastNums.includes(n)) s += 2.0;
-                
-                // 天天樂模式額外加成近期熱碼
-                if (currentMode === 'Daily' && gaps[n] === 0) s += 2.0;
 
-                scores.push({ n: n, val: s, tail: n % 10, gap: gaps[n] });
-            }
+            if (currentMode === '539') {
+                // 539 專用：分區矩陣策略
+                for (let n = 1; n <= range; n++) {
+                    let s = 0;
+                    // 分區平衡加權 (1-10, 11-20, 21-30, 31-39)
+                    let area = Math.ceil(n / 10);
+                    let areaCount = history[0].nums.filter(num => Math.ceil(num/10) === area).length;
+                    if (areaCount === 0) s += 5.0; // 補償上一期缺席區域
+                    
+                    // 尾數與遺漏
+                    let gap = 0;
+                    for (let r of history) { if (r.nums.includes(n)) break; gap++; }
+                    if (gap > 3 && gap < 9) s += 4.0;
+                    if (n % 10 === lastNums[0] % 10) s += 2.0;
 
-            scores.sort((a, b) => b.val - a.val);
+                    scores.push({ n: n, val: s });
+                }
+            } else {
+                // 天天樂專用：極限連莊鄰號策略
+                let neighborPool = new Set();
+                lastNums.forEach(n => { if(n>1) neighborPool.add(n-1); if(n<39) neighborPool.add(n+1); });
 
-            // 5. 鎖定輸出
-            let picked = [];
-            // 強制選取評分前二為「核心對碰」
-            picked.push(scores[0].n, scores[1].n);
-            
-            // 尋找不同尾數的熱碼
-            let usedTails = new Set(picked.map(n => n % 10));
-            for (let s of scores.slice(2)) {
-                if (picked.length < 6 && !usedTails.has(s.tail)) {
-                    picked.push(s.n);
-                    usedTails.add(s.tail);
+                for (let n = 1; n <= range; n++) {
+                    let s = 0;
+                    // 天天樂極端加權：鄰號與連莊是核心
+                    if (neighborPool.has(n)) s += 6.0;
+                    if (lastNums.includes(n)) s += 4.0;
+                    
+                    // 熱尾追蹤
+                    let tailCount = 0;
+                    history.slice(0,3).forEach(r => r.nums.forEach(num => { if(num%10 === n%10) tailCount++; }));
+                    s += (tailCount * 1.5);
+
+                    scores.push({ n: n, val: s });
                 }
             }
 
-            // 補足 8 碼 (遺漏補償碼)
-            for (let s of scores) {
-                if (picked.length < 8 && !picked.includes(s.n)) picked.push(s.n);
-            }
-
+            scores.sort((a, b) => b.val - a.val);
+            let picked = scores.slice(0, 8).map(s => s.n);
             return picked.sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
         }
 
@@ -173,7 +156,7 @@
 
             let stars = 0, rowsHtml = "";
             for (let i = 0; i < 10; i++) {
-                const result = getV800Prediction(history.slice(i + 1));
+                const result = getV820Prediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
@@ -184,20 +167,20 @@
             const avg = (stars / 10).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest uppercase">${currentMode} NEURAL-V8</span>
-                    <span class="bg-orange-600 text-black px-1 rounded text-[9px] font-bold">LOCKED</span>
+                    <span class="text-orange-500 font-bold uppercase">${currentMode} DUAL-CORE</span>
+                    <span class="bg-orange-600 text-black px-1 rounded text-[9px] font-bold">OPTIMIZED</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                策略模式: <span class="text-white font-bold italic">遺漏補償 + 二次尾數過濾</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">v8.00：大幅強化遺漏 2-7 期之爆發碼權重，鎖定 2.0 星目標。</div>`;
+                獨立策略: <span class="text-white font-bold italic">${currentMode === '539' ? '分區矩陣過濾' : '極限連莊鄰號'}</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">v8.20：已針對 539 與天天樂進行演算法物理隔離。</div>`;
 
-            const final = getV800Prediction(history);
+            const final = getV820Prediction(history);
             document.getElementById('p1').innerText = `${final[0]},${final[1]}`;
             document.getElementById('p2').innerText = `${final[2]},${final[3]}`;
             document.getElementById('p3').innerText = `${final[4]},${final[5]}`;
             document.getElementById('p4').innerText = `${final[6]},${final[7]}`;
             document.getElementById('historyTable').innerHTML = rowsHtml;
-            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.00 績效`;
+            document.getElementById('historyTitle').innerText = `近十期 ${currentMode} v8.20 績效`;
         }
     </script>
 </body>
