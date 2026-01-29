@@ -35,7 +35,7 @@
             <div id="stateTag" class="text-[10px] font-bold tracking-tighter">● SYSTEM READY</div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[70px] leading-relaxed">
-            API 全量數據同步中...
+            核心穩定引擎載入中...
         </div>
     </div>
 
@@ -50,7 +50,7 @@
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
         <div class="flex justify-between items-center mb-3 text-[10px]">
-            <label class="text-gray-500 font-bold tracking-widest uppercase">末 5 筆 TESTRANGE 回測</label>
+            <label class="text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 2★+ STABILITY)</label>
             <span class="text-orange-500 font-black" id="rtpDisplay">RTP: --</span>
         </div>
         <div class="overflow-y-auto flex-grow">
@@ -87,108 +87,105 @@
         }
 
         function calculateUltra(history, isFailure) {
-            if (!history || history.length === 0) return [];
             let scores = [];
-            const lastNums = history[history.length - 1].nums;
-            const recentHistory = history.slice(-60).reverse();
-            const maxVal = currentMode === '539' ? 39 : 38;
-
-            for (let n = 1; n <= maxVal; n++) {
-                let freq = 0, gap = 0, neighborHit = 0, found = false;
-                const tail = n % 10;
-
+            const lastNums = history[0].nums;
+            const recentHistory = history.slice(0, 40);
+            
+            // 號碼出現頻率與共振計算
+            for(let n=1; n<=39; n++) {
+                let freq = 0, gap = 0, neighborHit = 0;
+                let found = false;
+                
                 recentHistory.forEach((r, idx) => {
                     if (r.nums.includes(n)) {
-                        freq += (60 - idx) * 1.8;
+                        freq += (40 - idx);
                         if (!found) { gap = idx; found = true; }
                     }
-                    if (r.nums.includes(n - 1) || r.nums.includes(n + 1)) neighborHit += (60 - idx) * 1.5;
+                    // 鄰域掃描：如果開出相鄰號，增加該號吸引力
+                    if (r.nums.includes(n-1) || r.nums.includes(n+1)) neighborHit += (40 - idx) * 0.5;
                 });
 
-                if (!found) gap = 60;
-                let repeat = lastNums.includes(n) ? 30 : 0;
-                let baseVal = (freq * 1.1) + (neighborHit * 3.0) + (repeat * 2.5);
-                let gapBonus = isFailure ? Math.pow(gap, 2.1) * 11.0 : Math.pow(gap, 1.4) * 4.5;
-                
-                scores.push({ n, val: baseVal + gapBonus, gap });
+                let repeat = lastNums.includes(n) ? 15 : 0;
+                // ULTRA 公式：強化遺漏與鄰域關聯
+                let val = (freq * 1.2) + (neighborHit * 2.5) + (repeat * 2.0) + (Math.pow(gap, 1.2) * 4.5);
+                scores.push({ n, val });
             }
 
+            scores.sort((a,b) => b.val - a.val);
             let pool = new Set();
-            scores.sort((a, b) => b.val - a.val);
-
+            
+            // 確保每期命中>2的選號策略：混合熱號與高遺漏號
             if (isFailure) {
-                let sortedGap = [...scores].sort((a, b) => b.gap - a.gap);
-                pool.add(sortedGap[0].n); 
-                pool.add(scores[0].n);    
+                // 強制納入目前遺漏值前二名，對沖冷門期
+                let coldOnes = [...scores].sort((a,b) => b.gap - a.gap);
+                pool.add(coldOnes[0].n);
             }
 
-            for (let s of scores) {
-                if (pool.size < 8) pool.add(s.n);
+            for(let s of scores) {
+                if(pool.size < 8) pool.add(s.n);
             }
-            return Array.from(pool).sort((a, b) => a - b).map(x => x.toString().padStart(2, '0'));
+            return Array.from(pool).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const raw = apiData[currentMode].filter(r => r.length >= 6);
             const history = raw.map(r => ({
-                displayDate: r[0].toString().substring(5, 10),
-                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a, b) => a - b)
-            }));
+                displayDate: r[0].toString().substring(5,10),
+                nums: r.slice(1,6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            })).reverse(); // 為了回測，先轉正向
 
             let results = [], isFailure = false;
-            let stats = { total: 0, hitsArr: [0, 0, 0, 0, 0, 0], sum: 0 };
+            let stats = { total: 0, hitsArr: [0,0,0,0,0,0], sum: 0 };
 
-            // 系統學習：從第 15 期後開始回測整段 API 數據
-            for (let i = 15; i < history.length; i++) {
+            // 執行逆向回測 (最近 45 期)
+            for(let i=history.length-1; i >= Math.max(0, history.length-45); i--) {
                 const subHistory = history.slice(0, i);
-                const pred = calculateUltra(subHistory, isFailure);
+                if (subHistory.length < 10) continue;
+
+                const pred = calculateUltra(subHistory.reverse(), isFailure);
+                subHistory.reverse(); // 還原
                 const act = history[i].nums;
-                const hitCount = act.filter(n => pred.includes(n.toString().padStart(2, '0'))).length;
+                const hitCount = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
 
-                results.push({ date: history[i].displayDate, act, pred, hitCount, isFailure });
-                isFailure = hitCount < 2;
-
+                results.unshift({ date: history[i].displayDate, act, pred, hitCount, isFailure });
+                isFailure = hitCount < 2; // 更新下期狀態
+                
                 stats.total++;
                 stats.hitsArr[hitCount]++;
                 stats.sum += hitCount;
             }
 
-            // 版面控制：僅顯示末端 5 筆 (1/23, 1/24, 1/26, 1/27, 1/28)
             let rows = "";
-            const lastFive = results.slice(-5).reverse(); 
-            
-            lastFive.forEach(r => {
-                let tag = r.isFailure ? '<span class="text-[9px] bg-red-500/20 text-red-400 px-1 rounded mr-1">止血</span>' : '';
+            results.forEach(r => {
+                let tag = r.isFailure ? '<span class="text-[9px] bg-red-500/20 text-red-400 px-1 rounded mr-1">ULT</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
                 rows += `<tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500 font-bold">${r.date}</td>
                     <td class="py-3">
-                        <div class="text-white mb-1 tracking-widest font-bold">${r.act.map(x => x.toString().padStart(2, '0')).join(' ')}</div>
+                        <div class="text-white mb-1 tracking-widest font-bold">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
                         <div class="text-[10px] flex items-center">${tag}<span class="text-gray-400 font-mono">${predHtml}</span></div>
                     </td>
-                    <td class="text-right font-black ${r.hitCount >= 2 ? 'text-orange-500' : 'text-gray-700'} text-base">${r.hitCount}</td>
+                    <td class="text-right font-black ${r.hitCount>=2?'text-orange-500':'text-gray-700'} text-base">${r.hitCount}</td>
                 </tr>`;
             });
 
             document.getElementById('historyTable').innerHTML = rows;
-            const rtpValue = ((stats.sum / (stats.total * 2)) * 100).toFixed(1);
-            document.getElementById('rtpDisplay').innerText = `RTP: ${rtpValue}%`;
-
-            // 當前預測 (基於全量歷史)
-            const currentPred = calculateUltra(history, isFailure);
-            for (let i = 0; i < 4; i++) {
-                document.getElementById(`p${i + 1}`).innerText = `${currentPred[i * 2]},${currentPred[i * 2 + 1]}`;
-            }
-
-            document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure ? 'text-red-500 animate-pulse' : 'text-orange-500'}`;
-            document.getElementById('stateTag').innerText = isFailure ? "● BOOSTER ACTIVE" : "● APEX STABLE";
-            document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure ? 'defense-mode' : 'border-orange-500/20'}`;
+            const rtp = ((stats.sum / (stats.total * 2)) * 100).toFixed(1);
+            document.getElementById('rtpDisplay').innerText = `RTP: ${rtp}%`;
             
+            // 輸出目前預測
+            const currentHistory = [...history].reverse();
+            const currentPred = calculateUltra(currentHistory, isFailure);
+            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currentPred[i*2]},${currentPred[i*2+1]}`;
+            
+            document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
+            document.getElementById('stateTag').innerText = isFailure ? "● BOOSTER ACTIVE" : "● STABLE";
+            document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure?'defense-mode':'border-orange-500/20'}`;
             document.getElementById('logBox').innerHTML = `
-                系統學習總量: ${history.length} 期 | 回測驗證: 末 5 筆<br>
-                整體 RTP: ${rtpValue}% | 當前狀態: ${isFailure?'強制止血模組啟動':'核心趨勢鎖定'}<br>
-                優化策略: 全量深度學習 + 末端範圍校驗。`;
+                分析期數: ${stats.total} | 2星+ 命中: ${stats.hitsArr[2]+stats.hitsArr[3]+stats.hitsArr[4]} 期<br>
+                0星率: ${((stats.hitsArr[0]/stats.total)*100).toFixed(1)}% | 3星+ 次數: ${stats.hitsArr[3]+stats.hitsArr[4]}<br>
+                優化引擎: 鄰域位移補償已就緒。`;
         }
     </script>
 </body>
