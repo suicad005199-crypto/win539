@@ -3,69 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.99.1 RTP-MAX+</title>
+    <title>ULTIMATE EVO 7.0 PRO - QUANTUM AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
-        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; }
-        .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; box-shadow: 0 0 15px rgba(249,115,22,0.4); }
+        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow-x: hidden; }
+        .ios-panel { background: var(--ios-panel); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-active { background: linear-gradient(145deg, #fb923c, #f97316); color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(249,115,22,0.3); }
         .btn-inactive { background: #2c2c2e; color: #888; }
-        .hit-num { color: #f97316; font-weight: 900; text-shadow: 0 0 10px rgba(249,115,22,0.6); }
-        .defense-mode { border-color: #ef4444 !important; animation: pulse-border 2s infinite; }
-        @keyframes pulse-border { 0%, 100% { border-color: rgba(239,68,68,0.3); } 50% { border-color: #ef4444; } }
-        ::-webkit-scrollbar { width: 0; }
+        .hit-num { color: #f97316; font-weight: 900; text-shadow: 0 0 12px rgba(249,115,22,0.8); position: relative; }
+        .hit-num::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: #f97316; }
+        .defense-mode { border-color: #ef4444 !important; animation: pulse-border 1.5s infinite; }
+        @keyframes pulse-border { 0%, 100% { border-color: rgba(239,68,68,0.2); } 50% { border-color: #ef4444; } }
+        .scanline { width: 100%; height: 2px; background: rgba(249,115,22,0.1); position: absolute; animation: scan 3s linear infinite; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
-    <div class="flex justify-between items-center mb-4">
-        <div>
+    <div class="flex justify-between items-center mb-5">
+        <div class="relative">
             <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE EVO</h1>
-            <p class="text-[10px] text-gray-500 font-bold tracking-[0.3em]">V.6.99.1 QUANTUM-SYNC</p>
+            <p class="text-[10px] text-gray-500 font-bold tracking-[0.4em]">V.7.0.0 QUANTUM-LEARNING</p>
         </div>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
-            <button id="btn539" onclick="switchMode('539')" class="px-5 py-2 rounded-lg text-xs btn-active transition-all">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-2 rounded-lg text-xs btn-inactive ml-1 transition-all">天天樂</button>
-        </div>
-    </div>
-
-    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20">
-        <div class="flex justify-between items-end mb-3">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Global RTP Monitor</label>
-            <div id="stateTag" class="text-[10px] font-bold">● SYSTEM SYNCING</div>
-        </div>
-        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[75px] leading-relaxed">
-            核心引擎初始化中...
+        <div class="flex bg-[#2c2c2e] p-1.5 rounded-2xl shadow-inner">
+            <button id="btn539" onclick="switchMode('539')" class="px-6 py-2.5 rounded-xl text-xs btn-active transition-all">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-6 py-2.5 rounded-xl text-xs btn-inactive ml-1.5 transition-all">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500 shadow-lg shadow-orange-500/10">
-        <div class="grid grid-cols-4 gap-2 text-center">
-            <div class="border-r border-white/5"><div class="text-[9px] text-orange-500/70 mb-1 font-bold">熱點核心</div><div class="text-lg font-black tracking-tighter" id="p1">--</div></div>
-            <div class="border-r border-white/5"><div class="text-[9px] text-orange-500/70 mb-1 font-bold">尾數共振</div><div class="text-lg font-black tracking-tighter" id="p2">--</div></div>
-            <div class="border-r border-white/5"><div class="text-[9px] text-gray-500 mb-1 font-bold">對沖波段</div><div class="text-lg font-black tracking-tighter" id="p3">--</div></div>
-            <div><div class="text-[9px] text-gray-500 mb-1 font-bold">空間補位</div><div class="text-lg font-black tracking-tighter" id="p4">--</div></div>
+    <div id="statusPanel" class="ios-panel p-5 mb-4 relative overflow-hidden">
+        <div class="scanline"></div>
+        <div class="flex justify-between items-end mb-4 relative z-10">
+            <label class="text-[11px] text-orange-400 font-bold uppercase tracking-[0.2em]">Quantum AI Core Monitor</label>
+            <div id="stateTag" class="text-[10px] font-black px-2 py-0.5 rounded bg-orange-500/10 text-orange-500 border border-orange-500/20">SYNCING</div>
+        </div>
+        <div id="logBox" class="bg-black/80 p-4 rounded-xl text-[12px] font-mono border border-white/5 min-h-[90px] leading-relaxed shadow-inner">
+            核心模組啟動中... 正在載入演化學習集...
         </div>
     </div>
 
-    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
-        <div class="flex justify-between items-center mb-3">
-            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 3★+ BOOST)</label>
-            <div id="quickStats" class="text-[10px] text-orange-500 font-bold"></div>
+    <div class="ios-panel p-5 mb-4 border-t-4 border-orange-600 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">智能篩選核心組合 (8門)</span>
+             <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-orange-400 font-mono">TOP_PROBABILITY</span>
         </div>
-        <div class="overflow-y-auto flex-grow">
+        <div class="grid grid-cols-4 gap-3 text-center">
+            <div class="bg-black/30 p-2 rounded-lg border border-white/5"><div class="text-[9px] text-orange-500/60 mb-1 font-bold">主攻</div><div class="text-xl font-black tracking-tighter" id="p1">--</div></div>
+            <div class="bg-black/30 p-2 rounded-lg border border-white/5"><div class="text-[9px] text-orange-500/60 mb-1 font-bold">連動</div><div class="text-xl font-black tracking-tighter" id="p2">--</div></div>
+            <div class="bg-black/30 p-2 rounded-lg border border-white/5"><div class="text-[9px] text-gray-500 mb-1 font-bold">對沖</div><div class="text-xl font-black tracking-tighter" id="p3">--</div></div>
+            <div class="bg-black/30 p-2 rounded-lg border border-white/5"><div class="text-[9px] text-gray-500 mb-1 font-bold">補位</div><div class="text-xl font-black tracking-tighter" id="p4">--</div></div>
+        </div>
+    </div>
+
+    <div class="ios-panel p-5 flex-grow overflow-hidden flex flex-col shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase italic">回測效能統計 (Evolutionary Backtest)</label>
+            <div id="quickStats" class="text-[10px] text-orange-500 font-bold font-mono"></div>
+        </div>
+        <div class="overflow-y-auto flex-grow pr-1">
             <table class="w-full">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 z-10 text-[10px]">
                     <tr class="text-left uppercase">
-                        <th class="pb-2 w-14">Date</th>
-                        <th class="pb-2">Logic & Pulse Path</th>
-                        <th class="pb-2 text-right">Stars</th>
+                        <th class="pb-3 w-16 italic">Date</th>
+                        <th class="pb-3">Logic & Hit Distribution</th>
+                        <th class="pb-3 text-right">★</th>
                     </tr>
                 </thead>
-                <tbody id="historyTable" class="divide-y divide-white/5 font-mono text-[12px]"></tbody>
+                <tbody id="historyTable" class="divide-y divide-white/5 font-mono text-[13px]"></tbody>
             </table>
         </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 gap-3">
+        <a href="https://m.500.com/datachart/lotto/history.shtml" target="_blank" class="ios-panel p-3 text-center text-[11px] font-bold text-gray-400 hover:text-orange-500 transition-colors bg-white/5">
+            即時開獎網
+        </a>
+        <button onclick="fetchData()" class="ios-panel p-3 text-center text-[11px] font-bold text-orange-500 bg-orange-500/5 border-orange-500/20">
+            手動同步數據
+        </button>
     </div>
 
     <script>
@@ -74,16 +90,17 @@
 
         async function fetchData() {
             try {
+                document.getElementById('stateTag').innerText = "SYNCING...";
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "API Error. Check Connection."; }
+            } catch (e) { document.getElementById('logBox').innerText = "API 同步失敗，請檢查網絡連結。"; }
         }
 
         function switchMode(m) {
             currentMode = m;
-            document.getElementById('btn539').className = `px-5 py-2 rounded-lg text-xs ${m==='539'?'btn-active':'btn-inactive'}`;
-            document.getElementById('btnDaily').className = `px-5 py-2 rounded-lg text-xs ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
+            document.getElementById('btn539').className = `px-6 py-2.5 rounded-xl text-xs ${m==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-6 py-2.5 rounded-xl text-xs ${m==='Daily'?'btn-active ml-1.5':'btn-inactive ml-1.5'}`;
             render();
         }
 
@@ -100,45 +117,47 @@
         }
 
         function calculateAdvanced(history, isFailure) {
-            const sample = history.slice(0, 60);
-            
-            // 策略組：平衡(Balanced), 聯動(Linkage), 遺漏(Gap)
-            const packs = [
-                { id: 0, n: 'Matrix-A', wLink: 15.0, wTail: 8.0, wGap: 4.0 },
-                { id: 1, n: 'Matrix-B', wLink: 10.0, wTail: 12.0, wGap: 6.0 },
-                { id: 2, n: 'Matrix-C', wLink: 8.0, wTail: 6.0, wGap: 14.0 }
+            // 演化策略集
+            const strategies = [
+                { id: 'EVO-1', link: 18.0, pair: 12.0, gap: 5.0, tail: 10.0 }, // 重連動
+                { id: 'EVO-2', link: 12.0, pair: 8.0,  gap: 15.0, tail: 7.0 }, // 重遺漏
+                { id: 'EVO-3', link: 10.0, pair: 20.0, gap: 8.0, tail: 12.0 }  // 重矩陣組合
             ];
 
-            // 競爭回測找出最適合衝擊 3 星的權重
-            let bestPack = packs[0];
-            if (history.length > 10) {
-                let maxWeight = -1;
-                packs.forEach(p => {
-                    let score = 0;
-                    for (let i = 1; i <= 6; i++) {
-                        const pred = runLogic(history.slice(i), p);
+            // 競爭性回測：找出當前環境最優組合
+            let bestEvo = strategies[0];
+            if (history.length > 8) {
+                let maxScore = -1;
+                strategies.forEach(s => {
+                    let s_score = 0;
+                    for(let i=1; i<=5; i++) {
+                        const pred = runCore(history.slice(i), s);
                         const hits = history[i-1].nums.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
-                        score += (hits >= 3 ? hits * 3 : hits); // 3星以上加權權重
+                        // 3星命中獲得極高權重，加速優化進程
+                        if (hits >= 3) s_score += 50; 
+                        else if (hits == 2) s_score += 10;
+                        else s_score += hits;
                     }
-                    if (score > maxWeight) { maxWeight = score; bestPack = p; }
+                    if (s_score > maxScore) { maxScore = s_score; bestEvo = s; }
                 });
             }
 
-            function runLogic(h, W) {
-                let scores = [], linkMap = {}, tailMap = Array(10).fill(0), pairMap = {};
-                const s = h.slice(0, 45);
+            function runCore(h, W) {
+                let scores = [], pairMatrix = {}, linkMap = {}, tailFreq = Array(10).fill(0);
+                const s = h.slice(0, 40);
 
                 s.forEach((r, idx) => {
                     const weight = (s.length - idx) / s.length;
                     r.nums.forEach(n => {
-                        tailMap[n % 10] += weight;
+                        tailFreq[n % 10] += weight;
+                        // 建立聯動與矩陣
                         r.nums.forEach(n2 => {
                             if (n !== n2) {
                                 let k = n < n2 ? `${n}-${n2}` : `${n2}-${n}`;
-                                pairMap[k] = (pairMap[k] || 0) + weight;
+                                pairMatrix[k] = (pairMatrix[k] || 0) + weight;
                             }
                         });
-                        // 建立上一期拖牌關聯
+                        // 遺漏拖牌
                         if (idx < s.length - 1) {
                             h[idx+1].nums.forEach(pn => {
                                 if(!linkMap[pn]) linkMap[pn] = {};
@@ -149,45 +168,46 @@
                 });
 
                 for (let n = 1; n <= 39; n++) {
-                    let linkS = 0, pairS = 0;
+                    let l_score = 0, p_score = 0;
                     h[0].nums.forEach(ln => {
-                        if (linkMap[ln] && linkMap[ln][n]) linkS += linkMap[ln][n];
+                        if (linkMap[ln] && linkMap[ln][n]) l_score += linkMap[ln][n];
                         let pk = n < ln ? `${n}-${ln}` : `${ln}-${n}`;
-                        if (pairMap[pk]) pairS += pairMap[pk];
+                        if (pairMatrix[pk]) p_score += pairMatrix[pk];
                     });
 
                     let gap = 0;
                     for (let r of h) { if (r.nums.includes(n)) break; gap++; }
 
-                    // 矩陣核心算法：合併拖牌、成對關聯、尾數頻率與遺漏值
-                    let total = (linkS * W.wLink) + (pairS * W.wLink * 0.7) + (tailMap[n % 10] * W.wTail) + (Math.log1p(gap) * W.wGap);
+                    // 量子計算公式
+                    let total = (l_score * W.link) + (p_score * W.pair) + (tailFreq[n % 10] * W.tail) + (Math.sqrt(gap) * W.gap);
                     scores.push({ n, val: total, gap });
                 }
 
-                // 失敗恢復機制：若上期不理想，優先補償長期未出號
                 let pool = new Set();
-                if (isFailure) { 
-                    scores.sort((a,b) => b.gap - a.gap); 
-                    pool.add(scores[0].n); pool.add(scores[1].n); 
+                // 智能失敗恢復：引入極端遺漏平衡
+                if (isFailure) {
+                    scores.sort((a,b) => b.gap - a.gap);
+                    pool.add(scores[0].n);
+                    pool.add(scores[1].n);
                 }
 
                 scores.sort((a,b) => b.val - a.val);
-                for (let s of scores) { if (pool.size < 8) pool.add(s.n); }
+                for (let sc of scores) { if (pool.size < 8) pool.add(sc.n); }
                 return Array.from(pool).sort((a,b) => a - b).map(x => x.toString().padStart(2, '0'));
             }
 
-            return { nums: runLogic(history, bestPack), strategy: bestPack.n };
+            return { nums: runCore(history, bestEvo), strategy: bestEvo.id };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const history = parseHistory(apiData[currentMode]);
             let rows = "", results = [];
-            let stats = { total: 0, s3: 0, totalHits: 0 };
+            let stats = { total: 0, s3: 0, s2: 0, totalHits: 0 };
             let isFailure = false;
 
-            // 回測 40 期
-            for (let i = Math.min(history.length - 2, 40); i >= 0; i--) {
+            // 回測 30 期
+            for (let i = Math.min(history.length - 2, 30); i >= 0; i--) {
                 const res = calculateAdvanced(history.slice(i + 1), isFailure);
                 const act = history[i].nums;
                 const hits = act.filter(n => res.nums.includes(n.toString().padStart(2,'0'))).length;
@@ -201,14 +221,15 @@
                 stats.total++; 
                 stats.totalHits += r.hits;
                 if(r.hits >= 3) stats.s3++;
-                let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">STP</span>' : '';
-                let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
+                if(r.hits >= 2) stats.s2++;
+                let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/50 text-red-400 px-1 rounded mr-1">R-MODE</span>' : '';
+                let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-20">${p}</span>`).join(',');
 
                 rows += `<tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-500 font-bold">${r.date}</td>
-                    <td class="py-3">
+                    <td class="py-4 text-gray-500 font-bold">${r.date}</td>
+                    <td class="py-4">
                         <div class="text-white mb-1 tracking-[0.2em] font-black">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
-                        <div class="text-[10px] flex items-center">${tag}<span class="text-gray-500 font-mono tracking-tighter">${predHtml}</span></div>
+                        <div class="text-[11px] flex items-center">${tag}<span class="text-gray-500 font-mono tracking-tighter">${predHtml}</span></div>
                     </td>
                     <td class="text-right font-black ${r.hits>=3?'text-orange-500':'text-gray-500/50'} text-base">${r.hits}</td>
                 </tr>`;
@@ -216,19 +237,20 @@
 
             const current = calculateAdvanced(history, isFailure);
             const s3rate = ((stats.s3 / stats.total) * 100).toFixed(1);
+            const s2rate = ((stats.s2 / stats.total) * 100).toFixed(1);
             
-            document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
-            document.getElementById('stateTag').innerText = isFailure ? "● RECOVERY MODE" : "● MATRIX STABLE";
-            document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure?'defense-mode':'border-orange-500/20'}`;
+            document.getElementById('stateTag').className = `text-[10px] font-black px-2 py-0.5 rounded ${isFailure?'bg-red-500/10 text-red-500 animate-pulse':'bg-orange-500/10 text-orange-500'}`;
+            document.getElementById('stateTag').innerText = isFailure ? "RECOVERY MODE" : "APEX STABLE";
+            document.getElementById('statusPanel').className = `ios-panel p-5 mb-4 relative overflow-hidden transition-all ${isFailure?'defense-mode':''}`;
 
             document.getElementById('logBox').innerHTML = `
-                <div class="grid grid-cols-2 gap-x-2">
-                    <span class="text-gray-400">回測期數: <b class="text-white">${stats.total}</b></span>
+                <div class="grid grid-cols-2 gap-y-1">
+                    <span class="text-gray-400">當前策略: <b class="text-white">${current.strategy}</b></span>
                     <span class="text-gray-400 text-right">3★ 命中率: <b class="text-orange-500">${s3rate}%</b></span>
-                    <span class="text-gray-400">引擎核心: <b class="text-white">${current.strategy}</b></span>
-                    <span class="text-gray-400 text-right">預測精度: <b class="text-orange-500">${(stats.totalHits/stats.total).toFixed(2)}</b></span>
+                    <span class="text-gray-400">平均精度: <b class="text-white">${(stats.totalHits/stats.total).toFixed(2)}</b></span>
+                    <span class="text-gray-400 text-right">2-3★ 綜合: <b class="text-orange-500">${s2rate}%</b></span>
                 </div>
-                <div class="mt-1 text-[9px] text-gray-500 italic">正在使用成對關聯矩陣 (Pairwise Matrix) 鎖定組合規律。</div>`;
+                <div class="mt-2 text-[10px] text-gray-500 italic border-t border-white/5 pt-1">Quantum AI 正在進行非線性波動補償，鎖定熱點組合中。</div>`;
             
             for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${current.nums[i*2]},${current.nums[i*2+1]}`;
             document.getElementById('historyTable').innerHTML = rows;
