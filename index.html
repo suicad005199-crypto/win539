@@ -3,73 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.92 APEX FIXED</title>
+    <title>EVO 6.95 FULL-DATA APEX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
-        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
+        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 30px rgba(249, 115, 22, 0.2); }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
         .btn-inactive { background: #2c2c2e; color: #888; }
-        #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
         .hit-num { color: #000; background: var(--ios-orange); font-weight: 900; padding: 0 3px; border-radius: 2px; }
+        #historyTable tr:first-child { background: rgba(249, 115, 22, 0.05); }
     </style>
 </head>
-<body class="h-screen flex flex-col p-4 text-sm" onload="fetchData()">
+<body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.92</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.95</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/20">
+    <div class="ios-panel p-4 mb-3 border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">LOADING...</label>
-            <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold">
-                <span id="pulseDot" class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> APEX STABLE
-            </div>
+            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase">SYNCING DATA...</label>
+            <div class="text-[10px] text-orange-500 font-bold">● FULL HISTORICAL SCAN</div>
         </div>
-        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] h-24 overflow-y-auto font-mono border border-white/5">
-            <span class="text-orange-500/50 italic">校準序列載入中...</span>
+        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5">
+            正在掃描全量 API 數據庫...
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500">
-        <div class="grid grid-cols-4 gap-2">
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
-                <div class="text-[9px] text-orange-500 font-bold mb-1">熱點核心</div>
-                <div class="text-lg font-black text-white" id="p1">--</div>
-            </div>
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
-                <div class="text-[9px] text-orange-500 font-bold mb-1">影子共振</div>
-                <div class="text-lg font-black text-white" id="p2">--</div>
-            </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold mb-1">冷熱對沖</div>
-                <div class="text-lg font-black text-white" id="p3">--</div>
-            </div>
-            <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold mb-1">空間跳格</div>
-                <div class="text-lg font-black text-white" id="p4">--</div>
-            </div>
+        <div class="grid grid-cols-4 gap-2 text-center">
+            <div><div class="text-[9px] text-orange-500 mb-1">熱點核心</div><div class="text-lg font-black" id="p1">--</div></div>
+            <div><div class="text-[9px] text-orange-500 mb-1">影子共振</div><div class="text-lg font-black" id="p2">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">冷熱對沖</div><div class="text-lg font-black" id="p3">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">空間跳格</div><div class="text-lg font-black" id="p4">--</div></div>
         </div>
     </div>
 
-    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <div class="overflow-y-auto flex-grow">
+    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-10">
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">全量數據歷史回測 (由新至舊)</label>
+        <div class="overflow-y-auto flex-grow" style="max-height: 60vh;">
             <table class="w-full text-[12px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 shadow-sm">
                     <tr class="text-left">
-                        <th class="pb-2">日期</th>
-                        <th class="pb-2">開獎與狙擊選碼</th>
+                        <th class="pb-2 w-16">日期</th>
+                        <th class="pb-2">開獎與狙擊佈局</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
-                <tbody id="historyTable" class="divide-y divide-white/5"></tbody>
+                <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
             </table>
         </div>
     </div>
@@ -84,9 +70,7 @@
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { 
-                document.getElementById('logBox').innerHTML = `<span class="text-red-500">API 連結失敗，請檢查權限</span>`;
-            }
+            } catch (e) { document.getElementById('logBox').innerText = "API 連結異常"; }
         }
 
         function switchMode(m) {
@@ -96,83 +80,75 @@
             render();
         }
 
-        // --- 強健數據過濾器 ---
-        function parseHistory(raw) {
-            return raw.filter(row => row && row.length >= 6)
-                .map(row => {
-                    let dateStr = String(row[0]);
-                    // 處理 ISO Date 與普通字串
-                    let cleanDate = dateStr.includes('T') ? dateStr.split('T')[0].substring(5) : dateStr.replace(/-/g, '/').substring(5);
-                    let nums = row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b);
-                    return { date: cleanDate || "??/??", nums: nums };
-                })
-                .filter(item => item.nums.length === 5); // 確保開獎號碼完整
+        function parseCleanHistory(raw) {
+            let data = raw.filter(r => r && r.length >= 6).map(r => {
+                let d = new Date(r[0]);
+                return {
+                    fullDate: d,
+                    displayDate: !isNaN(d) ? `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}` : "??/??",
+                    nums: r.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+                };
+            }).filter(item => item.nums.length === 5);
+            
+            // 強制由新到舊排序
+            return data.sort((a, b) => b.fullDate - a.fullDate);
         }
 
         function calculateAPEX(history, mode) {
             if (history.length < 2) return { pred: ["00"], aIndex: "0.00" };
             const range = 39;
             const last = history[0].nums;
-            const last2 = history[1].nums;
             let scores = [];
 
             for(let n=1; n<=range; n++) {
-                let freq = history.slice(0, 15).filter(r => r.nums.includes(n)).length;
+                let freq = history.slice(0, 20).filter(r => r.nums.includes(n)).length;
                 let gap = 0;
                 for(let r of history) { if(r.nums.includes(n)) break; gap++; }
 
-                let base = mode === '539' ? (freq * 2.5 + gap * 0.4) : (freq * 3.2);
-                let jumpSignal = 0;
-                last.forEach(ln => {
-                    if (Math.abs(ln - n) === 2) jumpSignal += 2.0;
-                    if (last2.includes(ln - 1) && n === ln + 1) jumpSignal += 3.0;
-                });
-
+                let base = mode === '539' ? (freq * 2.8 + gap * 0.6) : (freq * 3.5);
                 let tailMatch = last.filter(ln => ln % 10 === n % 10).length;
-                let tailBonus = mode === 'Daily' ? (1 + tailMatch * 0.7) : (1 + tailMatch * 0.4);
-                let repeat = last.includes(n) ? (mode === 'Daily' ? 1.7 : 1.3) : 1.0;
-                let neighbor = last.some(ln => Math.abs(ln - n) === 1) ? 1.5 : 1.0;
+                let neighbor = last.some(ln => Math.abs(ln - n) <= 1) ? 1.5 : 1.0;
 
-                scores.push({ n: n, val: (base + jumpSignal) * tailBonus * repeat * neighbor, gap: gap, tail: n % 10 });
+                scores.push({ n: n, val: base * (1 + tailMatch * 0.5) * neighbor, gap: gap, tail: n % 10 });
             }
 
             scores.sort((a, b) => b.val - a.val);
             let p = new Set();
-            scores.slice(0, 2).forEach(s => p.add(s.n));
-            scores.slice(2, 12).forEach(s => {
-                if(p.size < 4 && Array.from(p).some(x => x % 10 === s.tail || Math.abs(x-s.n) <= 2)) p.add(s.n);
-            });
-            let cold = [...scores].sort((a,b)=>b.gap - a.gap)[0];
-            if(p.size < 6) p.add(cold.n);
-            scores.forEach(s => { if(p.size < 8) p.add(s.n); });
-
+            scores.slice(0, 8).forEach(s => p.add(s.n)); // 取權重前 8 名
+            
             return {
                 pred: Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                aIndex: (scores[0].val / (mode === '539' ? 6 : 9)).toFixed(2)
+                aIndex: (scores[0].val / 10).toFixed(2)
             };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
-            const history = parseHistory(apiData[currentMode]);
-            if (history.length === 0) return;
-
+            const history = parseCleanHistory(apiData[currentMode]);
             let stars = 0, rows = "";
-            const testCount = Math.min(10, history.length - 1);
 
-            for(let i=0; i < testCount; i++) {
-                let res = calculateAPEX(history.slice(i+1), currentMode);
+            // 顯示 API 提供之全部數據
+            for(let i=0; i < history.length; i++) {
+                // 回測邏輯：用該期之前的數據預測該期
+                let prevData = history.slice(i + 1);
+                if (prevData.length < 2) continue; 
+
+                let res = calculateAPEX(prevData, currentMode);
                 let act = history[i].nums;
                 let hits = act.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
-                stars += hits;
+                stars += (i < 10) ? hits : 0; // 僅計算近10期平均
 
                 let predHtml = res.pred.map(p => act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 font-mono">${history[i].date}</td><td class="text-white text-[11px] font-mono">${act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br><span class="text-gray-500">→ ${predHtml}</span></td><td class="text-right font-black ${hits>=2?'text-orange-500':'text-gray-700'}">${hits}</td></tr>`;
+                rows += `<tr class="border-b border-white/5">
+                    <td class="py-3 text-gray-500">${history[i].displayDate}</td>
+                    <td class="text-white text-[11px]">${act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br><span class="text-gray-600">→ ${predHtml}</span></td>
+                    <td class="text-right font-black ${hits>=2?'text-orange-500':'text-gray-800'}">${hits}</td>
+                </tr>`;
             }
 
             const current = calculateAPEX(history, currentMode);
             document.getElementById('strategyLabel').innerText = `STRATEGY ${currentMode === '539' ? 'A (539)' : 'B (DAILY)'} ACTIVE`;
-            document.getElementById('logBox').innerHTML = `<div class="flex justify-between"><span>平均命中: <b class="text-orange-500 text-sm">${(stars/testCount).toFixed(2)} 星</b></span><span>A-INDEX: ${current.aIndex}</span></div><div class="mt-2 text-gray-400">目前盤勢：${current.aIndex > 10 ? '高熱度趨勢' : '亂序補位期'}</div>`;
+            document.getElementById('logBox').innerHTML = `<div class="flex justify-between"><span>近 10 期平均: <b class="text-orange-500">${(stars/10).toFixed(2)} 星</b></span><span>A-INDEX: ${current.aIndex}</span></div>`;
             
             document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
             document.getElementById('p2').innerText = `${current.pred[2]},${current.pred[3]}`;
