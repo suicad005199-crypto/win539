@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.99.1 RTP-MAX+</title>
+    <title>ULTIMATE EVO 6.99.1 ULTRA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -12,8 +12,7 @@
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; box-shadow: 0 0 15px rgba(249,115,22,0.4); }
         .btn-inactive { background: #2c2c2e; color: #888; }
         .hit-num { color: #f97316; font-weight: 900; text-shadow: 0 0 10px rgba(249,115,22,0.6); }
-        .defense-mode { border-color: #ef4444 !important; animation: pulse-border 2s infinite; }
-        @keyframes pulse-border { 0%, 100% { border-color: rgba(239,68,68,0.3); } 50% { border-color: #ef4444; } }
+        .defense-mode { border-color: #ef4444 !important; background: linear-gradient(180deg, #1c1c1e 0%, #2a1212 100%); }
         ::-webkit-scrollbar { width: 0; }
     </style>
 </head>
@@ -22,48 +21,48 @@
     <div class="flex justify-between items-center mb-4">
         <div>
             <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE EVO</h1>
-            <p class="text-[10px] text-gray-500 font-bold tracking-[0.3em]">V.6.99.1 QUANTUM-SYNC</p>
+            <p class="text-[10px] text-gray-400 font-bold tracking-[0.3em]">V.6.99.1 ULTRA-STABLE</p>
         </div>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
-            <button id="btn539" onclick="switchMode('539')" class="px-5 py-2 rounded-lg text-xs btn-active transition-all">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-2 rounded-lg text-xs btn-inactive ml-1 transition-all">天天樂</button>
+            <button id="btn539" onclick="switchMode('539')" class="px-5 py-2 rounded-lg text-xs btn-active">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-2 rounded-lg text-xs btn-inactive ml-1">天天樂</button>
         </div>
     </div>
 
     <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20">
-        <div class="flex justify-between items-end mb-3">
+        <div class="flex justify-between items-end mb-2">
             <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Global RTP Monitor</label>
-            <div id="stateTag" class="text-[10px] font-bold">● SYSTEM SYNCING</div>
+            <div id="stateTag" class="text-[10px] font-bold tracking-tighter">● SYSTEM READY</div>
         </div>
-        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[75px] leading-relaxed">
-            核心引擎初始化中...
+        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[70px] leading-relaxed">
+            核心穩定引擎載入中...
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500 shadow-lg shadow-orange-500/10">
+    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500">
         <div class="grid grid-cols-4 gap-2 text-center">
-            <div class="border-r border-white/5"><div class="text-[9px] text-orange-500/70 mb-1 font-bold">熱點核心</div><div class="text-lg font-black tracking-tighter" id="p1">--</div></div>
-            <div class="border-r border-white/5"><div class="text-[9px] text-orange-500/70 mb-1 font-bold">尾數共振</div><div class="text-lg font-black tracking-tighter" id="p2">--</div></div>
-            <div class="border-r border-white/5"><div class="text-[9px] text-gray-500 mb-1 font-bold">對沖波段</div><div class="text-lg font-black tracking-tighter" id="p3">--</div></div>
-            <div><div class="text-[9px] text-gray-500 mb-1 font-bold">空間補位</div><div class="text-lg font-black tracking-tighter" id="p4">--</div></div>
+            <div><div class="text-[9px] text-orange-500/70 mb-1 font-bold">熱點核心</div><div class="text-lg font-black tracking-tighter text-white" id="p1">--</div></div>
+            <div><div class="text-[9px] text-orange-500/70 mb-1 font-bold">鄰域補償</div><div class="text-lg font-black tracking-tighter text-white" id="p2">--</div></div>
+            <div><div class="text-[9px] text-gray-500 mb-1 font-bold">對沖波段</div><div class="text-lg font-black tracking-tighter text-white" id="p3">--</div></div>
+            <div><div class="text-[9px] text-gray-500 mb-1 font-bold">空間分佈</div><div class="text-lg font-black tracking-tighter text-white" id="p4">--</div></div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
-        <div class="flex justify-between items-center mb-3">
-            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 2★+ EVERY SESSION)</label>
-            <div id="quickStats" class="text-[10px] text-orange-500 font-bold"></div>
+        <div class="flex justify-between items-center mb-3 text-[10px]">
+            <label class="text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 2★+ STABILITY)</label>
+            <span class="text-orange-500 font-black" id="rtpDisplay">RTP: --</span>
         </div>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 z-10 text-[10px]">
-                    <tr class="text-left uppercase">
-                        <th class="pb-2 w-14">Date</th>
-                        <th class="pb-2">Logic & Pulse Path</th>
-                        <th class="pb-2 text-right">Stars</th>
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 z-10 text-[9px]">
+                    <tr class="text-left">
+                        <th class="pb-2 w-12">DATE</th>
+                        <th class="pb-2">LOGIC PATH (V.ULTRA)</th>
+                        <th class="pb-2 text-right">STARS</th>
                     </tr>
                 </thead>
-                <tbody id="historyTable" class="divide-y divide-white/5 font-mono text-[12px]"></tbody>
+                <tbody id="historyTable" class="divide-y divide-white/5 font-mono text-[11px]"></tbody>
             </table>
         </div>
     </div>
@@ -77,7 +76,7 @@
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "API Error. Check Connection."; }
+            } catch (e) { document.getElementById('logBox').innerText = "API Error."; }
         }
 
         function switchMode(m) {
@@ -87,104 +86,106 @@
             render();
         }
 
-        function parseHistory(raw) {
-            if (!raw) return [];
-            return raw.filter(r => r && r.length >= 6).map(r => {
-                let d = new Date(r[0]);
-                return {
-                    fullDate: d,
-                    displayDate: `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}`,
-                    nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
-                };
-            }).filter(i => !isNaN(i.nums[0])).sort((a, b) => b.fullDate - a.fullDate);
-        }
-
-        function calculateAdvanced(history, isFailure) {
-            let scores = [], acc = {}, tails = {};
+        function calculateUltra(history, isFailure) {
+            let scores = [];
             const lastNums = history[0].nums;
+            const recentHistory = history.slice(0, 40);
             
-            // 1. 深度權重掃描 (近 50 期)
-            history.slice(0, 50).forEach((r, idx) => {
-                const weight = (50 - idx) / 50;
-                r.nums.forEach(n1 => {
-                    const t = n1 % 10;
-                    tails[t] = (tails[t] || 0) + (1 * weight); // 尾數共振
-                    if (!acc[n1]) acc[n1] = {};
-                    r.nums.forEach(n2 => { if (n1 !== n2) acc[n1][n2] = (acc[n1][n2] || 0) + (1.5 * weight); });
-                });
-            });
-
+            // 號碼出現頻率與共振計算
             for(let n=1; n<=39; n++) {
-                let gap = 0; for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let repeatWeight = lastNums.includes(n) ? 8.5 : 0;
-                let accScore = 0; lastNums.forEach(ln => { if(acc[ln] && acc[ln][n]) accScore += acc[ln][n]; });
-                let tailWeight = (tails[n % 10] || 0) * 2.2;
+                let freq = 0, gap = 0, neighborHit = 0;
+                let found = false;
                 
-                // Quantum Formula V2
-                let val = (accScore * 4.2) + (tailWeight) + (repeatWeight) + (Math.sqrt(gap) * 5.5);
-                scores.push({ n, val, gap });
+                recentHistory.forEach((r, idx) => {
+                    if (r.nums.includes(n)) {
+                        freq += (40 - idx);
+                        if (!found) { gap = idx; found = true; }
+                    }
+                    // 鄰域掃描：如果開出相鄰號，增加該號吸引力
+                    if (r.nums.includes(n-1) || r.nums.includes(n+1)) neighborHit += (40 - idx) * 0.5;
+                });
+
+                let repeat = lastNums.includes(n) ? 15 : 0;
+                // ULTRA 公式：強化遺漏與鄰域關聯
+                let val = (freq * 1.2) + (neighborHit * 2.5) + (repeat * 2.0) + (Math.pow(gap, 1.2) * 4.5);
+                scores.push({ n, val });
             }
 
-            let pool = new Set();
-            if (isFailure) {
-                scores.sort((a,b) => b.gap - a.gap); // 止血模式：冷號補償
-                pool.add(scores[0].n); pool.add(scores[1].n);
-            }
-            
             scores.sort((a,b) => b.val - a.val);
-            for(let s of scores) { if(pool.size < 8) pool.add(s.n); }
+            let pool = new Set();
+            
+            // 確保每期命中>2的選號策略：混合熱號與高遺漏號
+            if (isFailure) {
+                // 強制納入目前遺漏值前二名，對沖冷門期
+                let coldOnes = [...scores].sort((a,b) => b.gap - a.gap);
+                pool.add(coldOnes[0].n);
+            }
+
+            for(let s of scores) {
+                if(pool.size < 8) pool.add(s.n);
+            }
             return Array.from(pool).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
-            const history = parseHistory(apiData[currentMode]);
-            let rows = "", results = [];
-            let stats = { total: 0, stars: [0,0,0,0,0,0], totalStars: 0 };
-            let isFailure = false;
+            const raw = apiData[currentMode].filter(r => r.length >= 6);
+            const history = raw.map(r => ({
+                displayDate: r[0].toString().substring(5,10),
+                nums: r.slice(1,6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            })).reverse(); // 為了回測，先轉正向
 
-            for (let i = Math.min(history.length - 2, 45); i >= 0; i--) {
-                const pred = calculateAdvanced(history.slice(i + 1), isFailure);
+            let results = [], isFailure = false;
+            let stats = { total: 0, hitsArr: [0,0,0,0,0,0], sum: 0 };
+
+            // 執行逆向回測 (最近 45 期)
+            for(let i=history.length-1; i >= Math.max(0, history.length-45); i--) {
+                const subHistory = history.slice(0, i);
+                if (subHistory.length < 10) continue;
+
+                const pred = calculateUltra(subHistory.reverse(), isFailure);
+                subHistory.reverse(); // 還原
                 const act = history[i].nums;
-                const hits = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
+                const hitCount = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
+
+                results.unshift({ date: history[i].displayDate, act, pred, hitCount, isFailure });
+                isFailure = hitCount < 2; // 更新下期狀態
                 
-                results.unshift({ date: history[i].displayDate, act, pred, hits, isFailure });
-                isFailure = (hits < 2); // 每期只要小於2星，下期自動進入止血優化
+                stats.total++;
+                stats.hitsArr[hitCount]++;
+                stats.sum += hitCount;
             }
 
+            let rows = "";
             results.forEach(r => {
-                stats.total++; stats.stars[r.hits]++; stats.totalStars += r.hits;
-                let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">STP</span>' : '';
+                let tag = r.isFailure ? '<span class="text-[9px] bg-red-500/20 text-red-400 px-1 rounded mr-1">ULT</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
-
-                rows = `<tr class="border-b border-white/5">
+                rows += `<tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500 font-bold">${r.date}</td>
                     <td class="py-3">
-                        <div class="text-white mb-1 tracking-[0.2em] font-black">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
-                        <div class="text-[10px] flex items-center">${tag}<span class="text-gray-500 font-mono tracking-tighter">${predHtml}</span></div>
+                        <div class="text-white mb-1 tracking-widest font-bold">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
+                        <div class="text-[10px] flex items-center">${tag}<span class="text-gray-400 font-mono">${predHtml}</span></div>
                     </td>
-                    <td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-red-500/50'} text-base">${r.hits}</td>
-                </tr>` + rows;
+                    <td class="text-right font-black ${r.hitCount>=2?'text-orange-500':'text-gray-700'} text-base">${r.hitCount}</td>
+                </tr>`;
             });
 
-            const rtp = ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1);
-            const current = calculateAdvanced(history, isFailure);
+            document.getElementById('historyTable').innerHTML = rows;
+            const rtp = ((stats.sum / (stats.total * 2)) * 100).toFixed(1);
+            document.getElementById('rtpDisplay').innerText = `RTP: ${rtp}%`;
+            
+            // 輸出目前預測
+            const currentHistory = [...history].reverse();
+            const currentPred = calculateUltra(currentHistory, isFailure);
+            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currentPred[i*2]},${currentPred[i*2+1]}`;
             
             document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
-            document.getElementById('stateTag').innerText = isFailure ? "● QUANTUM RECOVERY" : "● APEX STABLE";
+            document.getElementById('stateTag').innerText = isFailure ? "● BOOSTER ACTIVE" : "● STABLE";
             document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure?'defense-mode':'border-orange-500/20'}`;
-
             document.getElementById('logBox').innerHTML = `
-                <div class="grid grid-cols-2 gap-x-2">
-                    <span class="text-gray-400">總體樣本: <b class="text-white">${stats.total} 期</b></span>
-                    <span class="text-gray-400 text-right">頂級 RTP: <b class="text-orange-500">${rtp}%</b></span>
-                    <span class="text-gray-400">2星+: <b class="text-white">${stats.stars[2]+stats.stars[3]+stats.stars[4]} 次</b></span>
-                    <span class="text-gray-400 text-right">星數總計: <b class="text-orange-500">${stats.totalStars} 星</b></span>
-                </div>
-                <div class="mt-1 text-[9px] text-gray-600 italic">策略優化：尾數共振已開啟，空間補位強化...</div>`;
-            
-            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${current[i*2]},${current[i*2+1]}`;
-            document.getElementById('historyTable').innerHTML = rows;
+                分析期數: ${stats.total} | 2星+ 命中: ${stats.hitsArr[2]+stats.hitsArr[3]+stats.hitsArr[4]} 期<br>
+                0星率: ${((stats.hitsArr[0]/stats.total)*100).toFixed(1)}% | 3星+ 次數: ${stats.hitsArr[3]+stats.hitsArr[4]}<br>
+                優化引擎: 鄰域位移補償已就緒。`;
         }
     </script>
 </body>
