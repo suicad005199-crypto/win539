@@ -51,7 +51,7 @@
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 shadow-sm">
                     <tr class="text-left">
                         <th class="pb-2 w-16">日期</th>
-                        <th class="pb-2">開獎與狙擊佈局</th>
+                        <th class="pb-2">開獎與狙擊佈局碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -89,8 +89,6 @@
                     nums: r.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
                 };
             }).filter(item => item.nums.length === 5);
-            
-            // 強制由新到舊排序
             return data.sort((a, b) => b.fullDate - a.fullDate);
         }
 
@@ -114,7 +112,7 @@
 
             scores.sort((a, b) => b.val - a.val);
             let p = new Set();
-            scores.slice(0, 8).forEach(s => p.add(s.n)); // 取權重前 8 名
+            scores.slice(0, 8).forEach(s => p.add(s.n));
             
             return {
                 pred: Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
@@ -127,22 +125,23 @@
             const history = parseCleanHistory(apiData[currentMode]);
             let stars = 0, rows = "";
 
-            // 顯示 API 提供之全部數據
             for(let i=0; i < history.length; i++) {
-                // 回測邏輯：用該期之前的數據預測該期
                 let prevData = history.slice(i + 1);
                 if (prevData.length < 2) continue; 
 
                 let res = calculateAPEX(prevData, currentMode);
                 let act = history[i].nums;
                 let hits = act.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
-                stars += (i < 10) ? hits : 0; // 僅計算近10期平均
+                stars += (i < 10) ? hits : 0;
+
+                // 修正：0-1 星顯示白色 (text-white)，2星以上顯示橘色 (text-orange-500)
+                let starColor = hits >= 2 ? 'text-orange-500' : 'text-white';
 
                 let predHtml = res.pred.map(p => act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
                 rows += `<tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500">${history[i].displayDate}</td>
                     <td class="text-white text-[11px]">${act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br><span class="text-gray-600">→ ${predHtml}</span></td>
-                    <td class="text-right font-black ${hits>=2?'text-orange-500':'text-gray-800'}">${hits}</td>
+                    <td class="text-right font-black ${starColor}">${hits}</td>
                 </tr>`;
             }
 
