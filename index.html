@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.99 DEFENSE-ACTIVE</title>
+    <title>ULTIMATE EVO 6.99.1 RTP-SENSE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -11,14 +11,14 @@
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
         .btn-inactive { background: #2c2c2e; color: #888; }
-        .hit-num { color: #f97316; font-weight: 900; } /* 命中的預測號碼呈現亮橘色 */
+        .hit-num { color: #f97316; font-weight: 900; }
         .defense-mode { border-color: #ef4444 !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.99</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.99.1</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
@@ -45,7 +45,7 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-10">
-        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">全量數據歷史回測 (狀態感知型)</label>
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">全量數據歷史回測 (RTP% 監控中)</label>
         <div class="overflow-y-auto flex-grow" style="max-height: 60vh;">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 shadow-sm">
@@ -83,7 +83,6 @@
         function parseCleanHistory(raw) {
             let data = raw.filter(r => r && r.length >= 6).map(r => {
                 let d = new Date(r[0]);
-                // 強制修正 1/1 或缺乏年份的解析問題
                 if (isNaN(d.getTime())) {
                     let parts = String(r[0]).split(/[-/T ]/);
                     if (parts.length >= 3) d = new Date(parts[0], parts[1]-1, parts[2]);
@@ -101,7 +100,6 @@
             const range = 39;
             const last = history[0].nums;
             let scores = [];
-
             for(let n=1; n<=range; n++) {
                 let freq = history.slice(0, 15).filter(r => r.nums.includes(n)).length;
                 let gap = 0;
@@ -109,21 +107,17 @@
                 let val = (freq * 3.0) + (gap * 0.5);
                 scores.push({ n: n, val: val, gap: gap, tail: n % 10 });
             }
-
             let p = new Set();
             if (isFailureState) {
                 let byGap = [...scores].sort((a,b) => b.gap - a.gap);
                 p.add(byGap[0].n); p.add(byGap[1].n);
                 let usedTails = new Set([byGap[0].tail, byGap[1].tail]);
                 let byFreq = [...scores].sort((a,b) => b.val - a.val);
-                for(let s of byFreq) {
-                    if (p.size < 8 && !usedTails.has(s.tail)) { p.add(s.n); usedTails.add(s.tail); }
-                }
+                for(let s of byFreq) { if (p.size < 8 && !usedTails.has(s.tail)) { p.add(s.n); usedTails.add(s.tail); } }
             } else {
                 let byVal = [...scores].sort((a,b) => b.val - a.val);
                 byVal.slice(0, 8).forEach(s => p.add(s.n));
             }
-
             let finalPred = Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
             if(finalPred.length < 8) {
                 scores.sort((a,b)=>b.val - a.val).forEach(s => { if(p.size < 8) p.add(s.n); });
@@ -136,7 +130,7 @@
             if (!apiData || !apiData[currentMode]) return;
             const history = parseCleanHistory(apiData[currentMode]);
             let rows = "";
-            let stats = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, total: 0 };
+            let stats = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, total: 0, totalStars: 0 };
             let consecutiveFailures = 0; 
             let currentIsFailure = false;
             let results = [];
@@ -161,11 +155,11 @@
             }
 
             results.forEach(r => {
-                stats.total++; stats[r.hits]++;
+                stats.total++; 
+                stats[r.hits]++;
+                stats.totalStars += r.hits;
                 let starColor = r.hits >= 2 ? 'text-orange-500' : 'text-white';
                 let modeTag = r.isDefense ? '<span class="text-[9px] bg-red-900/50 text-red-400 px-1 rounded mr-1">止血</span>' : '';
-                
-                // 處理預測號碼顯示：命中者為亮橘色 hit-num
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
 
                 rows += `<tr class="border-b border-white/5">
@@ -174,6 +168,9 @@
                     <td class="text-right font-black ${starColor}">${r.hits}</td>
                 </tr>`;
             });
+
+            // RTP 計算：總命中星數 / (總期數 * 8 碼成本) -> 此處簡化為相對回報率
+            let rtp = stats.total > 0 ? ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1) : 0;
 
             const current = calculateSmartAPEX(history, currentMode, currentIsFailure);
             const stateTag = document.getElementById('stateTag');
@@ -192,7 +189,7 @@
             document.getElementById('logBox').innerHTML = `
                 <div class="grid grid-cols-2 gap-x-4">
                     <span>總期數: ${stats.total}</span> <span class="text-orange-500">2星: ${stats[2]}</span>
-                    <span>0星: ${stats[0]}</span> <span class="text-orange-500">3星: ${stats[3]}</span>
+                    <span>0星: ${stats[0]} (RTP: ${rtp}%)</span> <span class="text-orange-500">3星: ${stats[3]}</span>
                     <span>1星: ${stats[1]}</span> <span class="text-orange-500">4星: ${stats[4]}</span>
                     <span>狀態: ${currentIsFailure ? '止血模式' : '主策略'}</span> <span class="text-orange-500 font-bold">5星: ${stats[5]}</span>
                 </div>`;
