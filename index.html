@@ -3,53 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EVO V.18 NEURAL-PULSE</title>
+    <title>ULTIMATE EVO V.19 QUANTUM-BIAS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --ios-orange: #f97316; --ios-bg: #000; --ios-panel: #1c1c1e; }
-        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-        .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .hit-num { color: #f97316; font-weight: 900; background: rgba(249,115,22,0.15); border-radius: 4px; padding: 0 2px; }
-        .sig-buy { color: #22c55e; border: 1px solid #22c55e; box-shadow: 0 0 10px rgba(34,197,94,0.2); }
-        .sig-wait { color: #ef4444; border: 1px solid #ef4444; }
-        ::-webkit-scrollbar { width: 0; }
+        :root { --ios-orange: #f59e0b; --ios-bg: #09090b; --ios-panel: #18181b; }
+        body { background-color: var(--ios-bg); color: #f4f4f5; font-family: -apple-system, system-ui; }
+        .ios-panel { background: var(--ios-panel); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+        .hit-num { color: #f59e0b; font-weight: 800; background: rgba(245,158,11,0.1); border-radius: 4px; padding: 0 2px; }
+        .sig-strong { color: #10b981; border: 1px solid #10b981; box-shadow: 0 0 12px rgba(16,185,129,0.2); }
+        .sig-weak { color: #f43f5e; border: 1px solid #f43f5e; }
+        .pulse-bg { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO V.18</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
-            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-xs font-bold transition-all bg-orange-500 text-black">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-xs font-bold transition-all ml-1 text-gray-400">天天樂</button>
+    <div class="flex justify-between items-center mb-5">
+        <h1 class="text-2xl font-black italic tracking-tighter text-amber-500">EVO <span class="text-white">V.19</span></h1>
+        <div class="flex bg-zinc-800/50 p-1 rounded-xl border border-white/5">
+            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-500 text-black">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-xs font-bold transition-all ml-1 text-zinc-500">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border border-orange-500/10">
-        <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Pulse Diagnostic</label>
-            <div id="stateTag" class="text-[10px] font-bold uppercase text-green-500">● Live Neural</div>
+    <div class="ios-panel p-4 mb-3">
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">Quantum Bias Engine</label>
+            <div id="stateTag" class="text-[10px] font-bold text-amber-500 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 pulse-bg"></span> ACTIVE
+            </div>
         </div>
-        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-snug min-h-[95px]">
-            矩陣協定解析中...
-        </div>
-    </div>
-
-    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500 relative">
-        <div class="absolute -top-2.5 left-4">
-            <span id="signalTag" class="px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase border border-white/10">Pulse</span>
-        </div>
-        <div class="grid grid-cols-4 gap-2 text-center mt-2">
-            <div><div class="text-[9px] text-orange-500 mb-1 font-bold">權重核心</div><div class="text-lg font-black" id="p1">--</div></div>
-            <div><div class="text-[9px] text-orange-500 mb-1 font-bold">關聯矩陣</div><div class="text-lg font-black" id="p2">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1 font-bold">動態對沖</div><div class="text-lg font-black" id="p3">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1 font-bold">深度遺漏</div><div class="text-lg font-black" id="p4">--</div></div>
+        <div id="logBox" class="bg-black/40 p-3 rounded-xl text-[11px] font-mono border border-white/5 leading-relaxed min-h-[100px]">
+            量子矩陣同步中...
         </div>
     </div>
 
-    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-6">
-        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2">Neural Recovery History (V.18)</label>
-        <div class="overflow-y-auto flex-grow">
+    <div class="ios-panel p-4 mb-3 relative overflow-hidden">
+        <div class="flex gap-2 mb-3">
+            <span id="signalTag" class="px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase tracking-tighter">Initializing</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-center">
+            <div class="bg-zinc-900/50 py-2 rounded-lg">
+                <div class="text-[8px] text-zinc-500 mb-1 font-bold">核心權重</div>
+                <div class="text-base font-black text-white" id="p1">--</div>
+            </div>
+            <div class="bg-zinc-900/50 py-2 rounded-lg">
+                <div class="text-[8px] text-zinc-500 mb-1 font-bold">偏向校正</div>
+                <div class="text-base font-black text-white" id="p2">--</div>
+            </div>
+            <div class="bg-zinc-900/50 py-2 rounded-lg">
+                <div class="text-[8px] text-zinc-400 mb-1 font-bold">分佈平衡</div>
+                <div class="text-base font-black text-white" id="p3">--</div>
+            </div>
+            <div class="bg-zinc-900/50 py-2 rounded-lg">
+                <div class="text-[8px] text-zinc-400 mb-1 font-bold">極限遺漏</div>
+                <div class="text-base font-black text-white" id="p4">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
+        <label class="text-[10px] text-zinc-600 font-bold uppercase mb-3 tracking-widest">Efficiency Backtest</label>
+        <div class="overflow-y-auto flex-grow pr-1">
             <table class="w-full text-[12px]">
                 <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
             </table>
@@ -66,32 +81,22 @@
                 apiData = await res.json();
                 render();
             } catch (e) {
-                document.getElementById('logBox').innerHTML = `<span class="text-red-500">Sync Error</span>`;
+                document.getElementById('logBox').innerText = "連線超時，請重新整理。";
             }
         }
 
         function switchMode(m) {
             currentMode = m;
-            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-xs font-bold transition-all ${m==='539'?'bg-orange-500 text-black':'text-gray-400'}`;
-            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-xs font-bold transition-all ml-1 ${m==='Daily'?'bg-orange-500 text-black':'text-gray-400'}`;
+            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-xs font-bold transition-all ${m==='539'?'bg-amber-500 text-black':'text-zinc-500'}`;
+            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-xs font-bold transition-all ml-1 ${m==='Daily'?'bg-amber-500 text-black':'text-zinc-500'}`;
             render();
         }
 
-        function parseCleanHistory(raw) {
-            if (!raw || !Array.isArray(raw)) return [];
-            return raw.filter(r => r && r.length >= 6 && !isNaN(parseInt(r[1])))
-                .map(r => ({
-                    fullDate: new Date(r[0]),
-                    displayDate: r[0].toString().substring(5, 10).replace('-', '/'),
-                    nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
-                })).sort((a,b) => b.fullDate - a.fullDate);
-        }
-
-        function calculateV18(history, isFail) {
+        function calculateV19(history, isFail) {
             let scores = [], acc = {};
-            const lastNums = history[0].nums;
+            const last = history[0].nums;
             
-            history.slice(0, 32).forEach(r => {
+            history.slice(0, 35).forEach(r => {
                 r.nums.forEach(n1 => {
                     if (!acc[n1]) acc[n1] = {};
                     r.nums.forEach(n2 => { if (n1 !== n2) acc[n1][n2] = (acc[n1][n2] || 0) + 1; });
@@ -100,31 +105,32 @@
 
             for(let n=1; n<=39; n++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let repeat = lastNums.includes(n) ? 4.5 : 0;
-                let accS = 0; lastNums.forEach(ln => { if(acc[ln] && acc[ln][n]) accS += acc[ln][n]; });
-                // V.18 Pulse Formula
-                let val = (accS * 2.4) + repeat + (Math.pow(gap, 0.72) * 0.85);
-                scores.push({ n: n, val: val, gap: gap });
+                let repeat = last.includes(n) ? 4.8 : 0;
+                let accS = 0; last.forEach(ln => { if(acc[ln] && acc[ln][n]) accS += acc[ln][n]; });
+                // V.19 Quantum Bias Adjustment
+                let val = (accS * 2.5) + repeat + (Math.pow(gap, 0.7) * 0.9);
+                scores.push({ n, val, gap });
             }
 
             let p = new Set();
-            if (isFail) {
-                scores.sort((a,b) => b.gap - a.gap);
-                p.add(scores[0].n); p.add(scores[1].n);
-            }
+            if (isFail) { scores.sort((a,b) => b.gap - a.gap); p.add(scores[0].n); p.add(scores[1].n); }
             scores.sort((a,b) => b.val - a.val);
             for(let s of scores) { if(p.size < 8) p.add(s.n); }
             return Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2,'0'));
         }
 
         function render() {
-            const history = parseCleanHistory(apiData ? apiData[currentMode] : null);
-            if (!history.length) return;
+            const raw = apiData ? apiData[currentMode] : null;
+            if(!raw) return;
+            const history = raw.filter(r => r && r.length >= 6).map(r => ({
+                displayDate: r[0].substring(5, 10).replace('-', '/'),
+                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            }));
 
             let stats = { total: 0, s: 0, s2: 0, s3: 0, recentHits: 0 }, isFail = false, results = [];
 
-            for (let i = history.length - 2; i >= 0; i--) {
-                const pred = calculateV18(history.slice(i + 1), isFail);
+            for (let i = Math.min(history.length - 2, 40); i >= 0; i--) {
+                const pred = calculateV19(history.slice(i + 1), isFail);
                 const act = history[i].nums;
                 const hits = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
                 results.push({ date: history[i].displayDate, act, pred, hits });
@@ -135,33 +141,33 @@
             }
 
             const rtp = ((stats.s / (stats.total * 2)) * 100).toFixed(1);
-            const currPred = calculateV18(history, isFail);
-            const recentAvg = (stats.recentHits / 5).toFixed(1);
+            const currPred = calculateV19(history, isFail);
 
             document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between border-b border-white/10 pb-1 mb-2 text-orange-500 font-bold">
-                    <span>脈衝 RTP: ${rtp}%</span><span>樣本: ${stats.total}期</span>
+                <div class="flex justify-between border-b border-white/5 pb-2 mb-2 text-amber-500 font-black">
+                    <span>效能 RTP: ${rtp}%</span><span>樣本: ${stats.total}期</span>
                 </div>
-                <div class="grid grid-cols-2 gap-y-1 text-[10px] text-gray-400">
-                    <span>2★ 累計: ${stats.s2}</span><span>3★+ 累計: ${stats.s3}</span>
-                    <span>近5期波幅: ${recentAvg}</span><span class="${isFail?'text-red-500':'text-green-500'} font-bold">狀態: ${isFail?'FORCE-RECOVERY':'STABLE-FLOW'}</span>
+                <div class="grid grid-cols-2 gap-y-1 text-zinc-400">
+                    <span>2★ 命中: ${stats.s2} 次</span><span>3★+ 命中: ${stats.s3} 次</span>
+                    <span>近5期均值: ${(stats.recentHits/5).toFixed(1)}</span>
+                    <span class="${isFail?'text-rose-500':'text-emerald-500'}">狀態: ${isFail?'偏差校正中':'穩定同步'}</span>
                 </div>
             `;
 
-            const sigTag = document.getElementById('signalTag');
-            sigTag.className = `px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase border ${rtp > 53 ? 'sig-buy animate-pulse' : 'sig-wait'}`;
-            sigTag.innerText = rtp > 53 ? "Strong Signal" : "Probing";
+            const sig = document.getElementById('signalTag');
+            sig.className = `px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase border ${rtp > 54 ? 'sig-strong pulse-bg' : 'sig-weak'}`;
+            sig.innerText = rtp > 54 ? "Quantum-Lock" : "Calculating";
 
             for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currPred[i*2]},${currPred[i*2+1]}`;
 
             document.getElementById('historyTable').innerHTML = results.reverse().map(r => `
                 <tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-600 w-12 text-[10px]">${r.date}</td>
-                    <td class="text-white text-[11px] py-3 leading-snug">
-                        ${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br>
-                        <span class="text-gray-500 text-[10px]">→ ${r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',')}</span>
+                    <td class="py-4 text-zinc-600 w-12 text-[10px]">${r.date}</td>
+                    <td class="py-4">
+                        <div class="text-zinc-100 mb-1">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
+                        <div class="text-zinc-600 text-[10px]">→ ${r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',')}</div>
                     </td>
-                    <td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-white'}">${r.hits}</td>
+                    <td class="text-right font-black ${r.hits>=2?'text-amber-500':'text-zinc-700'}">${r.hits}</td>
                 </tr>
             `).join('');
         }
