@@ -87,6 +87,7 @@
         }
 
         function calculateUltra(history, isFailure) {
+            if (!history || history.length === 0) return [];
             let scores = [];
             const lastNums = history[0].nums;
             const recentHistory = history.slice(0, 40);
@@ -121,20 +122,24 @@
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
-            // 統一格式：最新日期在 [0]
-            const raw = apiData[currentMode].filter(r => r.length >= 6);
-            const history = raw.map(r => ({
-                displayDate: r[0].toString().substring(5,10),
-                nums: r.slice(1,6).map(n => parseInt(n)).sort((a,b)=>a-b)
-            })); // 不需要額外 reverse，API 通常就是最新在首位
+            
+            // 處理原始資料，確保日期與格式正確
+            const history = apiData[currentMode]
+                .filter(r => r && r.length >= 6)
+                .map(r => ({
+                    displayDate: r[0] ? r[0].toString().substring(5,10) : "--/--",
+                    nums: r.slice(1,6).map(n => parseInt(n)).sort((a,b)=>a-b)
+                }));
 
             let results = [], isFailure = false;
             let stats = { total: 0, hitsArr: [0,0,0,0,0,0], sum: 0 };
 
-            // 逆向回測：從舊到新跑一遍邏輯
-            const testRange = Math.min(history.length - 10, 45);
-            for (let i = testRange; i >= 0; i--) {
+            // 逆向回測 (由舊日期往新日期模擬)
+            const testRange = Math.min(history.length - 1, 45);
+            for (let i = testRange - 1; i >= 0; i--) {
                 const subHistory = history.slice(i + 1);
+                if (subHistory.length === 0) continue;
+
                 const pred = calculateUltra(subHistory, isFailure);
                 const act = history[i].nums;
                 const hitCount = act.filter(n => pred.includes(n.toString().padStart(2, '0'))).length;
@@ -147,8 +152,9 @@
                 stats.sum += hitCount;
             }
 
+            // 渲染列表 (確保最上方為最新日期)
             let rows = "";
-            results.slice().reverse().forEach(r => {
+            results.reverse().forEach(r => {
                 let tag = r.isFailure ? '<span class="text-[9px] bg-red-500/20 text-red-400 px-1 rounded mr-1">ULT</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
                 rows += `<tr class="border-b border-white/5">
@@ -161,12 +167,15 @@
                 </tr>`;
             });
 
-            const rtp = ((stats.sum / (stats.total * 2)) * 100).toFixed(1);
             document.getElementById('historyTable').innerHTML = rows;
+            const rtp = stats.total > 0 ? ((stats.sum / (stats.total * 2)) * 100).toFixed(1) : "0.0";
             document.getElementById('rtpDisplay').innerText = `RTP: ${rtp}%`;
             
+            // 計算目前最新預測 (對應最新一期)
             const currentPred = calculateUltra(history, isFailure);
-            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currentPred[i*2]},${currentPred[i*2+1]}`;
+            for(let i=0; i<4; i++) {
+                document.getElementById(`p${i+1}`).innerText = currentPred.length >= 8 ? `${currentPred[i*2]},${currentPred[i*2+1]}` : "--";
+            }
             
             document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
             document.getElementById('stateTag').innerText = isFailure ? "● BOOSTER ACTIVE" : "● STABLE";
