@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.99.1 ULTRA</title>
+    <title>ULTIMATE EVO 6.99.2 ULTRA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -35,7 +35,7 @@
             <div id="stateTag" class="text-[10px] font-bold tracking-tighter">● SYSTEM READY</div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[70px] leading-relaxed">
-            系統初始化中...
+            全量數據分析中...
         </div>
     </div>
 
@@ -90,7 +90,7 @@
             if (!history || history.length === 0) return [];
             let scores = [];
             const lastNums = history[history.length - 1].nums;
-            const recentHistory = history.slice(-50).reverse();
+            const recentHistory = history.slice(-60).reverse();
             const maxVal = currentMode === '539' ? 39 : 38;
 
             for (let n = 1; n <= maxVal; n++) {
@@ -99,19 +99,18 @@
 
                 recentHistory.forEach((r, idx) => {
                     if (r.nums.includes(n)) {
-                        freq += (50 - idx) * 1.5;
+                        freq += (60 - idx) * 1.8;
                         if (!found) { gap = idx; found = true; }
                     }
-                    if (r.nums.includes(n - 1) || r.nums.includes(n + 1)) neighborHit += (50 - idx) * 0.8;
-                    if (r.nums.some(num => num % 10 === tail)) tailHit += (50 - idx) * 0.4;
+                    if (r.nums.includes(n - 1) || r.nums.includes(n + 1)) neighborHit += (60 - idx) * 1.2;
+                    if (r.nums.some(num => num % 10 === tail)) tailHit += (60 - idx) * 0.6;
                 });
 
-                if (!found) gap = 50;
-                let repeat = lastNums.includes(n) ? 25 : 0;
+                if (!found) gap = 60;
+                let repeat = lastNums.includes(n) ? 30 : 0;
                 
-                // 核心優化公式：針對 isFailure 進行加權補正
-                let baseVal = (freq * 1.0) + (neighborHit * 2.2) + (tailHit * 1.5) + (repeat * 1.8);
-                let gapBonus = isFailure ? Math.pow(gap, 1.8) * 8.0 : Math.pow(gap, 1.3) * 3.5;
+                let baseVal = (freq * 1.2) + (neighborHit * 2.8) + (tailHit * 1.8) + (repeat * 2.2);
+                let gapBonus = isFailure ? Math.pow(gap, 2.0) * 10.0 : Math.pow(gap, 1.4) * 4.2;
                 
                 scores.push({ n, val: baseVal + gapBonus, gap });
             }
@@ -119,11 +118,10 @@
             let pool = new Set();
             scores.sort((a, b) => b.val - a.val);
 
-            // 強制止血邏輯：如果上一期失敗，優先抓取極冷號與極熱號的對沖
             if (isFailure) {
-                let sortedGap = [...scores].sort((a, b) => b.gap - a.gap);
-                pool.add(sortedGap[0].n); // 補償最冷號
-                pool.add(scores[0].n);    // 補償最強號
+                let coldOnes = [...scores].sort((a, b) => b.gap - a.gap);
+                pool.add(coldOnes[0].n); // 強制補入極冷號
+                pool.add(scores[0].n);    // 強制補入最熱號
             }
 
             for (let s of scores) {
@@ -135,6 +133,8 @@
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const raw = apiData[currentMode].filter(r => r.length >= 6);
+            
+            // 讀取所有數據，不限制樣本數
             const history = raw.map(r => ({
                 displayDate: r[0].toString().substring(5, 10),
                 nums: r.slice(1, 6).map(n => parseInt(n)).sort((a, b) => a - b)
@@ -143,10 +143,8 @@
             let results = [], isFailure = false;
             let stats = { total: 0, hitsArr: [0, 0, 0, 0, 0, 0], sum: 0 };
 
-            const testRange = Math.min(23, history.length - 15); 
-            const testStart = history.length - testRange;
-
-            for (let i = testStart; i < history.length; i++) {
+            // 全量回測：從第 10 期開始（為了有初始計算樣本）
+            for (let i = 10; i < history.length; i++) {
                 const subHistory = history.slice(0, i);
                 const pred = calculateUltra(subHistory, isFailure);
                 const act = history[i].nums;
@@ -187,11 +185,10 @@
             document.getElementById('stateTag').innerText = isFailure ? "● BOOSTER ACTIVE" : "● APEX STABLE";
             document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure ? 'defense-mode' : 'border-orange-500/20'}`;
             
-            // 修正 LOGBOX 資訊缺漏
             document.getElementById('logBox').innerHTML = `
-                分析樣本: ${stats.total} 期 | 2星+: ${stats.hitsArr[2]+stats.hitsArr[3]+stats.hitsArr[4]} 期 | 3星+: ${stats.hitsArr[3]+stats.hitsArr[4]}<br>
-                RTP效能: ${rtpValue}% | 0星率: ${((stats.hitsArr[0]/stats.total)*100).toFixed(1)}% | 狀態: ${isFailure?'強制對沖中':'趨勢運作'}<br>
-                優化引擎: V.6.99.1 ULTRA-STABLE | 尾數共振與冷號補償已就緒。`;
+                分析總量: ${stats.total} 期 | 2星+: ${stats.hitsArr[2]+stats.hitsArr[3]+stats.hitsArr[4]} 期 | 3星+: ${stats.hitsArr[3]+stats.hitsArr[4]}<br>
+                RTP效能: ${rtpValue}% | 0星率: ${((stats.hitsArr[0]/stats.total)*100).toFixed(1)}% | 狀態: ${isFailure?'防護模式啟動':'趨勢鎖定中'}<br>
+                數據源: API FULL SYNC | 優化策略: 極端冷熱對沖 + 尾數聯動共振。`;
         }
     </script>
 </body>
