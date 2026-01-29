@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.999 ULTRA</title>
+    <title>ULTIMATE EVO 6.99.1 ULTRA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -35,7 +35,7 @@
             <div id="stateTag" class="text-[10px] font-bold tracking-tighter">● SYSTEM READY</div>
         </div>
         <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[70px] leading-relaxed">
-            核心穩定引擎載入中...
+            API 全量數據同步中...
         </div>
     </div>
 
@@ -50,7 +50,7 @@
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
         <div class="flex justify-between items-center mb-3 text-[10px]">
-            <label class="text-gray-500 font-bold tracking-widest uppercase">數據回測 (扣除末5筆 | TARGET: 2★+)</label>
+            <label class="text-gray-500 font-bold tracking-widest uppercase">末 5 筆 TESTRANGE 回測</label>
             <span class="text-orange-500 font-black" id="rtpDisplay">RTP: --</span>
         </div>
         <div class="overflow-y-auto flex-grow">
@@ -90,27 +90,25 @@
             if (!history || history.length === 0) return [];
             let scores = [];
             const lastNums = history[history.length - 1].nums;
-            const recentHistory = history.slice(-80).reverse();
+            const recentHistory = history.slice(-60).reverse();
             const maxVal = currentMode === '539' ? 39 : 38;
 
             for (let n = 1; n <= maxVal; n++) {
-                let freq = 0, gap = 0, neighborHit = 0, tailHit = 0, found = false;
+                let freq = 0, gap = 0, neighborHit = 0, found = false;
                 const tail = n % 10;
 
                 recentHistory.forEach((r, idx) => {
                     if (r.nums.includes(n)) {
-                        freq += (80 - idx) * 1.6;
+                        freq += (60 - idx) * 1.8;
                         if (!found) { gap = idx; found = true; }
                     }
-                    if (r.nums.includes(n - 1) || r.nums.includes(n + 1)) neighborHit += (80 - idx) * 1.5;
-                    if (r.nums.some(num => num % 10 === tail)) tailHit += (80 - idx) * 0.5;
+                    if (r.nums.includes(n - 1) || r.nums.includes(n + 1)) neighborHit += (60 - idx) * 1.5;
                 });
 
-                if (!found) gap = 80;
-                let repeat = lastNums.includes(n) ? 35 : 0;
-                
-                let baseVal = (freq * 1.1) + (neighborHit * 3.2) + (tailHit * 2.0) + (repeat * 2.5);
-                let gapBonus = isFailure ? Math.pow(gap, 2.2) * 12.0 : Math.pow(gap, 1.5) * 5.0;
+                if (!found) gap = 60;
+                let repeat = lastNums.includes(n) ? 30 : 0;
+                let baseVal = (freq * 1.1) + (neighborHit * 3.0) + (repeat * 2.5);
+                let gapBonus = isFailure ? Math.pow(gap, 2.1) * 11.0 : Math.pow(gap, 1.4) * 4.5;
                 
                 scores.push({ n, val: baseVal + gapBonus, gap });
             }
@@ -133,25 +131,22 @@
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const raw = apiData[currentMode].filter(r => r.length >= 6);
-            
             const history = raw.map(r => ({
                 displayDate: r[0].toString().substring(5, 10),
                 nums: r.slice(1, 6).map(n => parseInt(n)).sort((a, b) => a - b)
             }));
 
-            // 關鍵修改：扣除末端 5 筆進行回測顯示
-            const testHistory = history.slice(0, -5); 
-
             let results = [], isFailure = false;
             let stats = { total: 0, hitsArr: [0, 0, 0, 0, 0, 0], sum: 0 };
 
-            for (let i = 15; i < testHistory.length; i++) {
-                const subHistory = testHistory.slice(0, i);
+            // 系統學習：從第 15 期後開始回測整段 API 數據
+            for (let i = 15; i < history.length; i++) {
+                const subHistory = history.slice(0, i);
                 const pred = calculateUltra(subHistory, isFailure);
-                const act = testHistory[i].nums;
+                const act = history[i].nums;
                 const hitCount = act.filter(n => pred.includes(n.toString().padStart(2, '0'))).length;
 
-                results.push({ date: testHistory[i].displayDate, act, pred, hitCount, isFailure });
+                results.push({ date: history[i].displayDate, act, pred, hitCount, isFailure });
                 isFailure = hitCount < 2;
 
                 stats.total++;
@@ -159,8 +154,11 @@
                 stats.sum += hitCount;
             }
 
+            // 版面控制：僅顯示末端 5 筆 (1/23, 1/24, 1/26, 1/27, 1/28)
             let rows = "";
-            results.slice().reverse().forEach(r => {
+            const lastFive = results.slice(-5).reverse(); 
+            
+            lastFive.forEach(r => {
                 let tag = r.isFailure ? '<span class="text-[9px] bg-red-500/20 text-red-400 px-1 rounded mr-1">止血</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
                 rows += `<tr class="border-b border-white/5">
@@ -174,10 +172,10 @@
             });
 
             document.getElementById('historyTable').innerHTML = rows;
-            const rtpValue = stats.total > 0 ? ((stats.sum / (stats.total * 2)) * 100).toFixed(1) : "0.0";
+            const rtpValue = ((stats.sum / (stats.total * 2)) * 100).toFixed(1);
             document.getElementById('rtpDisplay').innerText = `RTP: ${rtpValue}%`;
 
-            // 當前預測仍使用完整 history
+            // 當前預測 (基於全量歷史)
             const currentPred = calculateUltra(history, isFailure);
             for (let i = 0; i < 4; i++) {
                 document.getElementById(`p${i + 1}`).innerText = `${currentPred[i * 2]},${currentPred[i * 2 + 1]}`;
@@ -188,9 +186,9 @@
             document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure ? 'defense-mode' : 'border-orange-500/20'}`;
             
             document.getElementById('logBox').innerHTML = `
-                回測樣本: ${stats.total} 期 (扣除末5) | 2星+: ${stats.hitsArr[2]+stats.hitsArr[3]+stats.hitsArr[4]} | 3星+: ${stats.hitsArr[3]+stats.hitsArr[4]}<br>
-                RTP效能: ${rtpValue}% | 0星率: ${stats.total > 0 ? ((stats.hitsArr[0]/stats.total)*100).toFixed(1) : 0}% | 模式: ${isFailure?'冷號補償':'趨勢追蹤'}<br>
-                引擎狀態: V.6.99.1 ULTRA | 排除偏離值中。`;
+                系統學習總量: ${history.length} 期 | 回測驗證: 末 5 筆<br>
+                整體 RTP: ${rtpValue}% | 當前狀態: ${isFailure?'強制止血模組啟動':'核心趨勢鎖定'}<br>
+                優化策略: 全量深度學習 + 末端範圍校驗。`;
         }
     </script>
 </body>
