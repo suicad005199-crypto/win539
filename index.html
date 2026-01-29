@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO V.07 PRO-ELITE</title>
+    <title>ULTIMATE EVO V.08 PRO-ELITE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -20,37 +20,37 @@
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO V.07</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO V.08</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20 transition-all duration-500">
+    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">PRO STRATEGY ACTIVE</label>
-            <div id="stateTag" class="text-[10px] font-bold">● INITIALIZING</div>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Tail-Sync Engine Active</label>
+            <div id="stateTag" class="text-[10px] font-bold">● SYSTEM READY</div>
         </div>
         <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-relaxed">
-            系統正在載入深度演算模組...
+            API 數據同步中...
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500 relative">
         <div class="absolute -top-2.5 left-4 flex gap-2">
-            <span id="signalTag" class="px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase tracking-tighter">SIGNAL LOADING</span>
+            <span id="signalTag" class="px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase">SIGNAL LOADING</span>
         </div>
         <div class="grid grid-cols-4 gap-2 text-center mt-2">
             <div><div class="text-[9px] text-orange-500 mb-1">熱點核心</div><div class="text-lg font-black" id="p1">--</div></div>
-            <div><div class="text-[9px] text-orange-500 mb-1">影子共振</div><div class="text-lg font-black" id="p2">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1">冷熱對沖</div><div class="text-lg font-black" id="p3">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1">空間補位</div><div class="text-lg font-black" id="p4">--</div></div>
+            <div><div class="text-[9px] text-orange-500 mb-1">尾數共振</div><div class="text-lg font-black" id="p2">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">遺漏反彈</div><div class="text-lg font-black" id="p3">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">空間結構</div><div class="text-lg font-black" id="p4">--</div></div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-10">
-        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">歷史回測效能分布 (8碼狙擊)</label>
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2">全量數據歷史回測 (V.08 PRO)</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
@@ -60,15 +60,14 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyzzXI3-YfaATyZSIpXamy-o5ZBJW3QZOtqlq3lijkRV574Jc4cf387EUwpcfqHYjy2PQ/exec";
-        let currentMode = '539';
-        let apiData = null;
+        let currentMode = '539', apiData = null;
 
         async function fetchData() {
             try {
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "數據同步中斷，請重新整理"; }
+            } catch (e) { document.getElementById('logBox').innerText = "API 連結異常"; }
         }
 
         function switchMode(m) {
@@ -79,100 +78,69 @@
         }
 
         function parseCleanHistory(raw) {
-            return raw.filter(r => r && r.length >= 6 && r[1] !== "" && !isNaN(parseInt(r[1]))).map(r => {
-                let d = new Date(r[0]);
-                if (isNaN(d.getTime())) {
-                    let p = String(r[0]).split(/[-/T ]/);
-                    if (p.length >= 3) d = new Date(p[0], p[1]-1, p[2]);
-                }
-                return {
-                    fullDate: d,
-                    displayDate: !isNaN(d.getTime()) ? `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}` : "??/??",
-                    nums: r.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
-                };
-            }).filter(i => i.nums.length === 5).sort((a,b) => b.fullDate - a.fullDate);
+            return raw.filter(r => r && r.length >= 6 && r[1] !== "" && !isNaN(parseInt(r[1]))).map(r => ({
+                fullDate: new Date(r[0]),
+                displayDate: r[0].toString().substring(5, 10).replace('-', '/'),
+                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            })).filter(i => i.nums.length === 5).sort((a,b) => b.fullDate - a.fullDate);
         }
 
         function calculateSmartAPEX(history, isFailureState) {
-            let scores = [];
-            const range = 39;
-            for(let n=1; n<=range; n++) {
-                let recent = history.slice(0, 5).filter(r => r.nums.includes(n)).length; // 近5期權重
-                let midTerm = history.slice(0, 12).filter(r => r.nums.includes(n)).length; // 中期趨勢
+            let scores = [], tailFreq = {};
+            // 計算近期尾數頻率
+            history.slice(0, 10).forEach(r => r.nums.forEach(n => {
+                let t = n % 10; tailFreq[t] = (tailFreq[t] || 0) + 1;
+            }));
+
+            for(let n=1; n<=39; n++) {
+                let recent = history.slice(0, 5).filter(r => r.nums.includes(n)).length;
+                let freq = history.slice(0, 15).filter(r => r.nums.includes(n)).length;
                 let gap = 0; for(let r of history) { if(r.nums.includes(n)) break; gap++; }
+                let tailScore = tailFreq[n % 10] || 0;
                 
-                // V.07 核心評分公式：熱度回測 + 遺漏值加成
-                let val = (recent * 8.0) + (midTerm * 2.5) + (gap * 0.4);
-                scores.push({ n: n, val: val, gap: gap, tail: n % 10 });
+                // V.08 權重：尾數佔比 20%
+                let val = (recent * 6.0) + (freq * 2.0) + (gap * 0.5) + (tailScore * 1.5);
+                scores.push({ n: n, val: val, gap: gap });
             }
 
             let p = new Set();
             if (isFailureState) {
-                // 止血模式：優先選取「剛進入冷區」或「長期冷號準備反彈」的平衡碼
-                scores.sort((a,b) => (b.gap * 1.5 + b.val) - (a.gap * 1.5 + a.val));
+                scores.sort((a,b) => b.gap - a.gap); // 止血模式抓極端冷號補位
                 p.add(scores[0].n); p.add(scores[1].n);
-                let byVal = [...scores].sort((a,b) => b.val - a.val);
-                for(let s of byVal) { if(p.size < 8) p.add(s.n); }
-            } else {
-                // 標準模式：強攻熱區共振
-                scores.sort((a,b) => b.val - a.val).slice(0, 8).forEach(s => p.add(s.n));
             }
+            scores.sort((a,b) => b.val - a.val);
+            for(let s of scores) { if(p.size < 8) p.add(s.n); }
+            
             return { pred: Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2,'0')) };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const history = parseCleanHistory(apiData[currentMode]);
-            let stats = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, total: 0, totalStars: 0 };
-            let currentIsFailure = false, results = [], rows = "";
+            let stats = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, total: 0, totalStars: 0 }, currentIsFailure = false, results = [], rows = "";
 
-            // 歷史回溯渲染
             for (let i = history.length - 2; i >= 0; i--) {
                 let prevData = history.slice(i + 1);
                 let res = calculateSmartAPEX(prevData, currentIsFailure);
                 let hits = history[i].nums.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 results.unshift({ date: history[i].displayDate, act: history[i].nums, pred: res.pred, hits: hits, isDefense: currentIsFailure });
-                
-                // 狀態機切換邏輯
-                if (hits < 2) currentIsFailure = true; 
-                else if (hits >= 2) currentIsFailure = false;
+                currentIsFailure = (hits < 2);
             }
 
             results.forEach(r => {
                 stats.total++; stats[r.hits]++; stats.totalStars += r.hits;
                 let starColor = r.hits >= 2 ? 'text-orange-500' : 'text-white';
-                let modeTag = r.isDefense ? '<span class="text-[9px] bg-red-900/50 text-red-400 px-1 rounded mr-1">止血</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 w-12">${r.date}</td><td class="text-white text-[11px] font-medium">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br>${modeTag}<span class="text-gray-600">→ ${predHtml}</span></td><td class="text-right font-black ${starColor}">${r.hits}</td></tr>`;
+                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 w-12">${r.date}</td><td class="text-white text-[11px]">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br><span class="text-gray-600">→ ${predHtml}</span></td><td class="text-right font-black ${starColor}">${r.hits}</td></tr>`;
             });
 
-            // RTP 效能與信號判定
             let rtp = stats.total > 0 ? ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1) : 0;
-            const signal = document.getElementById('signalTag');
-            if (currentIsFailure || rtp < 50) {
-                signal.innerText = "WAITING / 觀望"; signal.className = "px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase sig-wait";
-            } else {
-                signal.innerText = "STRONG BUY / 跟進"; signal.className = "px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase sig-buy animate-pulse";
-            }
-
-            // 更新面板狀態
-            const stateTag = document.getElementById('stateTag');
-            const statusPanel = document.getElementById('statusPanel');
-            if (currentIsFailure) {
-                statusPanel.classList.add('defense-mode');
-                stateTag.innerText = "● RECOVERY ACTIVE"; stateTag.className = "text-[10px] font-bold text-red-500 animate-pulse";
-            } else {
-                statusPanel.classList.remove('defense-mode');
-                stateTag.innerText = "● APEX STABLE"; stateTag.className = "text-[10px] font-bold text-orange-500";
-            }
-
-            document.getElementById('logBox').innerHTML = `
-                <div class="grid grid-cols-2 gap-x-4">
-                    <span>總計: ${stats.total} 期</span> <span class="text-orange-500">2星: ${stats[2]} / 3星: ${stats[3]}</span>
-                    <span>RTP效能: ${rtp}%</span> <span class="text-orange-500">4星+: ${stats[4]+stats[5]}</span>
-                    <span>近期狀態: ${currentIsFailure?'波段止血':'趨勢運作'}</span> <span class="text-gray-400">V.07 PRO-ELITE</span>
-                </div>`;
+            document.getElementById('logBox').innerHTML = `期數: ${stats.total} | 2星+: ${stats[2]+stats[3]} | RTP: ${rtp}% | 狀態: ${currentIsFailure?'止血':'主攻'}`;
             
+            const signal = document.getElementById('signalTag');
+            signal.innerText = rtp > 55 ? "STRONG BUY / 跟進" : "WAITING / 觀望";
+            signal.className = `px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase ${rtp > 55 ? 'sig-buy animate-pulse' : 'sig-wait'}`;
+
             const current = calculateSmartAPEX(history, currentIsFailure);
             document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
             document.getElementById('p2').innerText = `${current.pred[2]},${current.pred[3]}`;
