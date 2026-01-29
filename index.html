@@ -100,96 +100,107 @@
         }
 
         function calculateAdvanced(history, isFailure) {
-            const lastNums = history[0].nums;
-            const sample = history.slice(0, 50);
+            const sample = history.slice(0, 60);
             
-            // 策略權重候選組 (針對三星命中優化)
-            const strategyPacks = [
-                { name: 'Quantum3★', link: 9.5, tail: 6.0, repeat: 7.0, gap: 3.5 },
-                { name: 'DragBoost', link: 12.0, tail: 3.5, repeat: 5.0, gap: 4.5 },
-                { name: 'Cluster', link: 5.5, tail: 9.0, repeat: 8.5, gap: 5.0 }
+            // 策略組：平衡(Balanced), 聯動(Linkage), 遺漏(Gap)
+            const packs = [
+                { id: 0, n: 'Matrix-A', wLink: 15.0, wTail: 8.0, wGap: 4.0 },
+                { id: 1, n: 'Matrix-B', wLink: 10.0, wTail: 12.0, wGap: 6.0 },
+                { id: 2, n: 'Matrix-C', wLink: 8.0, wTail: 6.0, wGap: 14.0 }
             ];
 
-            let bestPack = strategyPacks[0];
-            if (history.length > 15) {
-                let bestScore = -1;
-                strategyPacks.forEach(pack => {
-                    let hitSum = 0;
-                    for (let i = 1; i <= 8; i++) { // 擴大回測窗口至8期以穩定三星
-                        const testPred = runLogic(history.slice(i), pack);
-                        const hits = history[i-1].nums.filter(n => testPred.includes(n.toString().padStart(2,'0'))).length;
-                        hitSum += (hits >= 3 ? hits * 2 : hits); // 給予三星以上更高的權重
+            // 競爭回測找出最適合衝擊 3 星的權重
+            let bestPack = packs[0];
+            if (history.length > 10) {
+                let maxWeight = -1;
+                packs.forEach(p => {
+                    let score = 0;
+                    for (let i = 1; i <= 6; i++) {
+                        const pred = runLogic(history.slice(i), p);
+                        const hits = history[i-1].nums.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
+                        score += (hits >= 3 ? hits * 3 : hits); // 3星以上加權權重
                     }
-                    if (hitSum > bestScore) { bestScore = hitSum; bestPack = pack; }
+                    if (score > maxWeight) { maxWeight = score; bestPack = p; }
                 });
             }
 
-            function runLogic(hist, W) {
-                let scores = [], linkMap = {}, tailFreq = Array(10).fill(0), pairMap = {};
-                const s = hist.slice(0, 40);
+            function runLogic(h, W) {
+                let scores = [], linkMap = {}, tailMap = Array(10).fill(0), pairMap = {};
+                const s = h.slice(0, 45);
 
                 s.forEach((r, idx) => {
-                    const decay = (s.length - idx) / s.length;
+                    const weight = (s.length - idx) / s.length;
                     r.nums.forEach(n => {
-                        tailFreq[n % 10] += decay;
-                        // 建立號碼對對碰關聯 (三星關鍵)
+                        tailMap[n % 10] += weight;
                         r.nums.forEach(n2 => {
                             if (n !== n2) {
-                                let key = n < n2 ? `${n}-${n2}` : `${n2}-${n}`;
-                                pairMap[key] = (pairMap[key] || 0) + decay;
+                                let k = n < n2 ? `${n}-${n2}` : `${n2}-${n}`;
+                                pairMap[k] = (pairMap[k] || 0) + weight;
                             }
                         });
+                        // 建立上一期拖牌關聯
+                        if (idx < s.length - 1) {
+                            h[idx+1].nums.forEach(pn => {
+                                if(!linkMap[pn]) linkMap[pn] = {};
+                                linkMap[pn][n] = (linkMap[pn][n] || 0) + weight;
+                            });
+                        }
                     });
                 });
 
                 for (let n = 1; n <= 39; n++) {
                     let linkS = 0, pairS = 0;
-                    hist[0].nums.forEach(ln => { 
-                        if(linkMap[ln] && linkMap[ln][n]) linkS += linkMap[ln][n];
-                        // 計算與上一期開獎號的成對關聯
+                    h[0].nums.forEach(ln => {
+                        if (linkMap[ln] && linkMap[ln][n]) linkS += linkMap[ln][n];
                         let pk = n < ln ? `${n}-${ln}` : `${ln}-${n}`;
-                        if(pairMap[pk]) pairS += pairMap[pk];
+                        if (pairMap[pk]) pairS += pairMap[pk];
                     });
 
                     let gap = 0;
-                    for (let r of hist) { if (r.nums.includes(n)) break; gap++; }
+                    for (let r of h) { if (r.nums.includes(n)) break; gap++; }
 
-                    let val = (linkS * W.link) + (pairS * W.link * 0.5) + (tailFreq[n % 10] * W.tail) + 
-                              (hist[0].nums.includes(n) ? W.repeat : 0) + (Math.log2(gap + 1) * W.gap);
-                    scores.push({ n, val, gap });
+                    // 矩陣核心算法：合併拖牌、成對關聯、尾數頻率與遺漏值
+                    let total = (linkS * W.wLink) + (pairS * W.wLink * 0.7) + (tailMap[n % 10] * W.wTail) + (Math.log1p(gap) * W.wGap);
+                    scores.push({ n, val: total, gap });
                 }
-                
-                let p = new Set();
-                if (isFailure) { scores.sort((a, b) => b.gap - a.gap); p.add(scores[0].n); p.add(scores[1].n); }
-                scores.sort((a, b) => b.val - a.val);
-                for (let sc of scores) { if (p.size < 8) p.add(sc.n); }
-                return Array.from(p).sort((a, b) => a - b).map(x => x.toString().padStart(2, '0'));
+
+                // 失敗恢復機制：若上期不理想，優先補償長期未出號
+                let pool = new Set();
+                if (isFailure) { 
+                    scores.sort((a,b) => b.gap - a.gap); 
+                    pool.add(scores[0].n); pool.add(scores[1].n); 
+                }
+
+                scores.sort((a,b) => b.val - a.val);
+                for (let s of scores) { if (pool.size < 8) pool.add(s.n); }
+                return Array.from(pool).sort((a,b) => a - b).map(x => x.toString().padStart(2, '0'));
             }
 
-            return { nums: runLogic(history, bestPack), strategy: bestPack.name };
+            return { nums: runLogic(history, bestPack), strategy: bestPack.n };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const history = parseHistory(apiData[currentMode]);
             let rows = "", results = [];
-            let stats = { total: 0, stars: [0,0,0,0,0,0], totalStars: 0, s3plus: 0 };
+            let stats = { total: 0, s3: 0, totalHits: 0 };
             let isFailure = false;
 
-            for (let i = Math.min(history.length - 2, 45); i >= 0; i--) {
+            // 回測 40 期
+            for (let i = Math.min(history.length - 2, 40); i >= 0; i--) {
                 const res = calculateAdvanced(history.slice(i + 1), isFailure);
-                const pred = res.nums;
                 const act = history[i].nums;
-                const hits = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
-                results.push({ date: history[i].displayDate, act, pred, hits, isFailure, strategy: res.strategy });
+                const hits = act.filter(n => res.nums.includes(n.toString().padStart(2,'0'))).length;
+                results.push({ date: history[i].displayDate, act, pred: res.nums, hits, isFailure, strategy: res.strategy });
                 isFailure = (hits < 2);
             }
 
             results.sort((a,b) => b.date.localeCompare(a.date));
 
             results.forEach(r => {
-                stats.total++; stats.stars[r.hits]++; stats.totalStars += r.hits;
-                if(r.hits >= 3) stats.s3plus++;
+                stats.total++; 
+                stats.totalHits += r.hits;
+                if(r.hits >= 3) stats.s3++;
                 let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">STP</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
 
@@ -203,22 +214,23 @@
                 </tr>`;
             });
 
-            const currentObj = calculateAdvanced(history, isFailure);
-            const s3rate = ((stats.s3plus / stats.total) * 100).toFixed(1);
+            const current = calculateAdvanced(history, isFailure);
+            const s3rate = ((stats.s3 / stats.total) * 100).toFixed(1);
             
             document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
-            document.getElementById('stateTag').innerText = isFailure ? "● QUANTUM RECOVERY" : "● APEX STABLE";
+            document.getElementById('stateTag').innerText = isFailure ? "● RECOVERY MODE" : "● MATRIX STABLE";
             document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure?'defense-mode':'border-orange-500/20'}`;
 
             document.getElementById('logBox').innerHTML = `
                 <div class="grid grid-cols-2 gap-x-2">
-                    <span class="text-gray-400">總體樣本: <b class="text-white">${stats.total} 期</b></span>
-                    <span class="text-gray-400 text-right">三星命中率: <b class="text-orange-500">${s3rate}%</b></span>
-                    <span class="text-gray-400">當前策略: <b class="text-white">${currentObj.strategy}</b></span>
-                    <span class="text-gray-400 text-right">平均星數: <b class="text-orange-500">${(stats.totalStars/stats.total).toFixed(2)}</b></span>
-                </div>`;
+                    <span class="text-gray-400">回測期數: <b class="text-white">${stats.total}</b></span>
+                    <span class="text-gray-400 text-right">3★ 命中率: <b class="text-orange-500">${s3rate}%</b></span>
+                    <span class="text-gray-400">引擎核心: <b class="text-white">${current.strategy}</b></span>
+                    <span class="text-gray-400 text-right">預測精度: <b class="text-orange-500">${(stats.totalHits/stats.total).toFixed(2)}</b></span>
+                </div>
+                <div class="mt-1 text-[9px] text-gray-500 italic">正在使用成對關聯矩陣 (Pairwise Matrix) 鎖定組合規律。</div>`;
             
-            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currentObj.nums[i*2]},${currentObj.nums[i*2+1]}`;
+            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${current.nums[i*2]},${current.nums[i*2+1]}`;
             document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
