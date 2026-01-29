@@ -3,67 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.99.1 RTP-MAX</title>
+    <title>ULTIMATE EVO 6.99.1 RTP-MAX+</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
+        .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; box-shadow: 0 0 15px rgba(249,115,22,0.4); }
         .btn-inactive { background: #2c2c2e; color: #888; }
-        .hit-num { color: #f97316; font-weight: 900; text-shadow: 0 0 8px rgba(249,115,22,0.4); }
-        .defense-mode { border-color: #ef4444 !important; box-shadow: inset 0 0 15px rgba(239,68,68,0.1); }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #3a3a3c; border-radius: 10px; }
+        .hit-num { color: #f97316; font-weight: 900; text-shadow: 0 0 10px rgba(249,115,22,0.6); }
+        .defense-mode { border-color: #ef4444 !important; animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0%, 100% { border-color: rgba(239,68,68,0.3); } 50% { border-color: #ef4444; } }
+        ::-webkit-scrollbar { width: 0; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-2xl font-black italic tracking-tighter text-orange-500 leading-none">ULTIMATE EVO</h1>
-            <p class="text-[10px] text-gray-500 font-bold tracking-[0.2em]">VERSION 6.99.1 RTP-MAX</p>
+            <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE EVO</h1>
+            <p class="text-[10px] text-gray-500 font-bold tracking-[0.3em]">V.6.99.1 QUANTUM-SYNC</p>
         </div>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
-            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-xs btn-active transition-all">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-xs btn-inactive ml-1 transition-all">天天樂</button>
+            <button id="btn539" onclick="switchMode('539')" class="px-5 py-2 rounded-lg text-xs btn-active transition-all">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-2 rounded-lg text-xs btn-inactive ml-1 transition-all">天天樂</button>
         </div>
     </div>
 
     <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20">
         <div class="flex justify-between items-end mb-3">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">RTP Performance Monitoring</label>
-            <div id="stateTag" class="text-[10px] font-bold">● INITIALIZING</div>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Global RTP Monitor</label>
+            <div id="stateTag" class="text-[10px] font-bold">● SYSTEM SYNCING</div>
         </div>
-        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[70px]">
-            量子引擎啟動中...
+        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[75px] leading-relaxed">
+            核心引擎初始化中...
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500">
+    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500 shadow-lg shadow-orange-500/10">
         <div class="grid grid-cols-4 gap-2 text-center">
-            <div><div class="text-[9px] text-orange-500/70 mb-1 font-bold">熱點核心</div><div class="text-lg font-black tracking-tighter" id="p1">--</div></div>
-            <div><div class="text-[9px] text-orange-500/70 mb-1 font-bold">共振權重</div><div class="text-lg font-black tracking-tighter" id="p2">--</div></div>
-            <div><div class="text-[9px] text-gray-500 mb-1 font-bold">對沖/止血</div><div class="text-lg font-black tracking-tighter" id="p3">--</div></div>
-            <div><div class="text-[9px] text-gray-500 mb-1 font-bold">空間結構</div><div class="text-lg font-black tracking-tighter" id="p4">--</div></div>
+            <div class="border-r border-white/5"><div class="text-[9px] text-orange-500/70 mb-1 font-bold">熱點核心</div><div class="text-lg font-black tracking-tighter" id="p1">--</div></div>
+            <div class="border-r border-white/5"><div class="text-[9px] text-orange-500/70 mb-1 font-bold">尾數共振</div><div class="text-lg font-black tracking-tighter" id="p2">--</div></div>
+            <div class="border-r border-white/5"><div class="text-[9px] text-gray-500 mb-1 font-bold">對沖波段</div><div class="text-lg font-black tracking-tighter" id="p3">--</div></div>
+            <div><div class="text-[9px] text-gray-500 mb-1 font-bold">空間補位</div><div class="text-lg font-black tracking-tighter" id="p4">--</div></div>
         </div>
     </div>
 
-    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-6">
+    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">全量歷史數據與策略校準</label>
-            <span class="text-[9px] bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded">RTP 98.5% TARGET</span>
+            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 2★+ EVERY SESSION)</label>
+            <div id="quickStats" class="text-[10px] text-orange-500 font-bold"></div>
         </div>
         <div class="overflow-y-auto flex-grow">
-            <table class="w-full text-[12px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 z-10">
-                    <tr class="text-left text-[10px]">
-                        <th class="pb-2 w-16">日期</th>
-                        <th class="pb-2">數據軌跡與演算法佈局</th>
-                        <th class="pb-2 text-right">星數</th>
+            <table class="w-full">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 z-10 text-[10px]">
+                    <tr class="text-left uppercase">
+                        <th class="pb-2 w-14">Date</th>
+                        <th class="pb-2">Logic & Pulse Path</th>
+                        <th class="pb-2 text-right">Stars</th>
                     </tr>
                 </thead>
-                <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
+                <tbody id="historyTable" class="divide-y divide-white/5 font-mono text-[12px]"></tbody>
             </table>
         </div>
     </div>
@@ -77,59 +77,57 @@
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "API 數據鏈接失敗，請檢查網路。"; }
+            } catch (e) { document.getElementById('logBox').innerText = "API Error. Check Connection."; }
         }
 
         function switchMode(m) {
             currentMode = m;
-            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-xs ${m==='539'?'btn-active':'btn-inactive'}`;
-            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-xs ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
+            document.getElementById('btn539').className = `px-5 py-2 rounded-lg text-xs ${m==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-5 py-2 rounded-lg text-xs ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
             render();
         }
 
-        function parseCleanHistory(raw) {
+        function parseHistory(raw) {
             if (!raw) return [];
             return raw.filter(r => r && r.length >= 6).map(r => {
                 let d = new Date(r[0]);
-                if (isNaN(d.getTime())) {
-                    let parts = String(r[0]).split(/[-/T ]/);
-                    if (parts.length >= 3) d = new Date(parts[0], parts[1]-1, parts[2]);
-                }
                 return {
                     fullDate: d,
-                    displayDate: !isNaN(d.getTime()) ? `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}` : String(r[0]).substring(5,10),
-                    nums: r.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+                    displayDate: `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}`,
+                    nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
                 };
-            }).filter(item => item.nums.length === 5).sort((a, b) => b.fullDate - a.fullDate);
+            }).filter(i => !isNaN(i.nums[0])).sort((a, b) => b.fullDate - a.fullDate);
         }
 
-        function calculateRTPMax(history, isDefense) {
-            let scores = [], acc = {};
+        function calculateAdvanced(history, isFailure) {
+            let scores = [], acc = {}, tails = {};
             const lastNums = history[0].nums;
             
-            // 核心深度共振矩陣
-            history.slice(0, 45).forEach((r, idx) => {
-                const weight = (45 - idx) / 45;
+            // 1. 深度權重掃描 (近 50 期)
+            history.slice(0, 50).forEach((r, idx) => {
+                const weight = (50 - idx) / 50;
                 r.nums.forEach(n1 => {
+                    const t = n1 % 10;
+                    tails[t] = (tails[t] || 0) + (1 * weight); // 尾數共振
                     if (!acc[n1]) acc[n1] = {};
-                    r.nums.forEach(n2 => { if (n1 !== n2) acc[n1][n2] = (acc[n1][n2] || 0) + (1 * weight); });
+                    r.nums.forEach(n2 => { if (n1 !== n2) acc[n1][n2] = (acc[n1][n2] || 0) + (1.5 * weight); });
                 });
             });
 
             for(let n=1; n<=39; n++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let repeat = lastNums.includes(n) ? 6.5 : 0; // 提升重複號權重
-                let accS = 0; lastNums.forEach(ln => { if(acc[ln] && acc[ln][n]) accS += acc[ln][n]; });
+                let repeatWeight = lastNums.includes(n) ? 8.5 : 0;
+                let accScore = 0; lastNums.forEach(ln => { if(acc[ln] && acc[ln][n]) accScore += acc[ln][n]; });
+                let tailWeight = (tails[n % 10] || 0) * 2.2;
                 
-                // RTP-MAX 公式優化
-                let val = (accS * 3.5) + (repeat * 1.2) + (Math.log1p(gap) * 4.2);
+                // Quantum Formula V2
+                let val = (accScore * 4.2) + (tailWeight) + (repeatWeight) + (Math.sqrt(gap) * 5.5);
                 scores.push({ n, val, gap });
             }
 
             let pool = new Set();
-            if (isDefense) {
-                // 止血模式優先抓取極端遺漏值
-                scores.sort((a,b) => b.gap - a.gap);
+            if (isFailure) {
+                scores.sort((a,b) => b.gap - a.gap); // 止血模式：冷號補償
                 pool.add(scores[0].n); pool.add(scores[1].n);
             }
             
@@ -140,55 +138,52 @@
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
-            const history = parseCleanHistory(apiData[currentMode]);
+            const history = parseHistory(apiData[currentMode]);
             let rows = "", results = [];
             let stats = { total: 0, stars: [0,0,0,0,0,0], totalStars: 0 };
-            let isDefense = false, failCount = 0;
+            let isFailure = false;
 
-            // 逆向模擬回測
-            for (let i = Math.min(history.length - 2, 40); i >= 0; i--) {
-                const pred = calculateRTPMax(history.slice(i + 1), isDefense);
+            for (let i = Math.min(history.length - 2, 45); i >= 0; i--) {
+                const pred = calculateAdvanced(history.slice(i + 1), isFailure);
                 const act = history[i].nums;
                 const hits = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
                 
-                results.unshift({ date: history[i].displayDate, act, pred, hits, isDefense });
-                
-                if (hits < 2) failCount++; else failCount = 0;
-                isDefense = failCount >= 1; // 極速觸發止血邏輯
+                results.unshift({ date: history[i].displayDate, act, pred, hits, isFailure });
+                isFailure = (hits < 2); // 每期只要小於2星，下期自動進入止血優化
             }
 
             results.forEach(r => {
                 stats.total++; stats.stars[r.hits]++; stats.totalStars += r.hits;
-                let tag = r.isDefense ? '<span class="text-[9px] bg-red-900/50 text-red-400 px-1 rounded mr-1 italic">STP</span>' : '';
-                let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-40">${p}</span>`).join(',');
+                let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">STP</span>' : '';
+                let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
 
                 rows = `<tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500 font-bold">${r.date}</td>
-                    <td class="py-3 pr-2">
-                        <div class="text-white mb-1 tracking-widest">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
+                    <td class="py-3">
+                        <div class="text-white mb-1 tracking-[0.2em] font-black">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
                         <div class="text-[10px] flex items-center">${tag}<span class="text-gray-500 font-mono tracking-tighter">${predHtml}</span></div>
                     </td>
-                    <td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-gray-700'} text-base">${r.hits}</td>
+                    <td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-red-500/50'} text-base">${r.hits}</td>
                 </tr>` + rows;
             });
 
             const rtp = ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1);
-            const currentPred = calculateRTPMax(history, isDefense);
+            const current = calculateAdvanced(history, isFailure);
             
-            // 更新 UI 狀態
-            document.getElementById('stateTag').className = `text-[10px] font-bold ${isDefense?'text-red-500 animate-pulse':'text-orange-500'}`;
-            document.getElementById('stateTag').innerText = isDefense ? "● RECOVERY ACTIVE" : "● APEX STABLE";
-            document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isDefense?'defense-mode':'border-orange-500/20'}`;
+            document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
+            document.getElementById('stateTag').innerText = isFailure ? "● QUANTUM RECOVERY" : "● APEX STABLE";
+            document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure?'defense-mode':'border-orange-500/20'}`;
 
             document.getElementById('logBox').innerHTML = `
-                <div class="grid grid-cols-2 gap-y-1">
-                    <span class="text-gray-400">樣本區間: <b class="text-white">${stats.total} 期</b></span>
-                    <span class="text-gray-400 text-right">即時 RTP: <b class="text-orange-500">${rtp}%</b></span>
-                    <span class="text-gray-400">平均星數: <b class="text-white">${(stats.totalStars/stats.total).toFixed(2)}</b></span>
-                    <span class="text-gray-400 text-right">高效命中: <b class="text-orange-500">${stats.stars[2]+stats.stars[3]+stats.stars[4]} 次</b></span>
-                </div>`;
+                <div class="grid grid-cols-2 gap-x-2">
+                    <span class="text-gray-400">總體樣本: <b class="text-white">${stats.total} 期</b></span>
+                    <span class="text-gray-400 text-right">頂級 RTP: <b class="text-orange-500">${rtp}%</b></span>
+                    <span class="text-gray-400">2星+: <b class="text-white">${stats.stars[2]+stats.stars[3]+stats.stars[4]} 次</b></span>
+                    <span class="text-gray-400 text-right">星數總計: <b class="text-orange-500">${stats.totalStars} 星</b></span>
+                </div>
+                <div class="mt-1 text-[9px] text-gray-600 italic">策略優化：尾數共振已開啟，空間補位強化...</div>`;
             
-            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currentPred[i*2]},${currentPred[i*2+1]}`;
+            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${current[i*2]},${current[i*2+1]}`;
             document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
