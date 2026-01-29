@@ -3,64 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO V.20 TOTAL-OMNI</title>
+    <title>ULTIMATE EVO 6.99.1 RTP-SENSE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --ios-orange: #f59e0b; --ios-bg: #000; --ios-panel: #1c1c1e; }
-        body { background-color: var(--ios-bg); color: #f4f4f5; font-family: -apple-system, system-ui; }
-        .ios-panel { background: var(--ios-panel); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .hit-num { color: #f59e0b; font-weight: 800; background: rgba(245,158,11,0.15); border-radius: 4px; padding: 0 2px; }
+        :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
+        body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; }
+        .ios-panel { background: var(--ios-panel); border-radius: 12px; }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
         .btn-inactive { background: #2c2c2e; color: #888; }
-        .pulse-text { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .hit-num { color: #f97316; font-weight: 900; }
+        .defense-mode { border-color: #ef4444 !important; border-width: 1px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-amber-500">EVO <span class="text-white">V.20</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
-            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-xs btn-active">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-xs btn-inactive ml-1">天天樂</button>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.99.1</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
+            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border border-amber-500/20">
-        <div class="flex justify-between items-center mb-2">
-            <label class="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Target RTP: 98.5%</label>
-            <div id="stateTag" class="text-[10px] font-bold text-emerald-500">● OMNI-SYNC</div>
+    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20 transition-all duration-500">
+        <div class="flex justify-between items-end mb-2">
+            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">ANALYZING PULSE...</label>
+            <div id="stateTag" class="text-[10px] font-bold">● SYSTEM READY</div>
         </div>
-        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[90px]">
-            矩陣初始化完成...
+        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-relaxed min-h-[60px]">
+            正在初始化量子鏈接...
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border-t-2 border-amber-500">
+    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500">
         <div class="grid grid-cols-4 gap-2 text-center">
-            <div class="bg-black/40 py-2 rounded">
-                <div class="text-[8px] text-amber-500 mb-1 font-bold">權重矩陣</div>
-                <div class="text-base font-black" id="p1">--</div>
-            </div>
-            <div class="bg-black/40 py-2 rounded">
-                <div class="text-[8px] text-amber-500 mb-1 font-bold">熱點共振</div>
-                <div class="text-base font-black" id="p2">--</div>
-            </div>
-            <div class="bg-black/40 py-2 rounded">
-                <div class="text-[8px] text-zinc-500 mb-1 font-bold">偏差校正</div>
-                <div class="text-base font-black" id="p3">--</div>
-            </div>
-            <div class="bg-black/40 py-2 rounded">
-                <div class="text-[8px] text-zinc-500 mb-1 font-bold">結構對沖</div>
-                <div class="text-base font-black" id="p4">--</div>
-            </div>
+            <div><div class="text-[9px] text-orange-500 mb-1">熱點核心</div><div class="text-lg font-black" id="p1">--</div></div>
+            <div><div class="text-[9px] text-orange-500 mb-1">共振權重</div><div class="text-lg font-black" id="p2">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">對沖修正</div><div class="text-lg font-black" id="p3">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">空間結構</div><div class="text-lg font-black" id="p4">--</div></div>
         </div>
     </div>
 
-    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
-        <label class="text-[10px] text-zinc-500 font-bold uppercase mb-2 tracking-widest">Backtest & Real-time Sync</label>
-        <div class="overflow-y-auto flex-grow">
+    <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-10">
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">全量數據回測 (RTP 98.5% TARGET)</label>
+        <div class="overflow-y-auto flex-grow" style="max-height: 60vh;">
             <table class="w-full text-[12px]">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10">
+                    <tr class="text-left">
+                        <th class="pb-2 w-16">日期</th>
+                        <th class="pb-2">數據軌跡與策略分佈</th>
+                        <th class="pb-2 text-right">星</th>
+                    </tr>
+                </thead>
                 <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
             </table>
         </div>
@@ -75,21 +69,37 @@
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "Sync Fail"; }
+            } catch (e) { document.getElementById('logBox').innerText = "API 解析錯誤"; }
         }
 
         function switchMode(m) {
             currentMode = m;
-            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-xs ${m==='539'?'btn-active':'btn-inactive'}`;
-            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-xs ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
+            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-sm ${m==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-sm ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
             render();
         }
 
-        function calculateV20(history, isFail) {
+        function parseCleanHistory(raw) {
+            if (!raw) return [];
+            return raw.filter(r => r && r.length >= 6).map(r => {
+                let d = new Date(r[0]);
+                if (isNaN(d.getTime())) {
+                    let parts = String(r[0]).split(/[-/T ]/);
+                    if (parts.length >= 3) d = new Date(parts[0], parts[1]-1, parts[2]);
+                }
+                return {
+                    fullDate: d,
+                    displayDate: !isNaN(d.getTime()) ? `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}` : String(r[0]).substring(5,10),
+                    nums: r.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+                };
+            }).filter(item => item.nums.length === 5).sort((a, b) => b.fullDate - a.fullDate);
+        }
+
+        function calculateV20(history, isFailureState) {
             let scores = [], acc = {};
-            const last = history[0].nums;
+            const lastNums = history[0].nums;
             
-            history.slice(0, 36).forEach(r => {
+            history.slice(0, 32).forEach(r => {
                 r.nums.forEach(n1 => {
                     if (!acc[n1]) acc[n1] = {};
                     r.nums.forEach(n2 => { if (n1 !== n2) acc[n1][n2] = (acc[n1][n2] || 0) + 1; });
@@ -98,69 +108,72 @@
 
             for(let n=1; n<=39; n++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let repeat = last.includes(n) ? 5.0 : 0;
-                let accS = 0; last.forEach(ln => { if(acc[ln] && acc[ln][n]) accS += acc[ln][n]; });
-                // V.20 Omni Formula: 針對 98.5% 目標強化對沖係數
-                let val = (accS * 2.6) + repeat + (Math.pow(gap, 0.75) * 1.1);
-                scores.push({ n, val, gap, tail: n % 10 });
+                let repeat = lastNums.includes(n) ? 5.2 : 0;
+                let accS = 0; lastNums.forEach(ln => { if(acc[ln] && acc[ln][n]) accS += acc[ln][n]; });
+                let val = (accS * 2.8) + repeat + (Math.pow(gap, 0.75) * 1.2);
+                scores.push({ n, val, gap });
             }
 
             let p = new Set();
-            if (isFail) { 
-                scores.sort((a,b) => b.gap - a.gap); p.add(scores[0].n); p.add(scores[1].n); 
+            if (isFailureState) {
+                scores.sort((a,b) => b.gap - a.gap);
+                p.add(scores[0].n); p.add(scores[1].n);
             }
             scores.sort((a,b) => b.val - a.val);
             for(let s of scores) { if(p.size < 8) p.add(s.n); }
-            return Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2,'0'));
+            return Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
         }
 
         function render() {
-            const raw = apiData ? apiData[currentMode] : null;
-            if(!raw) return;
-            const history = raw.filter(r => r && r.length >= 6).map(r => ({
-                displayDate: r[0].substring(5, 10).replace('-', '/'),
-                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
-            }));
+            if (!apiData || !apiData[currentMode]) return;
+            const history = parseCleanHistory(apiData[currentMode]);
+            let rows = "";
+            let stats = { total: 0, s: 0, stars: [0,0,0,0,0,0], totalStars: 0 };
+            let currentIsFailure = false, consecutiveFailures = 0, results = [];
 
-            let stats = { total: 0, s: 0, hitsArr: [0,0,0,0,0,0], recent: 0 }, isFail = false, results = [];
-
-            for (let i = Math.min(history.length - 2, 45); i >= 0; i--) {
-                const pred = calculateV20(history.slice(i + 1), isFail);
+            for (let i = history.length - 2; i >= 0; i--) {
+                const pred = calculateV20(history.slice(i + 1), currentIsFailure);
                 const act = history[i].nums;
                 const hits = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
-                results.push({ date: history[i].displayDate, act, pred, hits, isFail });
-                stats.total++; stats.s += hits;
-                stats.hitsArr[hits]++;
-                if(i < 5) stats.recent += hits;
-                isFail = hits < 2;
+                
+                results.unshift({
+                    date: history[i].displayDate, act, pred, hits, isDefense: currentIsFailure
+                });
+
+                if (hits < 2) consecutiveFailures++; else consecutiveFailures = 0;
+                currentIsFailure = consecutiveFailures >= 2;
             }
 
-            const rtp = ((stats.s / (stats.total * 2)) * 100).toFixed(1);
-            const currPred = calculateV20(history, isFail);
+            results.forEach(r => {
+                stats.total++; stats.stars[r.hits]++; stats.totalStars += r.hits;
+                let modeTag = r.isDefense ? '<span class="text-[9px] bg-red-900/50 text-red-400 px-1 rounded mr-1">止血</span>' : '';
+                let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+
+                rows = `<tr class="border-b border-white/5">
+                    <td class="py-3 text-gray-500">${r.date}</td>
+                    <td class="py-3 text-white text-[11px]">
+                        ${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br>
+                        ${modeTag}<span class="text-gray-600">→ ${predHtml}</span>
+                    </td>
+                    <td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-white'}">${r.hits}</td>
+                </tr>` + rows;
+            });
+
+            const rtp = ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1);
+            const current = calculateV20(history, currentIsFailure);
+            
+            document.getElementById('stateTag').className = `text-[10px] font-bold ${currentIsFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
+            document.getElementById('stateTag').innerText = currentIsFailure ? "● RECOVERY ACTIVE" : "● APEX STABLE";
+            document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${currentIsFailure?'defense-mode':'border-orange-500/20'}`;
 
             document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between border-b border-white/10 pb-1 mb-2 text-amber-500 font-bold">
-                    <span>即時效能 RTP: ${rtp}%</span><span>樣本: ${stats.total}期</span>
-                </div>
-                <div class="grid grid-cols-2 gap-y-1 text-zinc-400 text-[10px]">
-                    <span>2星累計: ${stats.hitsArr[2]} | 3星+: ${stats.hitsArr[3]+stats.hitsArr[4]+stats.hitsArr[5]}</span>
-                    <span>近5期均值: ${(stats.recent/5).toFixed(1)}</span>
-                    <span class="${isFail?'text-rose-500 pulse-text':'text-emerald-500'} font-bold">模式: ${isFail?'FORCE-CORRECT':'ULTRA-STABLE'}</span>
-                </div>
-            `;
-
-            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currPred[i*2]},${currPred[i*2+1]}`;
-
-            document.getElementById('historyTable').innerHTML = results.reverse().map(r => `
-                <tr class="border-b border-white/5">
-                    <td class="py-3 text-zinc-600 w-12">${r.date}</td>
-                    <td class="py-3">
-                        <div class="text-zinc-200 mb-0.5">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
-                        <div class="text-zinc-500 text-[10px]">→ ${r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',')}</div>
-                    </td>
-                    <td class="text-right font-black ${r.hits>=2?'text-amber-500':'text-zinc-700'}">${r.hits}</td>
-                </tr>
-            `).join('');
+                <div class="grid grid-cols-2 gap-x-4">
+                    <span>樣本: ${stats.total} | RTP: ${rtp}%</span> <span class="text-orange-500 text-right">2★: ${stats.stars[2]} 次</span>
+                    <span>0★: ${stats.stars[0]} | 1★: ${stats.stars[1]}</span> <span class="text-orange-500 text-right">3★+: ${stats.stars[3]+stats.stars[4]+stats.stars[5]} 次</span>
+                </div>`;
+            
+            for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${current[i*2]},${current[i*2+1]}`;
+            document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
 </body>
