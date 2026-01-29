@@ -51,7 +51,7 @@
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 2★+ EVERY SESSION)</label>
+            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 3★+ BOOST)</label>
             <div id="quickStats" class="text-[10px] text-orange-500 font-bold"></div>
         </div>
         <div class="overflow-y-auto flex-grow">
@@ -99,54 +99,62 @@
             }).filter(i => !isNaN(i.nums[0])).sort((a, b) => b.fullDate - a.fullDate);
         }
 
-        // 多重策略引擎：根據歷史表現自動挑選權重
         function calculateAdvanced(history, isFailure) {
             const lastNums = history[0].nums;
             const sample = history.slice(0, 50);
             
-            // 策略權重候選組
+            // 策略權重候選組 (針對三星命中優化)
             const strategyPacks = [
-                { name: 'Trend', link: 8.5, tail: 3.0, repeat: 9.0, gap: 2.5 },
-                { name: 'Omission', link: 3.5, tail: 4.5, repeat: 4.0, gap: 9.5 },
-                { name: 'Balanced', link: 6.2, tail: 4.5, repeat: 7.5, gap: 5.8 }
+                { name: 'Quantum3★', link: 9.5, tail: 6.0, repeat: 7.0, gap: 3.5 },
+                { name: 'DragBoost', link: 12.0, tail: 3.5, repeat: 5.0, gap: 4.5 },
+                { name: 'Cluster', link: 5.5, tail: 9.0, repeat: 8.5, gap: 5.0 }
             ];
 
-            // 競爭回測：測試哪組權重在過去 5 期最準
-            let bestPack = strategyPacks[2]; // 預設平衡
-            if (history.length > 10) {
+            let bestPack = strategyPacks[0];
+            if (history.length > 15) {
                 let bestScore = -1;
                 strategyPacks.forEach(pack => {
                     let hitSum = 0;
-                    for (let i = 1; i <= 5; i++) {
+                    for (let i = 1; i <= 8; i++) { // 擴大回測窗口至8期以穩定三星
                         const testPred = runLogic(history.slice(i), pack);
-                        hitSum += history[i-1].nums.filter(n => testPred.includes(n.toString().padStart(2,'0'))).length;
+                        const hits = history[i-1].nums.filter(n => testPred.includes(n.toString().padStart(2,'0'))).length;
+                        hitSum += (hits >= 3 ? hits * 2 : hits); // 給予三星以上更高的權重
                     }
                     if (hitSum > bestScore) { bestScore = hitSum; bestPack = pack; }
                 });
             }
 
             function runLogic(hist, W) {
-                let scores = [], linkMap = {}, tailFreq = Array(10).fill(0);
-                const s = hist.slice(0, 30);
+                let scores = [], linkMap = {}, tailFreq = Array(10).fill(0), pairMap = {};
+                const s = hist.slice(0, 40);
+
                 s.forEach((r, idx) => {
                     const decay = (s.length - idx) / s.length;
                     r.nums.forEach(n => {
                         tailFreq[n % 10] += decay;
-                        if (idx < s.length - 1) {
-                            hist[idx+1].nums.forEach(pn => {
-                                if(!linkMap[pn]) linkMap[pn] = {};
-                                linkMap[pn][n] = (linkMap[pn][n] || 0) + decay;
-                            });
-                        }
+                        // 建立號碼對對碰關聯 (三星關鍵)
+                        r.nums.forEach(n2 => {
+                            if (n !== n2) {
+                                let key = n < n2 ? `${n}-${n2}` : `${n2}-${n}`;
+                                pairMap[key] = (pairMap[key] || 0) + decay;
+                            }
+                        });
                     });
                 });
 
                 for (let n = 1; n <= 39; n++) {
-                    let linkS = 0;
-                    hist[0].nums.forEach(ln => { if(linkMap[ln] && linkMap[ln][n]) linkS += linkMap[ln][n]; });
+                    let linkS = 0, pairS = 0;
+                    hist[0].nums.forEach(ln => { 
+                        if(linkMap[ln] && linkMap[ln][n]) linkS += linkMap[ln][n];
+                        // 計算與上一期開獎號的成對關聯
+                        let pk = n < ln ? `${n}-${ln}` : `${ln}-${n}`;
+                        if(pairMap[pk]) pairS += pairMap[pk];
+                    });
+
                     let gap = 0;
                     for (let r of hist) { if (r.nums.includes(n)) break; gap++; }
-                    let val = (linkS * W.link) + (tailFreq[n % 10] * W.tail) + 
+
+                    let val = (linkS * W.link) + (pairS * W.link * 0.5) + (tailFreq[n % 10] * W.tail) + 
                               (hist[0].nums.includes(n) ? W.repeat : 0) + (Math.log2(gap + 1) * W.gap);
                     scores.push({ n, val, gap });
                 }
@@ -165,25 +173,23 @@
             if (!apiData || !apiData[currentMode]) return;
             const history = parseHistory(apiData[currentMode]);
             let rows = "", results = [];
-            let stats = { total: 0, stars: [0,0,0,0,0,0], totalStars: 0 };
+            let stats = { total: 0, stars: [0,0,0,0,0,0], totalStars: 0, s3plus: 0 };
             let isFailure = false;
 
-            // 回測 45 期
             for (let i = Math.min(history.length - 2, 45); i >= 0; i--) {
                 const res = calculateAdvanced(history.slice(i + 1), isFailure);
                 const pred = res.nums;
                 const act = history[i].nums;
                 const hits = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
-                
                 results.push({ date: history[i].displayDate, act, pred, hits, isFailure, strategy: res.strategy });
                 isFailure = (hits < 2);
             }
 
-            // 日期排序：新至舊
             results.sort((a,b) => b.date.localeCompare(a.date));
 
             results.forEach(r => {
                 stats.total++; stats.stars[r.hits]++; stats.totalStars += r.hits;
+                if(r.hits >= 3) stats.s3plus++;
                 let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">STP</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
 
@@ -193,12 +199,12 @@
                         <div class="text-white mb-1 tracking-[0.2em] font-black">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
                         <div class="text-[10px] flex items-center">${tag}<span class="text-gray-500 font-mono tracking-tighter">${predHtml}</span></div>
                     </td>
-                    <td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-red-500/50'} text-base">${r.hits}</td>
+                    <td class="text-right font-black ${r.hits>=3?'text-orange-500':'text-gray-500/50'} text-base">${r.hits}</td>
                 </tr>`;
             });
 
-            const rtp = ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1);
             const currentObj = calculateAdvanced(history, isFailure);
+            const s3rate = ((stats.s3plus / stats.total) * 100).toFixed(1);
             
             document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
             document.getElementById('stateTag').innerText = isFailure ? "● QUANTUM RECOVERY" : "● APEX STABLE";
@@ -206,12 +212,11 @@
 
             document.getElementById('logBox').innerHTML = `
                 <div class="grid grid-cols-2 gap-x-2">
-                    <span class="text-gray-400">總樣本: <b class="text-white">${stats.total} 期</b></span>
-                    <span class="text-gray-400 text-right">當前 RTP: <b class="text-orange-500">${rtp}%</b></span>
-                    <span class="text-gray-400">最佳策略: <b class="text-white">${currentObj.strategy}</b></span>
-                    <span class="text-gray-400 text-right">2星+回合: <b class="text-orange-500">${stats.stars[2]+stats.stars[3]+stats.stars[4]} 期</b></span>
-                </div>
-                <div class="mt-1 text-[9px] text-gray-600 italic">多重策略競爭中... 已挑選最適權重進行運算。</div>`;
+                    <span class="text-gray-400">總體樣本: <b class="text-white">${stats.total} 期</b></span>
+                    <span class="text-gray-400 text-right">三星命中率: <b class="text-orange-500">${s3rate}%</b></span>
+                    <span class="text-gray-400">當前策略: <b class="text-white">${currentObj.strategy}</b></span>
+                    <span class="text-gray-400 text-right">平均星數: <b class="text-orange-500">${(stats.totalStars/stats.total).toFixed(2)}</b></span>
+                </div>`;
             
             for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${currentObj.nums[i*2]},${currentObj.nums[i*2+1]}`;
             document.getElementById('historyTable').innerHTML = rows;
