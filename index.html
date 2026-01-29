@@ -99,72 +99,49 @@
             }).filter(i => !isNaN(i.nums[0])).sort((a, b) => b.fullDate - a.fullDate);
         }
 
-        /**
-         * 優化選號策略：
-         * 1. 引入時間衰減函數 (Time Decay Weighting)
-         * 2. 號碼聯動相關性分析 (Number Correlation / Drag)
-         * 3. 遺漏值對數平滑處理 (Logarithmic Gap Smoothing)
-         */
         function calculateAdvanced(history, isFailure) {
             const lastNums = history[0].nums;
-            const sampleSize = Math.min(history.length, 60); 
-            const scores = [];
+            const sample = history.slice(0, 45);
+            let scores = [];
             
-            // 權重參數
-            const W = { link: 5.2, tail: 3.8, repeat: 8.0, gap: 6.5 };
+            // 模擬優化權重
+            const W_LINK = 6.2, W_TAIL = 4.5, W_REPEAT = 7.5, W_GAP = 5.8;
 
-            // 統計容器
-            let tailFreq = Array(10).fill(0);
-            let linkMap = {}; // 存儲號碼間的聯動關係
+            let linkMap = {}, tailFreq = Array(10).fill(0);
 
-            // 數據掃描 (帶入時間權重)
-            history.slice(0, sampleSize).forEach((record, idx) => {
-                const decay = (sampleSize - idx) / sampleSize;
-                record.nums.forEach(n => {
+            sample.forEach((r, idx) => {
+                const decay = (sample.length - idx) / sample.length;
+                r.nums.forEach(n => {
                     tailFreq[n % 10] += (1 * decay);
-                    // 建立與上一期的聯動統計
-                    if (idx < sampleSize - 1) {
-                        history[idx + 1].nums.forEach(prevN => {
-                            if (!linkMap[prevN]) linkMap[prevN] = {};
-                            linkMap[prevN][n] = (linkMap[prevN][n] || 0) + (1 * decay);
+                    if (idx < sample.length - 1) {
+                        history[idx+1].nums.forEach(pn => {
+                            if(!linkMap[pn]) linkMap[pn] = {};
+                            linkMap[pn][n] = (linkMap[pn][n] || 0) + decay;
                         });
                     }
                 });
             });
 
             for (let n = 1; n <= 39; n++) {
-                // 1. 計算聯動分 (與上一期開獎號的關聯強度)
                 let linkScore = 0;
-                lastNums.forEach(ln => {
-                    if (linkMap[ln] && linkMap[ln][n]) linkScore += linkMap[ln][n];
-                });
+                lastNums.forEach(ln => { if(linkMap[ln] && linkMap[ln][n]) linkScore += linkMap[ln][n]; });
 
-                // 2. 計算遺漏值 (Gap)
                 let gap = 0;
                 for (let r of history) { if (r.nums.includes(n)) break; gap++; }
 
-                // 綜合評分公式：聯動分 + 尾數共振 + 連莊權重 + 遺漏平滑
-                let val = (linkScore * W.link) + 
-                          (tailFreq[n % 10] * W.tail) + 
-                          (lastNums.includes(n) ? W.repeat : 0) + 
-                          (Math.log1p(gap) * W.gap);
-
+                let val = (linkScore * W_LINK) + (tailFreq[n % 10] * W_TAIL) + 
+                          (lastNums.includes(n) ? W_REPEAT : 0) + (Math.log2(gap + 1) * W_GAP);
+                
                 scores.push({ n, val, gap });
             }
 
             let pool = new Set();
-            // 止血模式：冷號補償邏輯
             if (isFailure) {
                 scores.sort((a, b) => b.gap - a.gap);
-                pool.add(scores[0].n);
-                pool.add(scores[1].n);
+                pool.add(scores[0].n); pool.add(scores[1].n);
             }
-
-            // 根據最終評分排序選出 8 碼
             scores.sort((a, b) => b.val - a.val);
-            for (let s of scores) {
-                if (pool.size < 8) pool.add(s.n);
-            }
+            for (let s of scores) { if (pool.size < 8) pool.add(s.n); }
 
             return Array.from(pool).sort((a, b) => a - b).map(x => x.toString().padStart(2, '0'));
         }
@@ -180,7 +157,6 @@
                 const pred = calculateAdvanced(history.slice(i + 1), isFailure);
                 const act = history[i].nums;
                 const hits = act.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
-                
                 results.unshift({ date: history[i].displayDate, act, pred, hits, isFailure });
                 isFailure = (hits < 2);
             }
@@ -189,7 +165,6 @@
                 stats.total++; stats.stars[r.hits]++; stats.totalStars += r.hits;
                 let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">STP</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
-
                 rows = `<tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500 font-bold">${r.date}</td>
                     <td class="py-3">
@@ -202,20 +177,16 @@
 
             const rtp = ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1);
             const current = calculateAdvanced(history, isFailure);
-            
             document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
             document.getElementById('stateTag').innerText = isFailure ? "● QUANTUM RECOVERY" : "● APEX STABLE";
             document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure?'defense-mode':'border-orange-500/20'}`;
-
             document.getElementById('logBox').innerHTML = `
                 <div class="grid grid-cols-2 gap-x-2">
-                    <span class="text-gray-400">總體樣本: <b class="text-white">${stats.total} 期</b></span>
-                    <span class="text-gray-400 text-right">頂級 RTP: <b class="text-orange-500">${rtp}%</b></span>
-                    <span class="text-gray-400">2星+: <b class="text-white">${stats.stars[2]+stats.stars[3]+stats.stars[4]} 次</b></span>
-                    <span class="text-gray-400 text-right">星數總計: <b class="text-orange-500">${stats.totalStars} 星</b></span>
-                </div>
-                <div class="mt-1 text-[9px] text-gray-600 italic">策略優化：聯動相關性分析已啟用，遺漏值平滑補償中...</div>`;
-            
+                    <span class="text-gray-400">樣本總計: <b class="text-white">${stats.total} 期</b></span>
+                    <span class="text-gray-400 text-right">當前 RTP: <b class="text-orange-500">${rtp}%</b></span>
+                    <span class="text-gray-400">穩定星率: <b class="text-white">${((stats.stars[2]+stats.stars[3])/stats.total*100).toFixed(1)}%</b></span>
+                    <span class="text-gray-400 text-right">優化模式: <b class="text-orange-500">QUANTUM V3</b></span>
+                </div>`;
             for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${current[i*2]},${current[i*2+1]}`;
             document.getElementById('historyTable').innerHTML = rows;
         }
