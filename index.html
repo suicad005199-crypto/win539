@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EVO 6.95 FULL-DATA APEX</title>
+    <title>EVO 6.98 DEFENSE-ACTIVE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -12,26 +12,26 @@
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
         .btn-inactive { background: #2c2c2e; color: #888; }
         .hit-num { color: #000; background: var(--ios-orange); font-weight: 900; padding: 0 3px; border-radius: 2px; }
-        #historyTable tr:first-child { background: rgba(249, 115, 22, 0.05); }
+        .defense-mode { border-color: #ef4444 !important; } /* 失效狀態紅框預警 */
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.95</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.98</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border border-orange-500/20">
+    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20 transition-all duration-500">
         <div class="flex justify-between items-end mb-2">
-            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase">SYNCING DATA...</label>
-            <div class="text-[10px] text-orange-500 font-bold">● FULL HISTORICAL SCAN</div>
+            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">ANALYZING...</label>
+            <div id="stateTag" class="text-[10px] font-bold">● SYSTEM READY</div>
         </div>
-        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5">
-            正在掃描全量 API 數據庫...
+        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-relaxed">
+            正在掃描數據規律...
         </div>
     </div>
 
@@ -39,19 +39,19 @@
         <div class="grid grid-cols-4 gap-2 text-center">
             <div><div class="text-[9px] text-orange-500 mb-1">熱點核心</div><div class="text-lg font-black" id="p1">--</div></div>
             <div><div class="text-[9px] text-orange-500 mb-1">影子共振</div><div class="text-lg font-black" id="p2">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1">冷熱對沖</div><div class="text-lg font-black" id="p3">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1">空間跳格</div><div class="text-lg font-black" id="p4">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">對沖/止血</div><div class="text-lg font-black" id="p3">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1">空間結構</div><div class="text-lg font-black" id="p4">--</div></div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-10">
-        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">全量數據歷史回測 (由新至舊)</label>
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">全量數據歷史回測 (防禦系統已掛載)</label>
         <div class="overflow-y-auto flex-grow" style="max-height: 60vh;">
             <table class="w-full text-[12px]">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 shadow-sm">
                     <tr class="text-left">
                         <th class="pb-2 w-16">日期</th>
-                        <th class="pb-2">開獎與狙擊佈局碼</th>
+                        <th class="pb-2">開獎與策略佈局</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -92,67 +92,149 @@
             return data.sort((a, b) => b.fullDate - a.fullDate);
         }
 
-        function calculateAPEX(history, mode) {
-            if (history.length < 2) return { pred: ["00"], aIndex: "0.00" };
+        // --- 狀態感知型策略核心 ---
+        function calculateSmartAPEX(history, mode, isFailureState) {
             const range = 39;
             const last = history[0].nums;
             let scores = [];
 
+            // 1. 基礎權重計算
             for(let n=1; n<=range; n++) {
-                let freq = history.slice(0, 20).filter(r => r.nums.includes(n)).length;
+                let freq = history.slice(0, 15).filter(r => r.nums.includes(n)).length;
                 let gap = 0;
                 for(let r of history) { if(r.nums.includes(n)) break; gap++; }
 
-                let base = mode === '539' ? (freq * 2.8 + gap * 0.6) : (freq * 3.5);
-                let tailMatch = last.filter(ln => ln % 10 === n % 10).length;
-                let neighbor = last.some(ln => Math.abs(ln - n) <= 1) ? 1.5 : 1.0;
-
-                scores.push({ n: n, val: base * (1 + tailMatch * 0.5) * neighbor, gap: gap, tail: n % 10 });
+                let val = (freq * 3.0) + (gap * 0.5);
+                let tail = n % 10;
+                scores.push({ n: n, val: val, gap: gap, tail: tail });
             }
 
-            scores.sort((a, b) => b.val - a.val);
             let p = new Set();
-            scores.slice(0, 8).forEach(s => p.add(s.n));
-            
-            return {
-                pred: Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                aIndex: (scores[0].val / 10).toFixed(2)
-            };
+
+            if (isFailureState) {
+                // 【止血策略模式】：高覆蓋、尾數擴散、極端補位
+                // A. 抓最大遺漏 (2碼)
+                let byGap = [...scores].sort((a,b) => b.gap - a.gap);
+                p.add(byGap[0].n);
+                p.add(byGap[1].n);
+                // B. 抓尾數擴散 (不重複尾數)
+                let usedTails = new Set([byGap[0].tail, byGap[1].tail]);
+                let byFreq = [...scores].sort((a,b) => b.val - a.val);
+                for(let s of byFreq) {
+                    if (p.size < 8 && !usedTails.has(s.tail)) {
+                        p.add(s.n);
+                        usedTails.add(s.tail);
+                    }
+                }
+            } else {
+                // 【APEX 主策略模式】：原本的精準選碼
+                let byVal = [...scores].sort((a,b) => b.val - a.val);
+                byVal.slice(0, 8).forEach(s => p.add(s.n));
+            }
+
+            let finalPred = Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
+            // 補齊 8 碼
+            if(finalPred.length < 8) {
+                scores.sort((a,b)=>b.val - a.val).forEach(s => {
+                    if(p.size < 8) p.add(s.n);
+                });
+                finalPred = Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
+            }
+
+            return { pred: finalPred, isDefense: isFailureState };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const history = parseCleanHistory(apiData[currentMode]);
-            let stars = 0, rows = "";
+            let rows = "";
+            let stats = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, total: 0 };
+            
+            // 記錄狀態的關鍵變數
+            let consecutiveFailures = 0; 
+            let currentIsFailure = false;
 
-            for(let i=0; i < history.length; i++) {
+            // 為了準確回測「狀態切換」，我們必須從最早的期數往最新期數模擬
+            // 先計算回測結果
+            let results = [];
+            for (let i = history.length - 2; i >= 0; i--) {
                 let prevData = history.slice(i + 1);
-                if (prevData.length < 2) continue; 
-
-                let res = calculateAPEX(prevData, currentMode);
+                // 判斷當前是否處於失效狀態 (若前 2 期都 <2 星)
+                // 注意：這裡簡化為 N=2 作為切換點
+                let res = calculateSmartAPEX(prevData, currentMode, currentIsFailure);
                 let act = history[i].nums;
                 let hits = act.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
-                stars += (i < 10) ? hits : 0;
+                
+                results.unshift({
+                    date: history[i].displayDate,
+                    act: act,
+                    pred: res.pred,
+                    hits: hits,
+                    isDefense: currentIsFailure
+                });
 
-                // 修正：0-1 星顯示白色 (text-white)，2星以上顯示橘色 (text-orange-500)
-                let starColor = hits >= 2 ? 'text-orange-500' : 'text-white';
-
-                let predHtml = res.pred.map(p => act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rows += `<tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-500">${history[i].displayDate}</td>
-                    <td class="text-white text-[11px]">${act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br><span class="text-gray-600">→ ${predHtml}</span></td>
-                    <td class="text-right font-black ${starColor}">${hits}</td>
-                </tr>`;
+                // 更新感知器狀態
+                if (hits < 2) {
+                    consecutiveFailures++;
+                } else {
+                    consecutiveFailures = 0;
+                }
+                
+                // 狀態機：連續 2 期失敗則進入止血模式，直到拿到 2 星以上才切回
+                if (consecutiveFailures >= 2) {
+                    currentIsFailure = true;
+                } else if (hits >= 2) {
+                    currentIsFailure = false;
+                }
             }
 
-            const current = calculateAPEX(history, currentMode);
-            document.getElementById('strategyLabel').innerText = `STRATEGY ${currentMode === '539' ? 'A (539)' : 'B (DAILY)'} ACTIVE`;
-            document.getElementById('logBox').innerHTML = `<div class="flex justify-between"><span>近 10 期平均: <b class="text-orange-500">${(stars/10).toFixed(2)} 星</b></span><span>A-INDEX: ${current.aIndex}</span></div>`;
+            // 渲染回測面板與統計
+            results.forEach(r => {
+                stats.total++;
+                stats[r.hits]++;
+                let starColor = r.hits >= 2 ? 'text-orange-500' : 'text-white';
+                let modeTag = r.isDefense ? '<span class="text-[9px] bg-red-900/50 text-red-400 px-1 rounded mr-1">止血</span>' : '';
+                
+                rows += `<tr class="border-b border-white/5">
+                    <td class="py-3 text-gray-500">${r.date}</td>
+                    <td class="text-white text-[11px]">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br>${modeTag}<span class="text-gray-600">→ ${r.pred.join(',')}</span></td>
+                    <td class="text-right font-black ${starColor}">${r.hits}</td>
+                </tr>`;
+            });
+
+            // 更新 UI 狀態
+            const latestRes = calculateSmartAPEX(history, currentMode, currentIsFailure);
+            const statusPanel = document.getElementById('statusPanel');
+            const stateTag = document.getElementById('stateTag');
             
-            document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
-            document.getElementById('p2').innerText = `${current.pred[2]},${current.pred[3]}`;
-            document.getElementById('p3').innerText = `${current.pred[4]},${current.pred[5]}`;
-            document.getElementById('p4').innerText = `${current.pred[6]},${current.pred[7]}`;
+            if (currentIsFailure) {
+                statusPanel.classList.add('defense-mode');
+                stateTag.innerText = "● RECOVERY MODE ACTIVE";
+                stateTag.className = "text-[10px] font-bold text-red-500 animate-pulse";
+            } else {
+                statusPanel.classList.remove('defense-mode');
+                stateTag.innerText = "● APEX STABLE";
+                stateTag.className = "text-[10px] font-bold text-orange-500";
+            }
+
+            document.getElementById('strategyLabel').innerText = `STRATEGY ${currentMode === '539' ? 'A' : 'B'} 感知中`;
+            document.getElementById('logBox').innerHTML = `
+                <div class="grid grid-cols-2 gap-x-4">
+                    <span>總回測期數: ${stats.total}</span>
+                    <span class="text-orange-500">2星命中: ${stats[2]} 期</span>
+                    <span>0星次數: ${stats[0]}</span>
+                    <span class="text-orange-500">3星命中: ${stats[3]} 期</span>
+                    <span>1星次數: ${stats[1]}</span>
+                    <span class="text-orange-500">4星命中: ${stats[4]} 期</span>
+                    <span>目前狀態: ${currentIsFailure ? '止血模式' : '主策略運行'}</span>
+                    <span class="text-orange-500 font-bold">5星命中: ${stats[5]} 期</span>
+                </div>
+            `;
+            
+            document.getElementById('p1').innerText = `${latestRes.pred[0]},${latestRes.pred[1]}`;
+            document.getElementById('p2').innerText = `${latestRes.pred[2]},${latestRes.pred[3]}`;
+            document.getElementById('p3').innerText = `${latestRes.pred[4]},${latestRes.pred[5]}`;
+            document.getElementById('p4').innerText = `${latestRes.pred[6]},${latestRes.pred[7]}`;
             document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
