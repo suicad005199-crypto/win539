@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.90 APEX</title>
+    <title>ULTIMATE EVO V.01 APEX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">啟動負載平衡對沖機制...</span>
+            <span class="text-orange-500/50 italic">系統初始化中...</span>
         </div>
     </div>
 
@@ -86,11 +86,10 @@
         async function fetchData() {
             try {
                 const response = await fetch(API_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
                 apiResponse = await response.json();
                 renderActiveMode();
             } catch (error) { 
-                document.getElementById('logBox').innerHTML = `<span class="text-red-500">API 連結失敗</span><br>請確認 Script 已部署為「任何人」存取。`; 
+                document.getElementById('logBox').innerHTML = `<span class="text-red-500">API 連結失敗</span>`; 
             }
         }
 
@@ -102,86 +101,81 @@
         }
 
         function renderActiveMode() {
-            if (!apiResponse || !apiResponse[currentMode]) {
-                document.getElementById('logBox').innerText = `等待數據載入或找不到 ${currentMode} 分頁...`;
-                return;
-            }
+            if (!apiResponse || !apiResponse[currentMode]) return;
             processData(apiResponse[currentMode]);
         }
 
-        // V3 核心演算法：融入版路空間規律
-        function getApexPrediction(history) {
-            const range = currentMode === '539' ? 39 : 36;
+        // --- 策略分流模組 (V3 核心架構) ---
+
+        function getStrategyA(history) {
+            return calculateV3Core(history, 39, "STRATEGY A (539)");
+        }
+
+        function getStrategyB(history) {
+            return calculateV3Core(history, 39, "STRATEGY B (DAILY)");
+        }
+
+        function calculateV3Core(history, range, label) {
             let lastNums = history[0].nums;
-            let last2Nums = history[1].nums; // 觀察斜連位
-            
+            let last2Nums = history[1].nums;
             let scores = [];
+
             for(let n=1; n<=range; n++) {
-                // 1. 基礎熱度 (近期 12 期)
+                // 熱度掃描 (近 12 期)
                 let shortCounts = 0;
                 history.slice(0, 12).forEach(r => { if(r.nums.includes(n)) shortCounts++ });
-                
-                // 2. 斜連位訊號 (仿手寫分佈圖邏輯)
+
+                // 斜連位感應 (V3 特色)
                 let diagSignal = 0;
                 lastNums.forEach(ln => {
-                    if (last2Nums.includes(ln - 1) && n === ln + 1) diagSignal += 2.5; // 向右斜
-                    if (last2Nums.includes(ln + 1) && n === ln - 1) diagSignal += 2.5; // 向左斜
+                    if (last2Nums.includes(ln - 1) && n === ln + 1) diagSignal += 2.8;
+                    if (last2Nums.includes(ln + 1) && n === ln - 1) diagSignal += 2.8;
                 });
 
-                // 3. 空間跳島 (間隔期重複規律)
-                let islandSignal = 0;
-                if (history[2] && history[2].nums.includes(n)) islandSignal += 1.2;
-                if (history[4] && history[4].nums.includes(n)) islandSignal += 1.5;
-
-                // 4. 尾數聯動權重
+                // 尾數共振
                 let tailCount = 0;
                 lastNums.forEach(ln => { if(ln % 10 === n % 10) tailCount++ });
 
-                // 綜合權重評分
-                let base = (shortCounts * 2.2);
-                let neighbor = lastNums.some(ln => Math.abs(ln - n) === 1) ? 1.7 : 1.0;
-                let repeat = lastNums.includes(n) ? 1.4 : 1.0;
-                let tailBonus = 1 + (tailCount * 0.4);
-                
-                // 5. 遺漏對沖補償
+                // 遺漏觀察
                 let gap = 0; 
                 for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let gapBonus = (gap >= 4 && gap <= 9) ? 1.6 : 1.0;
 
-                let finalScore = (base + diagSignal + islandSignal) * neighbor * repeat * tailBonus * gapBonus;
+                // 加權公式
+                let base = (shortCounts * 2.5);
+                let neighbor = lastNums.some(ln => Math.abs(ln - n) === 1) ? 1.8 : 1.0;
+                let repeat = lastNums.includes(n) ? 1.5 : 1.0;
+                let tailBonus = 1 + (tailCount * 0.5);
+                let gapBonus = (gap >= 4 && gap <= 9) ? 1.7 : 1.0;
 
-                scores.push({ n: n, val: finalScore, gap: gap, tail: n % 10 });
+                scores.push({ n: n, val: (base + diagSignal) * neighbor * repeat * tailBonus * gapBonus, gap: gap, tail: n % 10 });
             }
-            
+
             scores.sort((a, b) => b.val - a.val);
-
             let picked = new Set();
-            // 策略分配：強攻核心(3) + 影子共振(3) + 冷熱對沖(2)
             scores.slice(0, 3).forEach(s => picked.add(s.n));
-
+            
             let candidates = scores.filter(s => !picked.has(s.n));
             for(let s of candidates) {
                 if(picked.size >= 6) break;
-                let coreArr = Array.from(picked);
-                // 優先選擇與核心有斜連或同尾關係的
-                if(coreArr.some(cn => Math.abs(cn - s.n) <= 2 || cn % 10 === s.tail)) picked.add(s.n);
+                if(Array.from(picked).some(cn => Math.abs(cn - s.n) <= 2 || cn % 10 === s.tail)) picked.add(s.n);
             }
-
-            // 對沖機制：補足冷門
+            
+            // 冷熱對沖 (補足長缺)
             candidates = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.gap - a.gap);
             if(candidates.length > 0 && picked.size < 8) picked.add(candidates[0].n);
-
-            // 最終補齊
+            
+            // 結構補位
             candidates = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.val - a.val);
-            for(let s of candidates) {
-                if(picked.size >= 8) break;
-                picked.add(s.n);
-            }
+            for(let s of candidates) { if(picked.size >= 8) break; picked.add(s.n); }
 
-            const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val / 2.8).toFixed(2);
-            return { pred, sIndex };
+            return { 
+                pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
+                sIndex: (scores[0].val / 3).toFixed(2),
+                label: label
+            };
         }
+
+        // --- 核心處理與數據渲染 ---
 
         function processData(rawData) {
             let history = rawData.filter(row => row.length >= 6 && !isNaN(parseInt(row[1]))).map(row => ({
@@ -189,41 +183,38 @@
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
 
-            if (history.length < 15) {
-                document.getElementById('logBox').innerText = "數據量不足以進行 V3 空間運算";
-                return;
-            }
-
+            if (history.length < 15) return;
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
-            let stars = 0, rowsHtml = "", lastS = 0;
+            const strategyFunc = currentMode === '539' ? getStrategyA : getStrategyB;
+            let stars = 0, rowsHtml = "", lastS = 0, currentLabel = "";
             const testCount = 10;
+
             for (let i = 0; i < testCount; i++) {
-                const result = getApexPrediction(history.slice(i + 1));
+                const result = strategyFunc(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
-                if(i===0) lastS = result.sIndex;
+                if(i===0) { lastS = result.sIndex; currentLabel = result.label; }
                 const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${String(history[i].date).substring(5).replace('-','/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
             const avg = (stars / testCount).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.90 APEX V3</span>
+                    <span class="text-orange-500 font-bold tracking-widest">${currentLabel}</span>
                     <span class="bg-white/10 px-2 rounded text-[9px]">A-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                目標: <span class="text-white font-bold text-lg">STABILIZE 2.0 STAR</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">版路校準：已強化空間斜連與尾數共振權重。</div>`;
+                目標校準: <span class="text-white font-bold text-lg">STABILIZE 2.0+</span><br>
+                <div class="mt-1 text-[9px] text-gray-400 italic">模式：${currentMode === '539' ? '今彩' : '天天樂'}數據軌跡分析中...</div>`;
 
-            const final = getApexPrediction(history);
-            document.getElementById('p1').innerText = `${final.pred[0]||'--'},${final.pred[1]||'--'}`;
-            document.getElementById('p2').innerText = `${final.pred[2]||'--'},${final.pred[3]||'--'}`;
-            document.getElementById('p3').innerText = `${final.pred[4]||'--'},${final.pred[5]||'--'}`;
-            document.getElementById('p4').innerText = `${final.pred[6]||'--'},${final.pred[7]||'--'}`;
+            const final = strategyFunc(history);
+            document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
+            document.getElementById('p2').innerText = `${final.pred[2]},${final.pred[3]}`;
+            document.getElementById('p3').innerText = `${final.pred[4]},${final.pred[5]}`;
+            document.getElementById('p4').innerText = `${final.pred[6]},${final.pred[7]}`;
             document.getElementById('historyTable').innerHTML = rowsHtml;
         }
     </script>
