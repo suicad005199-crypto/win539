@@ -3,73 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO V.01 APEX</title>
+    <title>ULTIMATE EVO 6.90 APEX V.02</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
         body { background-color: var(--ios-bg); color: #fff; font-family: -apple-system, system-ui; overflow: hidden; }
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
-        .orange-glow { box-shadow: 0 0 25px rgba(249, 115, 22, 0.4); }
-        .btn-active { background: var(--ios-orange); color: #000; font-weight: 700; }
-        .btn-inactive { background: #2c2c2e; color: var(--ios-orange); }
+        .orange-glow { box-shadow: 0 0 30px rgba(249, 115, 22, 0.3); }
+        .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; }
+        .btn-inactive { background: #2c2c2e; color: #888; }
         #logBox { font-variant-numeric: tabular-nums; scrollbar-width: none; }
-        #logBox::-webkit-scrollbar { display: none; }
-        .hit-num { color: var(--ios-orange); font-weight: 900; text-decoration: underline; }
+        .hit-num { color: #000; background: var(--ios-orange); font-weight: 900; padding: 0 2px; border-radius: 2px; }
+        .tab-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
-<body class="h-screen flex flex-col p-4" onload="fetchData()">
+<body class="h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
-    <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.90</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl flex-nowrap shrink-0">
-            <button id="btn539" onclick="switchMode('539')" class="px-4 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
-            <button id="btnDaily" onclick="switchMode('Daily')" class="px-4 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.92</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
+            <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm tab-transition btn-active whitespace-nowrap">今彩539</button>
+            <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm tab-transition btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 orange-glow border border-orange-500/30">
+    <div class="ios-panel p-4 mb-3 orange-glow border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-orange-400">Panel 1: CORE-X APEX 巔峰校準引擎</label>
-            <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold uppercase">
-                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> APEX STABLE ACTIVE
+            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">STRATEGY A ACTIVE</label>
+            <div id="syncStatus" class="flex items-center text-[10px] text-orange-500 font-bold">
+                <span class="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span> APEX STABLE
             </div>
         </div>
-        <div id="logBox" class="bg-black/50 p-3 rounded-lg text-[11px] h-28 overflow-y-auto font-mono border border-white/5 leading-relaxed">
-            <span class="text-orange-500/50 italic">系統初始化中...</span>
+        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] h-24 overflow-y-auto font-mono border border-white/5">
+            <span class="text-orange-500/50 italic">校準序列載入中...</span>
         </div>
     </div>
 
-    <div class="ios-panel p-4 mb-4 border-t-2 border-orange-500">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-3">Panel 3: APEX 集成組合 (Balanced Output)</label>
+    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500">
         <div class="grid grid-cols-4 gap-2">
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">熱點核心</div>
+            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
+                <div class="text-[9px] text-orange-500 font-bold mb-1">熱點核心</div>
                 <div class="text-lg font-black text-white" id="p1">--</div>
             </div>
-            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/30">
-                <div class="text-[9px] text-orange-500 font-bold">影子共振</div>
+            <div class="bg-orange-500/10 p-2 rounded-lg text-center border border-orange-500/20">
+                <div class="text-[9px] text-orange-500 font-bold mb-1">影子共振</div>
                 <div class="text-lg font-black text-white" id="p2">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">冷熱對沖</div>
+                <div class="text-[9px] text-gray-400 font-bold mb-1">冷熱對沖</div>
                 <div class="text-lg font-black text-white" id="p3">--</div>
             </div>
             <div class="bg-white/5 p-2 rounded-lg text-center border border-white/5">
-                <div class="text-[9px] text-gray-400 font-bold">結構補位</div>
+                <div class="text-[9px] text-gray-400 font-bold mb-1">空間跳格</div>
                 <div class="text-lg font-black text-white" id="p4">--</div>
             </div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col">
-        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">近十期 CORE-X APEX 績效趨勢</label>
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">近十期 APEX 績效趨勢</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-500">
-                    <tr class="text-left border-b border-white/10">
+                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10">
+                    <tr class="text-left">
                         <th class="pb-2">日期</th>
                         <th class="pb-2">開獎</th>
-                        <th class="pb-2">狙擊選碼</th>
                         <th class="pb-2 text-right">星</th>
                     </tr>
                 </thead>
@@ -81,141 +79,111 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyzzXI3-YfaATyZSIpXamy-o5ZBJW3QZOtqlq3lijkRV574Jc4cf387EUwpcfqHYjy2PQ/exec";
         let currentMode = '539';
-        let apiResponse = null;
+        let apiData = null;
 
         async function fetchData() {
             try {
-                const response = await fetch(API_URL);
-                apiResponse = await response.json();
-                renderActiveMode();
-            } catch (error) { 
-                document.getElementById('logBox').innerHTML = `<span class="text-red-500">API 連結失敗</span>`; 
-            }
+                const res = await fetch(API_URL);
+                apiData = await res.json();
+                render();
+            } catch (e) { document.getElementById('logBox').innerText = "連線失敗"; }
         }
 
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('btn539').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='539'?'btn-active':'btn-inactive'} whitespace-nowrap`;
-            document.getElementById('btnDaily').className = `px-4 py-1.5 rounded-lg text-sm transition-all ${mode==='Daily'?'btn-active ml-1':'btn-inactive ml-1'} whitespace-nowrap`;
-            renderActiveMode();
+        function switchMode(m) {
+            currentMode = m;
+            document.getElementById('btn539').className = `px-5 py-1.5 rounded-lg text-sm tab-transition ${m==='539'?'btn-active':'btn-inactive'}`;
+            document.getElementById('btnDaily').className = `px-5 py-1.5 rounded-lg text-sm tab-transition ${m==='Daily'?'btn-active ml-1':'btn-inactive ml-1'}`;
+            render();
         }
 
-        function renderActiveMode() {
-            if (!apiResponse || !apiResponse[currentMode]) return;
-            processData(apiResponse[currentMode]);
-        }
+        // --- 核心優化策略 ---
 
-        // --- 策略分流模組 (V3 核心架構) ---
-
-        function getStrategyA(history) {
-            return calculateV3Core(history, 39, "STRATEGY A (539)");
-        }
-
-        function getStrategyB(history) {
-            return calculateV3Core(history, 39, "STRATEGY B (DAILY)");
-        }
-
-        function calculateV3Core(history, range, label) {
-            let lastNums = history[0].nums;
-            let last2Nums = history[1].nums;
+        function calculateAPEX(history, mode) {
+            const range = 39;
+            const last = history[0].nums;
+            const last2 = history[1].nums;
             let scores = [];
 
             for(let n=1; n<=range; n++) {
-                // 熱度掃描 (近 12 期)
-                let shortCounts = 0;
-                history.slice(0, 12).forEach(r => { if(r.nums.includes(n)) shortCounts++ });
-
-                // 斜連位感應 (V3 特色)
-                let diagSignal = 0;
-                lastNums.forEach(ln => {
-                    if (last2Nums.includes(ln - 1) && n === ln + 1) diagSignal += 2.8;
-                    if (last2Nums.includes(ln + 1) && n === ln - 1) diagSignal += 2.8;
-                });
-
-                // 尾數共振
-                let tailCount = 0;
-                lastNums.forEach(ln => { if(ln % 10 === n % 10) tailCount++ });
-
-                // 遺漏觀察
-                let gap = 0; 
+                let freq = history.slice(0, 15).filter(r => r.nums.includes(n)).length;
+                let gap = 0;
                 for(let r of history) { if(r.nums.includes(n)) break; gap++; }
 
-                // 加權公式
-                let base = (shortCounts * 2.5);
-                let neighbor = lastNums.some(ln => Math.abs(ln - n) === 1) ? 1.8 : 1.0;
-                let repeat = lastNums.includes(n) ? 1.5 : 1.0;
-                let tailBonus = 1 + (tailCount * 0.5);
-                let gapBonus = (gap >= 4 && gap <= 9) ? 1.7 : 1.0;
+                // 1. 基礎加權 (A 側重冷熱，B 側重頻率)
+                let base = mode === '539' ? (freq * 2.2 + gap * 0.5) : (freq * 3.0);
+                
+                // 2. 空間跳格 (針對手寫圖優化)
+                let jumpSignal = 0;
+                last.forEach(ln => {
+                    if (Math.abs(ln - n) === 2) jumpSignal += 2.5; // 隔位跳格
+                    if (last2.includes(ln - 1) && n === ln + 1) jumpSignal += 3.5; // 斜連走勢
+                });
 
-                scores.push({ n: n, val: (base + diagSignal) * neighbor * repeat * tailBonus * gapBonus, gap: gap, tail: n % 10 });
+                // 3. 尾數共振
+                let tailMatch = last.filter(ln => ln % 10 === n % 10).length;
+                let tailBonus = mode === 'Daily' ? (1 + tailMatch * 0.8) : (1 + tailMatch * 0.4);
+
+                // 4. 連莊與鄰號 (天天樂權重更高)
+                let repeat = last.includes(n) ? (mode === 'Daily' ? 1.8 : 1.4) : 1.0;
+                let neighbor = last.some(ln => Math.abs(ln - n) === 1) ? 1.6 : 1.0;
+
+                scores.push({
+                    n: n,
+                    val: (base + jumpSignal) * tailBonus * repeat * neighbor,
+                    gap: gap,
+                    tail: n % 10
+                });
             }
 
             scores.sort((a, b) => b.val - a.val);
-            let picked = new Set();
-            scores.slice(0, 3).forEach(s => picked.add(s.n));
-            
-            let candidates = scores.filter(s => !picked.has(s.n));
-            for(let s of candidates) {
-                if(picked.size >= 6) break;
-                if(Array.from(picked).some(cn => Math.abs(cn - s.n) <= 2 || cn % 10 === s.tail)) picked.add(s.n);
-            }
-            
-            // 冷熱對沖 (補足長缺)
-            candidates = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.gap - a.gap);
-            if(candidates.length > 0 && picked.size < 8) picked.add(candidates[0].n);
-            
-            // 結構補位
-            candidates = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.val - a.val);
-            for(let s of candidates) { if(picked.size >= 8) break; picked.add(s.n); }
+            let p = new Set();
+            // 熱點核心 (Top 2)
+            scores.slice(0, 2).forEach(s => p.add(s.n));
+            // 影子共振 (取同尾或相關空間)
+            scores.slice(2, 15).forEach(s => {
+                if(p.size < 4 && Array.from(p).some(x => x % 10 === s.tail || Math.abs(x-s.n) <= 2)) p.add(s.n);
+            });
+            // 冷熱對沖 (取最大遺漏)
+            let cold = [...scores].sort((a,b)=>b.gap - a.gap)[0];
+            if(p.size < 6) p.add(cold.n);
+            // 結構補位 (剩餘最高值)
+            scores.forEach(s => { if(p.size < 8) p.add(s.n); });
 
-            return { 
-                pred: Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
-                sIndex: (scores[0].val / 3).toFixed(2),
-                label: label
+            return {
+                pred: Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0')),
+                aIndex: (scores[0].val / (mode === '539' ? 5 : 8)).toFixed(2)
             };
         }
 
-        // --- 核心處理與數據渲染 ---
+        function render() {
+            if (!apiData || !apiData[currentMode]) return;
+            let raw = apiData[currentMode];
+            let history = raw.filter(r => r.length >= 6).map(r => ({
+                date: String(r[0]).split('T')[0],
+                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            }));
+            
+            if (new Date(history[0].date) < new Date(history[1].date)) history.reverse();
 
-        function processData(rawData) {
-            let history = rawData.filter(row => row.length >= 6 && !isNaN(parseInt(row[1]))).map(row => ({
-                date: String(row[0]).includes('T') ? row[0].split('T')[0] : String(row[0]),
-                nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
-            })).filter(h => h.nums.length === 5);
-
-            if (history.length < 15) return;
-            if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
-
-            const strategyFunc = currentMode === '539' ? getStrategyA : getStrategyB;
-            let stars = 0, rowsHtml = "", lastS = 0, currentLabel = "";
-            const testCount = 10;
-
-            for (let i = 0; i < testCount; i++) {
-                const result = strategyFunc(history.slice(i + 1));
-                const actual = history[i].nums;
-                const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
+            let stars = 0, rows = "";
+            for(let i=0; i<10; i++) {
+                let res = calculateAPEX(history.slice(i+1), currentMode);
+                let act = history[i].nums;
+                let hits = act.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
                 stars += hits;
-                if(i===0) { lastS = result.sIndex; currentLabel = result.label; }
-                const predHtml = result.pred.map(p => actual.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${String(history[i].date).substring(5).replace('-','/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
+                let predHtml = res.pred.map(p => act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
+                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${history[i].date.substring(5)}</td><td class="font-mono text-white text-[11px]">${act.map(x=>x.toString().padStart(2,'0')).join(' ')} <span class="text-[10px] text-gray-500 ml-1">→ ${predHtml}</span></td><td class="text-right font-black ${hits>=2?'text-orange-500':'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const avg = (stars / testCount).toFixed(2);
-            document.getElementById('logBox').innerHTML = `
-                <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">${currentLabel}</span>
-                    <span class="bg-white/10 px-2 rounded text-[9px]">A-INDEX: ${lastS}</span>
-                </div>
-                10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
-                目標校準: <span class="text-white font-bold text-lg">STABILIZE 2.0+</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">模式：${currentMode === '539' ? '今彩' : '天天樂'}數據軌跡分析中...</div>`;
-
-            const final = strategyFunc(history);
-            document.getElementById('p1').innerText = `${final.pred[0]},${final.pred[1]}`;
-            document.getElementById('p2').innerText = `${final.pred[2]},${final.pred[3]}`;
-            document.getElementById('p3').innerText = `${final.pred[4]},${final.pred[5]}`;
-            document.getElementById('p4').innerText = `${final.pred[6]},${final.pred[7]}`;
-            document.getElementById('historyTable').innerHTML = rowsHtml;
+            const current = calculateAPEX(history, currentMode);
+            document.getElementById('strategyLabel').innerText = `STRATEGY ${currentMode === '539' ? 'A (539)' : 'B (DAILY)'} ACTIVE`;
+            document.getElementById('logBox').innerHTML = `<div class="flex justify-between"><span>平均命中: <b class="text-orange-500 text-sm">${(stars/10).toFixed(2)} 星</b></span><span>A-INDEX: ${current.aIndex}</span></div><div class="mt-2 text-gray-400">目前盤勢：${current.aIndex > 15 ? '高熱度趨勢' : '亂序補位期'}</div><div class="text-[9px] mt-1 text-orange-500/50 italic">空間跳格參數已校準。</div>`;
+            
+            document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
+            document.getElementById('p2').innerText = `${current.pred[2]},${current.pred[3]}`;
+            document.getElementById('p3').innerText = `${current.pred[4]},${current.pred[5]}`;
+            document.getElementById('p4').innerText = `${current.pred[6]},${current.pred[7]}`;
+            document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
 </body>
