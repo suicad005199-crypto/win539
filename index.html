@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 9.99 RTP-MAX+</title>
+    <title>ULTIMATE EVO 7.0 PRO - QUANTUM AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -11,8 +11,7 @@
         .ios-panel { background: var(--ios-panel); border-radius: 12px; }
         .btn-active { background: var(--ios-orange); color: #000; font-weight: 800; box-shadow: 0 0 15px rgba(249,115,22,0.4); }
         .btn-inactive { background: #2c2c2e; color: #888; }
-        .hit-num { color: #f97316; font-weight: 900; text-shadow: 0 0 10px rgba(249,115,22,0.6); position: relative; }
-        .hit-num::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: #f97316; }
+        .hit-num { color: #f97316; font-weight: 900; text-shadow: 0 0 10px rgba(249,115,22,0.6); }
         .defense-mode { border-color: #ef4444 !important; animation: pulse-border 2s infinite; }
         @keyframes pulse-border { 0%, 100% { border-color: rgba(239,68,68,0.3); } 50% { border-color: #ef4444; } }
         ::-webkit-scrollbar { width: 0; }
@@ -23,7 +22,7 @@
     <div class="flex justify-between items-center mb-4">
         <div>
             <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE EVO</h1>
-            <p class="text-[10px] text-gray-500 font-bold tracking-[0.3em]">V.9.99.1 RTP-MAX-PRO</p>
+            <p class="text-[10px] text-gray-500 font-bold tracking-[0.3em]">V.7.0 PRO QUANTUM-EVO</p>
         </div>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
             <button id="btn539" onclick="switchMode('539')" class="px-5 py-2 rounded-lg text-xs btn-active transition-all">今彩539</button>
@@ -33,11 +32,11 @@
 
     <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20">
         <div class="flex justify-between items-end mb-3">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Quantum Strategy Monitor</label>
-            <div id="stateTag" class="text-[10px] font-bold">● INITIALIZING</div>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Global Quantum Monitor</label>
+            <div id="stateTag" class="text-[10px] font-bold">● SYSTEM SYNCING</div>
         </div>
-        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[75px] leading-relaxed">
-            核心引擎載入中... 正在配置對稱矩陣參數...
+        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 min-h-[75px] leading-relaxed shadow-inner">
+            核心引擎初始化中...
         </div>
     </div>
 
@@ -52,16 +51,16 @@
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-4">
         <div class="flex justify-between items-center mb-3">
-            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">全量數據回測 (TARGET: 3★+ BOOST)</label>
+            <label class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">演化回測 (TARGET: 2-3★ STABLE)</label>
             <div id="quickStats" class="text-[10px] text-orange-500 font-bold"></div>
         </div>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full">
                 <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 z-10 text-[10px]">
                     <tr class="text-left uppercase">
-                        <th class="pb-2 w-14 italic">Date</th>
+                        <th class="pb-2 w-14">Date</th>
                         <th class="pb-2">Logic & Pulse Path</th>
-                        <th class="pb-2 text-right">★</th>
+                        <th class="pb-2 text-right">Stars</th>
                     </tr>
                 </thead>
                 <tbody id="historyTable" class="divide-y divide-white/5 font-mono text-[12px]"></tbody>
@@ -78,7 +77,7 @@
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "API 連結中斷，請重新整理。"; }
+            } catch (e) { document.getElementById('logBox').innerText = "API Error. Check Connection."; }
         }
 
         function switchMode(m) {
@@ -101,29 +100,30 @@
         }
 
         function calculateAdvanced(history, isFailure) {
-            const packs = [
-                { id: 0, n: 'Matrix-A (Balanced)', wL: 15.0, wT: 8.0, wG: 4.5 },
-                { id: 1, n: 'Matrix-B (Linkage)', wL: 12.0, wT: 14.0, wG: 6.0 },
-                { id: 2, n: 'Matrix-C (Gap-Fill)', wL: 8.5, wT: 6.0, wG: 15.5 }
+            // 演化策略集 (針對三星爆發力優化)
+            const strategyPacks = [
+                { id: 'Quantum3★', link: 15.0, pair: 10.0, tail: 8.0, gap: 5.0 },
+                { id: 'DragBoost', link: 20.0, pair: 12.0, tail: 4.0, gap: 8.0 },
+                { id: 'Matrix-R', link: 10.0, pair: 15.0, tail: 12.0, gap: 3.0 }
             ];
 
-            let bestP = packs[0];
+            let bestPack = strategyPacks[0];
             if (history.length > 10) {
-                let maxS = -1;
-                packs.forEach(p => {
-                    let s = 0;
-                    for (let i = 1; i <= 8; i++) {
+                let maxScore = -1;
+                strategyPacks.forEach(p => {
+                    let score = 0;
+                    for (let i = 1; i <= 6; i++) {
                         const pred = runCore(history.slice(i), p);
                         const hits = history[i-1].nums.filter(n => pred.includes(n.toString().padStart(2,'0'))).length;
-                        s += (hits >= 3 ? hits * 5 : hits * 1.5);
+                        score += (hits >= 3 ? hits * 3 : hits); 
                     }
-                    if (s > maxS) { maxS = s; bestP = p; }
+                    if (score > maxScore) { maxScore = score; bestPack = p; }
                 });
             }
 
             function runCore(h, W) {
-                let scores = [], linkMap = {}, tailMap = Array(10).fill(0), pairMap = {};
-                const s = h.slice(0, 50);
+                let scores = [], pairMatrix = {}, tailMap = Array(10).fill(0), linkMap = {};
+                const s = h.slice(0, 45);
 
                 s.forEach((r, idx) => {
                     const weight = (s.length - idx) / s.length;
@@ -132,7 +132,7 @@
                         r.nums.forEach(n2 => {
                             if (n !== n2) {
                                 let k = n < n2 ? `${n}-${n2}` : `${n2}-${n}`;
-                                pairMap[k] = (pairMap[k] || 0) + weight;
+                                pairMatrix[k] = (pairMatrix[k] || 0) + weight;
                             }
                         });
                         if (idx < s.length - 1) {
@@ -145,73 +145,75 @@
                 });
 
                 for (let n = 1; n <= 39; n++) {
-                    let lS = 0, pS = 0;
+                    let l_s = 0, p_s = 0;
                     h[0].nums.forEach(ln => {
-                        if (linkMap[ln] && linkMap[ln][n]) lS += linkMap[ln][n];
+                        if (linkMap[ln] && linkMap[ln][n]) l_s += linkMap[ln][n];
                         let pk = n < ln ? `${n}-${ln}` : `${ln}-${n}`;
-                        if (pairMap[pk]) pS += pairMap[pk];
+                        if (pairMatrix[pk]) p_s += pairMatrix[pk];
                     });
                     let gap = 0;
                     for (let r of h) { if (r.nums.includes(n)) break; gap++; }
-                    let total = (lS * W.wL) + (pS * W.wL * 0.75) + (tailMap[n % 10] * W.wT) + (Math.sqrt(gap) * W.wG);
+                    let total = (l_s * W.link) + (p_s * W.pair) + (tailMap[n % 10] * W.tail) + (Math.sqrt(gap) * W.gap);
                     scores.push({ n, val: total, gap });
                 }
 
                 let pool = new Set();
-                if (isFailure) { 
-                    scores.sort((a,b) => b.gap - a.gap); 
-                    pool.add(scores[0].n); pool.add(scores[1].n); 
-                }
+                if (isFailure) { scores.sort((a,b) => b.gap - a.gap); pool.add(scores[0].n); pool.add(scores[1].n); }
                 scores.sort((a,b) => b.val - a.val);
-                for (let s of scores) { if (pool.size < 8) pool.add(s.n); }
+                for (let sc of scores) { if (pool.size < 8) pool.add(sc.n); }
                 return Array.from(pool).sort((a,b) => a - b).map(x => x.toString().padStart(2, '0'));
             }
-            return { nums: runCore(history, bestP), strategy: bestP.n };
+
+            return { nums: runCore(history, bestPack), strategy: bestPack.id };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const history = parseHistory(apiData[currentMode]);
-            let rows = "", stats = { total: 0, s3: 0, hits: 0 };
+            let rows = "", results = [];
+            let stats = { total: 0, s3: 0, s2: 0, hits: 0 };
             let isFailure = false;
 
-            let results = [];
             for (let i = Math.min(history.length - 2, 40); i >= 0; i--) {
                 const res = calculateAdvanced(history.slice(i + 1), isFailure);
                 const act = history[i].nums;
-                const hitArr = act.filter(n => res.nums.includes(n.toString().padStart(2,'0')));
-                results.push({ date: history[i].displayDate, act, pred: res.nums, hitN: hitArr.length, isF: isFailure, strat: res.strategy });
-                isFailure = (hitArr.length < 2);
+                const hits = act.filter(n => res.nums.includes(n.toString().padStart(2,'0'))).length;
+                results.push({ date: history[i].displayDate, act, pred: res.nums, hits, isFailure, strategy: res.strategy });
+                isFailure = (hits < 2);
             }
 
-            results.reverse().forEach(r => {
-                stats.total++; stats.hits += r.hitN;
-                if(r.hitN >= 3) stats.s3++;
-                let tag = r.isF ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">R-MODE</span>' : '';
+            results.sort((a,b) => b.date.localeCompare(a.date));
+
+            results.forEach(r => {
+                stats.total++; stats.hits += r.hits;
+                if(r.hits >= 3) stats.s3++;
+                if(r.hits >= 2) stats.s2++;
+                let tag = r.isFailure ? '<span class="text-[9px] bg-red-900/40 text-red-400 px-1 rounded mr-1">R-MODE</span>' : '';
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : `<span class="opacity-30">${p}</span>`).join(',');
 
-                rows = `<tr class="border-b border-white/5">
+                rows += `<tr class="border-b border-white/5">
                     <td class="py-3 text-gray-500 font-bold">${r.date}</td>
                     <td class="py-3">
-                        <div class="text-white mb-1 tracking-widest font-black">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
+                        <div class="text-white mb-1 tracking-[0.2em] font-black">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}</div>
                         <div class="text-[10px] flex items-center">${tag}<span class="text-gray-500 font-mono tracking-tighter">${predHtml}</span></div>
                     </td>
-                    <td class="text-right font-black ${r.hitN>=3?'text-orange-500':'text-gray-500/50'} text-base">${r.hitN}</td>
-                </tr>` + rows;
+                    <td class="text-right font-black ${r.hits>=3?'text-orange-500':'text-gray-500/50'} text-base">${r.hits}</td>
+                </tr>`;
             });
 
             const current = calculateAdvanced(history, isFailure);
+            
             document.getElementById('stateTag').className = `text-[10px] font-bold ${isFailure?'text-red-500 animate-pulse':'text-orange-500'}`;
-            document.getElementById('stateTag').innerText = isFailure ? "● RECOVERY ACTIVE" : "● SYSTEM OPTIMIZED";
+            document.getElementById('stateTag').innerText = isFailure ? "● QUANTUM RECOVERY" : "● APEX STABLE";
             document.getElementById('statusPanel').className = `ios-panel p-4 mb-3 border transition-all ${isFailure?'defense-mode':'border-orange-500/20'}`;
+
             document.getElementById('logBox').innerHTML = `
                 <div class="grid grid-cols-2 gap-x-2">
-                    <span class="text-gray-400">適配核心: <b class="text-white">${current.strategy}</b></span>
+                    <span class="text-gray-400">當前策略: <b class="text-white">${current.strategy}</b></span>
                     <span class="text-gray-400 text-right">3★ 命中率: <b class="text-orange-500">${((stats.s3/stats.total)*100).toFixed(1)}%</b></span>
                     <span class="text-gray-400">平均精度: <b class="text-white">${(stats.hits/stats.total).toFixed(2)}</b></span>
-                    <span class="text-gray-400 text-right">當前權重: <b class="text-orange-500">RTP-MAX</b></span>
-                </div>
-                <div class="mt-1 text-[9px] text-gray-500 italic border-t border-white/5 pt-1">Quantum AI 已完成動態遺漏補償，鎖定高頻共振區間。</div>`;
+                    <span class="text-gray-400 text-right">2-3★ 綜合: <b class="text-orange-500">${((stats.s2/stats.total)*100).toFixed(1)}%</b></span>
+                </div>`;
             
             for(let i=0; i<4; i++) document.getElementById(`p${i+1}`).innerText = `${current.nums[i*2]},${current.nums[i*2+1]}`;
             document.getElementById('historyTable').innerHTML = rows;
