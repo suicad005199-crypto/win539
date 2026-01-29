@@ -109,59 +109,77 @@
             processData(apiResponse[currentMode]);
         }
 
+        // V3 核心演算法：融入版路空間規律
         function getApexPrediction(history) {
             const range = currentMode === '539' ? 39 : 36;
             let lastNums = history[0].nums;
+            let last2Nums = history[1].nums; // 觀察斜連位
             
-            let shortCounts = Array(range + 1).fill(0);
-            history.slice(0, 7).forEach(r => r.nums.forEach(n => { if(n <= range) shortCounts[n]++ }));
-            let longCounts = Array(range + 1).fill(0);
-            history.slice(0, 30).forEach(r => r.nums.forEach(n => { if(n <= range) longCounts[n]++ }));
-
-            let gaps = Array(range + 1).fill(0);
-            for(let n=1; n<=range; n++) {
-                let g = 0; for(let r of history) { if(r.nums.includes(n)) break; g++; }
-                gaps[n] = g;
-            }
-
             let scores = [];
             for(let n=1; n<=range; n++) {
-                let heat = (shortCounts[n] * 1.7) + (longCounts[n] * 0.3);
-                let isNeighbor = lastNums.some(ln => Math.abs(ln - n) === 1);
-                let isRepeat = lastNums.includes(n);
-                let gapBonus = (gaps[n] >= 3 && gaps[n] <= 10) ? 1.75 : 1.0;
-                let hedgeScore = (gaps[n] >= 15) ? 2.5 : 0; 
+                // 1. 基礎熱度 (近期 12 期)
+                let shortCounts = 0;
+                history.slice(0, 12).forEach(r => { if(r.nums.includes(n)) shortCounts++ });
                 
-                scores.push({
-                    n: n,
-                    val: (heat * (isNeighbor ? 1.45 : 1.0) * (isRepeat ? 1.3 : 1.0) * gapBonus) + (3 / (gaps[n] + 1)) + hedgeScore,
-                    gap: gaps[n]
+                // 2. 斜連位訊號 (仿手寫分佈圖邏輯)
+                let diagSignal = 0;
+                lastNums.forEach(ln => {
+                    if (last2Nums.includes(ln - 1) && n === ln + 1) diagSignal += 2.5; // 向右斜
+                    if (last2Nums.includes(ln + 1) && n === ln - 1) diagSignal += 2.5; // 向左斜
                 });
+
+                // 3. 空間跳島 (間隔期重複規律)
+                let islandSignal = 0;
+                if (history[2] && history[2].nums.includes(n)) islandSignal += 1.2;
+                if (history[4] && history[4].nums.includes(n)) islandSignal += 1.5;
+
+                // 4. 尾數聯動權重
+                let tailCount = 0;
+                lastNums.forEach(ln => { if(ln % 10 === n % 10) tailCount++ });
+
+                // 綜合權重評分
+                let base = (shortCounts * 2.2);
+                let neighbor = lastNums.some(ln => Math.abs(ln - n) === 1) ? 1.7 : 1.0;
+                let repeat = lastNums.includes(n) ? 1.4 : 1.0;
+                let tailBonus = 1 + (tailCount * 0.4);
+                
+                // 5. 遺漏對沖補償
+                let gap = 0; 
+                for(let r of history) { if(r.nums.includes(n)) break; gap++; }
+                let gapBonus = (gap >= 4 && gap <= 9) ? 1.6 : 1.0;
+
+                let finalScore = (base + diagSignal + islandSignal) * neighbor * repeat * tailBonus * gapBonus;
+
+                scores.push({ n: n, val: finalScore, gap: gap, tail: n % 10 });
             }
+            
             scores.sort((a, b) => b.val - a.val);
 
             let picked = new Set();
-            scores.slice(0, 4).forEach(s => picked.add(s.n));
+            // 策略分配：強攻核心(3) + 影子共振(3) + 冷熱對沖(2)
+            scores.slice(0, 3).forEach(s => picked.add(s.n));
 
             let candidates = scores.filter(s => !picked.has(s.n));
-            let coreArray = Array.from(picked);
             for(let s of candidates) {
                 if(picked.size >= 6) break;
-                if(coreArray.some(cn => Math.abs(cn - s.n) === 1 || cn % 10 === s.n % 10)) picked.add(s.n);
+                let coreArr = Array.from(picked);
+                // 優先選擇與核心有斜連或同尾關係的
+                if(coreArr.some(cn => Math.abs(cn - s.n) <= 2 || cn % 10 === s.tail)) picked.add(s.n);
             }
 
-            candidates = scores.filter(s => !picked.has(s.n));
-            candidates.sort((a, b) => b.gap - a.gap);
+            // 對沖機制：補足冷門
+            candidates = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.gap - a.gap);
             if(candidates.length > 0 && picked.size < 8) picked.add(candidates[0].n);
-            
-            candidates = scores.filter(s => !picked.has(s.n)).sort((a, b) => b.val - a.val);
+
+            // 最終補齊
+            candidates = scores.filter(s => !picked.has(s.n)).sort((a,b) => b.val - a.val);
             for(let s of candidates) {
                 if(picked.size >= 8) break;
                 picked.add(s.n);
             }
 
             const pred = Array.from(picked).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            const sIndex = (scores[0].val * 1.6).toFixed(2);
+            const sIndex = (scores[0].val / 2.8).toFixed(2);
             return { pred, sIndex };
         }
 
@@ -171,15 +189,16 @@
                 nums: row.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
             })).filter(h => h.nums.length === 5);
 
-            if (history.length < 11) {
-                document.getElementById('logBox').innerText = "數據量不足以進行運算";
+            if (history.length < 15) {
+                document.getElementById('logBox').innerText = "數據量不足以進行 V3 空間運算";
                 return;
             }
 
             if (new Date(history[0].date) < new Date(history[history.length - 1].date)) history.reverse();
 
             let stars = 0, rowsHtml = "", lastS = 0;
-            for (let i = 0; i < 10; i++) {
+            const testCount = 10;
+            for (let i = 0; i < testCount; i++) {
                 const result = getApexPrediction(history.slice(i + 1));
                 const actual = history[i].nums;
                 const hits = actual.filter(n => result.pred.includes(n.toString().padStart(2,'0'))).length;
@@ -190,15 +209,15 @@
                 rowsHtml += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500">${String(history[i].date).substring(5).replace('-','/')}</td><td class="font-mono text-white">${actual.map(n => n.toString().padStart(2,'0')).join(' ')}</td><td class="text-[11px] text-gray-400 font-mono">${predHtml}</td><td class="text-right font-black ${hits >= 2 ? 'text-orange-500' : 'text-gray-700'}">${hits}</td></tr>`;
             }
 
-            const avg = (stars / 10).toFixed(2);
+            const avg = (stars / testCount).toFixed(2);
             document.getElementById('logBox').innerHTML = `
                 <div class="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.90 APEX</span>
+                    <span class="text-orange-500 font-bold tracking-widest">EVO 6.90 APEX V3</span>
                     <span class="bg-white/10 px-2 rounded text-[9px]">A-INDEX: ${lastS}</span>
                 </div>
                 10期平均命中: <span class="text-orange-500 text-lg font-black">${avg} 星</span><br>
                 目標: <span class="text-white font-bold text-lg">STABILIZE 2.0 STAR</span><br>
-                <div class="mt-1 text-[9px] text-gray-400 italic">巔峰校準：已識別 ${currentMode} 專屬分頁數據。</div>`;
+                <div class="mt-1 text-[9px] text-gray-400 italic">版路校準：已強化空間斜連與尾數共振權重。</div>`;
 
             const final = getApexPrediction(history);
             document.getElementById('p1').innerText = `${final.pred[0]||'--'},${final.pred[1]||'--'}`;
