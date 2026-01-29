@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO V.12 NEURAL-SYNC</title>
+    <title>ULTIMATE EVO V.13 NEURAL-DYNAMICS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -14,42 +14,43 @@
         .hit-num { color: #f97316; font-weight: 900; }
         .sig-buy { color: #22c55e; border: 1px solid #22c55e; box-shadow: 0 0 10px #22c55e44; }
         .sig-wait { color: #ef4444; border: 1px solid #ef4444; }
+        .log-tag { background: rgba(249, 115, 22, 0.15); color: #f97316; padding: 1px 4px; border-radius: 4px; font-size: 9px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO V.12</span></h1>
-        <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO V.13</span></h1>
+        <div class="flex bg-[#2c2c2e] p-1 rounded-xl">
             <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20 relative">
+    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Neural-Sync Analytics</label>
-            <div id="stateTag" class="text-[10px] font-bold uppercase text-orange-500 tracking-tighter">● Calculating...</div>
+            <label class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Neural Dynamics Log</label>
+            <div id="stateTag" class="text-[10px] font-bold uppercase">● Analyzing</div>
         </div>
-        <div id="logBox" class="bg-black/60 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-snug min-h-[90px]">
-            矩陣計算中...
+        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-relaxed min-h-[100px]">
+            系統初始化中...
         </div>
     </div>
 
     <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500 relative">
         <div class="absolute -top-2.5 left-4 flex gap-2">
-            <span id="signalTag" class="px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase tracking-tighter">INITIALIZING</span>
+            <span id="signalTag" class="px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase tracking-tighter">Syncing</span>
         </div>
         <div class="grid grid-cols-4 gap-2 text-center mt-2">
-            <div><div class="text-[9px] text-orange-500 mb-1 font-bold">動態連莊</div><div class="text-lg font-black" id="p1">--</div></div>
-            <div><div class="text-[9px] text-orange-500 mb-1 font-bold">伴生強勢</div><div class="text-lg font-black" id="p2">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1 font-bold">遺漏閾值</div><div class="text-lg font-black" id="p3">--</div></div>
-            <div><div class="text-[9px] text-gray-400 mb-1 font-bold">尾數共振</div><div class="text-lg font-black" id="p4">--</div></div>
+            <div><div class="text-[9px] text-orange-500 mb-1 font-bold">動態核心</div><div class="text-lg font-black" id="p1">--</div></div>
+            <div><div class="text-[9px] text-orange-500 mb-1 font-bold">伴生矩陣</div><div class="text-lg font-black" id="p2">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1 font-bold">冷熱對沖</div><div class="text-lg font-black" id="p3">--</div></div>
+            <div><div class="text-[9px] text-gray-400 mb-1 font-bold">空間補位</div><div class="text-lg font-black" id="p4">--</div></div>
         </div>
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-10">
-        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">歷史效能追蹤 (V.12 PRO-LITE)</label>
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2">歷史策略回測 (V.13 Dynamics)</label>
         <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
                 <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
@@ -66,7 +67,7 @@
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "連線失敗"; }
+            } catch (e) { document.getElementById('logBox').innerText = "Data Interrupted"; }
         }
 
         function switchMode(m) {
@@ -76,22 +77,14 @@
             render();
         }
 
-        function parseCleanHistory(raw) {
-            return raw.filter(r => r && r.length >= 6 && r[1] !== "" && !isNaN(parseInt(r[1]))).map(r => ({
-                fullDate: new Date(r[0]),
-                displayDate: r[0].toString().substring(5, 10).replace('-', '/'),
-                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
-            })).filter(i => i.nums.length === 5).sort((a,b) => b.fullDate - a.fullDate);
-        }
-
-        function calculateV12(history, isFailureState) {
+        function calculateV13(history, isRecovery) {
             let scores = [], accompany = {}, tailFreq = {};
             const lastNums = history[0].nums;
-            
-            // 矩陣掃描：建立伴生關係與尾數分佈
-            history.slice(0, 25).forEach(r => {
+            const sampleSize = 30;
+
+            history.slice(0, sampleSize).forEach(r => {
                 r.nums.forEach(n1 => {
-                    let t = n1 % 10; tailFreq[t] = (tailFreq[t] || 0) + 1;
+                    tailFreq[n1 % 10] = (tailFreq[n1 % 10] || 0) + 1;
                     r.nums.forEach(n2 => {
                         if (n1 !== n2) {
                             if (!accompany[n1]) accompany[n1] = {};
@@ -103,77 +96,90 @@
 
             for(let n=1; n<=39; n++) {
                 let gap = 0; for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let repeatWeight = lastNums.includes(n) ? 4.5 : 0; // 連莊權重
                 let accScore = 0; lastNums.forEach(ln => { if(accompany[ln] && accompany[ln][n]) accScore += accompany[ln][n]; });
                 
-                let val = (accScore * 2.0) + (repeatWeight) + (gap * 0.7) + (tailFreq[n % 10] * 0.5);
+                // V.13 權重優化：提高伴生權重(2.5)，加入尾數權重(0.8)
+                let val = (accScore * 2.5) + (gap * 0.5) + (tailFreq[n % 10] * 0.8);
+                if (lastNums.includes(n)) val += 3.0; // 連莊誘因
                 scores.push({ n: n, val: val, gap: gap });
             }
 
             let p = new Set();
-            if (isFailureState) {
+            if (isRecovery) {
                 scores.sort((a,b) => b.gap - a.gap);
                 p.add(scores[0].n); p.add(scores[1].n);
             }
             scores.sort((a,b) => b.val - a.val);
             for(let s of scores) { if(p.size < 8) p.add(s.n); }
-            
-            // 找出最熱門伴生號
-            let hotPair = Object.keys(accompany[lastNums[0]] || {}).sort((a,b) => accompany[lastNums[0]][b] - accompany[lastNums[0]][a])[0] || "--";
+
+            // 提取 LOG 資訊
+            let top3Acc = scores.slice(0, 3).map(s => s.n.toString().padStart(2,'0')).join(', ');
 
             return { 
                 pred: Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2,'0')),
-                hotPair: hotPair
+                log: { top3: top3Acc, gapMax: Math.max(...scores.map(s=>s.gap)) }
             };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
-            const history = parseCleanHistory(apiData[currentMode]);
-            let stats = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, total: 0, totalStars: 0 }, currentIsFailure = false, results = [];
+            const history = apiData[currentMode].filter(r => r[1] !== "").map(r => ({
+                date: r[0].substring(5, 10).replace('-', '/'),
+                nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
+            })).reverse();
 
-            for (let i = history.length - 2; i >= 0; i--) {
-                let prevData = history.slice(i + 1);
-                let res = calculateV12(prevData, currentIsFailure);
-                let hits = history[i].nums.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
-                results.unshift({ date: history[i].displayDate, act: history[i].nums, pred: res.pred, hits: hits, isDefense: currentIsFailure });
-                currentIsFailure = (hits < 2);
+            let stats = { stars: 0, total: 0, s2: 0, s3: 0 }, recovery = false, results = [];
+
+            for (let i = 0; i < history.length - 1; i++) {
+                let prev = history.slice(0, i + 1).reverse();
+                let res = calculateV13(prev, recovery);
+                let hits = history[i+1].nums.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
+                results.unshift({ date: history[i+1].date, act: history[i+1].nums, pred: res.pred, hits: hits });
+                recovery = (hits < 2);
             }
 
-            let rows = "";
             results.forEach(r => {
-                stats.total++; stats[r.hits]++; stats.totalStars += r.hits;
-                let starColor = r.hits >= 2 ? 'text-orange-500' : 'text-white';
-                let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 w-12">${r.date}</td><td class="text-white text-[11px]">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br><span class="text-gray-600">→ ${predHtml}</span></td><td class="text-right font-black ${starColor}">${r.hits}</td></tr>`;
+                stats.total++; stats.stars += r.hits;
+                if(r.hits === 2) stats.s2++; if(r.hits >= 3) stats.s3++;
             });
 
-            const rtp = stats.total > 0 ? ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1) : 0;
-            const current = calculateV12(history, currentIsFailure);
+            const current = calculateV12 ? calculateV13(history.slice().reverse(), recovery) : null; 
+            const rtp = ((stats.stars / (stats.total * 2)) * 100).toFixed(1);
 
             document.getElementById('logBox').innerHTML = `
-                <div class="grid grid-cols-2 gap-x-2 border-b border-white/10 pb-1 mb-1">
-                    <span>效能: <span class="text-orange-500">${rtp}% RTP</span></span>
-                    <span class="text-right">樣本: ${stats.total}期</span>
+                <div class="flex justify-between border-b border-white/10 pb-1 mb-2">
+                    <span>效率: <span class="text-orange-500">${rtp}% RTP</span></span>
+                    <span>樣本: ${stats.total}期</span>
                 </div>
-                <div class="grid grid-cols-3 gap-1 text-[10px] text-gray-400 py-1">
-                    <span>2★: ${stats[2]}</span><span>3★: ${stats[3]}</span><span class="text-right">4★: ${stats[4]}</span>
-                </div>
-                <div class="flex justify-between items-center text-[10px] mt-1">
-                    <span class="text-orange-500">伴生強勢: ${current.hotPair}號連動</span>
-                    <span class="${currentIsFailure?'text-red-500':'text-green-500'}">● ${currentIsFailure?'RECOVERY':'STABLE'}</span>
+                <div class="space-y-1">
+                    <div><span class="log-tag">矩陣熱點</span> ${current.log.top3} (伴生最高)</div>
+                    <div><span class="log-tag">最大遺漏</span> ${current.log.gapMax} 期 (空間補位參考)</div>
+                    <div class="flex gap-4 pt-1 text-gray-400">
+                        <span>2★: ${stats.s2}</span><span>3★+: ${stats.s3}</span>
+                        <span class="ml-auto text-orange-500 font-bold">${recovery ? '止血模式中' : '穩定追蹤中'}</span>
+                    </div>
                 </div>
             `;
-            
-            document.getElementById('signalTag').innerText = rtp > 53 ? "STRONG SIGNAL" : "WAITING...";
-            document.getElementById('signalTag').className = `px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase ${rtp > 53 ? 'sig-buy animate-pulse' : 'sig-wait'}`;
-            document.getElementById('stateTag').innerText = `● ${currentIsFailure ? 'RECOVERY ACTIVE' : 'SYSTEM OPTIMIZED'}`;
+
+            document.getElementById('signalTag').innerText = rtp > 52 ? "STRONG SIGNAL" : "PROBING";
+            document.getElementById('signalTag').className = `px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase ${rtp > 52 ? 'sig-buy animate-pulse' : 'sig-wait'}`;
+            document.getElementById('stateTag').className = `text-[10px] font-bold uppercase ${recovery ? 'text-red-500' : 'text-orange-500'}`;
+            document.getElementById('stateTag').innerText = `● ${recovery ? 'Recovery' : 'Apex Stable'}`;
 
             document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
             document.getElementById('p2').innerText = `${current.pred[2]},${current.pred[3]}`;
             document.getElementById('p3').innerText = `${current.pred[4]},${current.pred[5]}`;
             document.getElementById('p4').innerText = `${current.pred[6]},${current.pred[7]}`;
-            document.getElementById('historyTable').innerHTML = rows;
+
+            document.getElementById('historyTable').innerHTML = results.map(r => `
+                <tr class="border-b border-white/5">
+                    <td class="py-3 text-gray-500 w-12">${r.date}</td>
+                    <td class="text-white">${r.act.map(n=>n.toString().padStart(2,'0')).join(' ')}<br>
+                        <span class="text-gray-600 text-[10px]">→ ${r.pred.map(p=>r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>`:p).join(',')}</span>
+                    </td>
+                    <td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-white'}">${r.hits}</td>
+                </tr>
+            `).join('');
         }
     </script>
 </body>
