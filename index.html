@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ULTIMATE EVO 6.99.1 RTP-SENSE</title>
+    <title>ULTIMATE EVO V.04 PROFIT-FOCUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --ios-orange: #f97316; --ios-bg: #000000; --ios-panel: #1c1c1e; }
@@ -13,30 +13,35 @@
         .btn-inactive { background: #2c2c2e; color: #888; }
         .hit-num { color: #f97316; font-weight: 900; }
         .defense-mode { border-color: #ef4444 !important; }
+        /* 標籤樣式 */
+        .sig-buy { color: #22c55e; border: 1px solid #22c55e; }
+        .sig-caution { color: #eab308; border: 1px solid #eab308; }
+        .sig-wait { color: #ef4444; border: 1px solid #ef4444; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 text-sm" onload="fetchData()">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO 6.99.1</span></h1>
+        <h1 class="text-2xl font-black italic tracking-tighter text-orange-500">ULTIMATE <span class="text-white">EVO V.04</span></h1>
         <div class="flex bg-[#2c2c2e] p-1 rounded-xl shrink-0">
             <button id="btn539" onclick="switchMode('539')" class="px-5 py-1.5 rounded-lg text-sm btn-active whitespace-nowrap">今彩539</button>
             <button id="btnDaily" onclick="switchMode('Daily')" class="px-5 py-1.5 rounded-lg text-sm btn-inactive ml-1 whitespace-nowrap">天天樂</button>
         </div>
     </div>
 
-    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20 transition-all duration-500">
+    <div id="statusPanel" class="ios-panel p-4 mb-3 border border-orange-500/20">
         <div class="flex justify-between items-end mb-2">
-            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase tracking-widest">ANALYZING...</label>
+            <label id="strategyLabel" class="text-[10px] text-orange-400 font-bold uppercase">ANALYZING...</label>
             <div id="stateTag" class="text-[10px] font-bold">● SYSTEM READY</div>
         </div>
-        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-relaxed">
-            正在掃描數據規律...
-        </div>
+        <div id="logBox" class="bg-black/40 p-3 rounded-lg text-[11px] font-mono border border-white/5 leading-relaxed"></div>
     </div>
 
-    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500">
-        <div class="grid grid-cols-4 gap-2 text-center">
+    <div class="ios-panel p-4 mb-3 border-t-2 border-orange-500 relative">
+        <div class="absolute -top-2.5 left-4 flex gap-2">
+            <span id="signalTag" class="px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase tracking-tighter">SIGNAL LOADING</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-center mt-2">
             <div><div class="text-[9px] text-orange-500 mb-1">熱點核心</div><div class="text-lg font-black" id="p1">--</div></div>
             <div><div class="text-[9px] text-orange-500 mb-1">影子共振</div><div class="text-lg font-black" id="p2">--</div></div>
             <div><div class="text-[9px] text-gray-400 mb-1">對沖/止血</div><div class="text-lg font-black" id="p3">--</div></div>
@@ -45,16 +50,9 @@
     </div>
 
     <div class="ios-panel p-4 flex-grow overflow-hidden flex flex-col mb-10">
-        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">全量數據歷史回測 (RTP% 監控中)</label>
-        <div class="overflow-y-auto flex-grow" style="max-height: 60vh;">
+        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2">歷史回測效能分布</label>
+        <div class="overflow-y-auto flex-grow">
             <table class="w-full text-[12px]">
-                <thead class="sticky top-0 bg-[#1c1c1e] text-gray-600 border-b border-white/10 shadow-sm">
-                    <tr class="text-left">
-                        <th class="pb-2 w-16">日期</th>
-                        <th class="pb-2">開獎與策略佈局</th>
-                        <th class="pb-2 text-right">星</th>
-                    </tr>
-                </thead>
                 <tbody id="historyTable" class="divide-y divide-white/5 font-mono"></tbody>
             </table>
         </div>
@@ -70,7 +68,7 @@
                 const res = await fetch(API_URL);
                 apiData = await res.json();
                 render();
-            } catch (e) { document.getElementById('logBox').innerText = "API 連結異常"; }
+            } catch (e) { document.getElementById('logBox').innerText = "API ERROR"; }
         }
 
         function switchMode(m) {
@@ -81,123 +79,77 @@
         }
 
         function parseCleanHistory(raw) {
-            let data = raw.filter(r => r && r.length >= 6).map(r => {
+            return raw.filter(r => r && r.length >= 6).map(r => {
                 let d = new Date(r[0]);
                 if (isNaN(d.getTime())) {
-                    let parts = String(r[0]).split(/[-/T ]/);
-                    if (parts.length >= 3) d = new Date(parts[0], parts[1]-1, parts[2]);
+                    let p = String(r[0]).split(/[-/T ]/);
+                    if (p.length >= 3) d = new Date(p[0], p[1]-1, p[2]);
                 }
                 return {
                     fullDate: d,
-                    displayDate: !isNaN(d.getTime()) ? `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}` : String(r[0]).substring(5,10),
-                    nums: r.slice(1, 6).map(n => parseInt(n)).filter(n => !isNaN(n)).sort((a,b)=>a-b)
+                    displayDate: !isNaN(d.getTime()) ? `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}` : "??/??",
+                    nums: r.slice(1, 6).map(n => parseInt(n)).sort((a,b)=>a-b)
                 };
-            }).filter(item => item.nums.length === 5);
-            return data.sort((a, b) => b.fullDate - a.fullDate);
+            }).filter(i => i.nums.length === 5).sort((a,b) => b.fullDate - a.fullDate);
         }
 
-        function calculateSmartAPEX(history, mode, isFailureState) {
-            const range = 39;
-            const last = history[0].nums;
+        function calculateSmartAPEX(history, isFailureState) {
             let scores = [];
-            for(let n=1; n<=range; n++) {
-                let freq = history.slice(0, 15).filter(r => r.nums.includes(n)).length;
-                let gap = 0;
-                for(let r of history) { if(r.nums.includes(n)) break; gap++; }
-                let val = (freq * 3.0) + (gap * 0.5);
-                scores.push({ n: n, val: val, gap: gap, tail: n % 10 });
+            for(let n=1; n<=39; n++) {
+                let freq = history.slice(0, 20).filter(r => r.nums.includes(n)).length;
+                let gap = 0; for(let r of history) { if(r.nums.includes(n)) break; gap++; }
+                scores.push({ n: n, val: (freq * 3.5) + (gap * 0.4), gap: gap, tail: n % 10 });
             }
             let p = new Set();
             if (isFailureState) {
-                let byGap = [...scores].sort((a,b) => b.gap - a.gap);
-                p.add(byGap[0].n); p.add(byGap[1].n);
-                let usedTails = new Set([byGap[0].tail, byGap[1].tail]);
-                let byFreq = [...scores].sort((a,b) => b.val - a.val);
-                for(let s of byFreq) { if (p.size < 8 && !usedTails.has(s.tail)) { p.add(s.n); usedTails.add(s.tail); } }
+                // 強化止血：優先抓極端冷號 + 遺漏間隔對沖
+                scores.sort((a,b) => b.gap - a.gap).slice(0, 3).forEach(s => p.add(s.n));
+                let tails = new Set(Array.from(p).map(n => n % 10));
+                scores.sort((a,b) => b.val - a.val).forEach(s => {
+                    if(p.size < 8 && !tails.has(s.tail)) { p.add(s.n); tails.add(s.tail); }
+                });
             } else {
-                let byVal = [...scores].sort((a,b) => b.val - a.val);
-                byVal.slice(0, 8).forEach(s => p.add(s.n));
+                scores.sort((a,b) => b.val - a.val).slice(0, 8).forEach(s => p.add(s.n));
             }
-            let finalPred = Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            if(finalPred.length < 8) {
-                scores.sort((a,b)=>b.val - a.val).forEach(s => { if(p.size < 8) p.add(s.n); });
-                finalPred = Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2, '0'));
-            }
-            return { pred: finalPred, isDefense: isFailureState };
+            let res = Array.from(p).sort((a,b)=>a-b).map(x => x.toString().padStart(2,'0'));
+            while(res.length < 8) res.push("01"); // 備用填充
+            return { pred: res, isDefense: isFailureState };
         }
 
         function render() {
             if (!apiData || !apiData[currentMode]) return;
             const history = parseCleanHistory(apiData[currentMode]);
-            let rows = "";
             let stats = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, total: 0, totalStars: 0 };
-            let consecutiveFailures = 0; 
-            let currentIsFailure = false;
-            let results = [];
+            let consecutiveFailures = 0, currentIsFailure = false, results = [], rows = "";
 
             for (let i = history.length - 2; i >= 0; i--) {
-                let prevData = history.slice(i + 1);
-                let res = calculateSmartAPEX(prevData, currentMode, currentIsFailure);
-                let act = history[i].nums;
-                let hitNums = res.pred.filter(p => act.includes(parseInt(p)));
-                let hits = hitNums.length;
-                
-                results.unshift({
-                    date: history[i].displayDate,
-                    act: act,
-                    pred: res.pred,
-                    hits: hits,
-                    isDefense: currentIsFailure
-                });
-
+                let res = calculateSmartAPEX(history.slice(i + 1), currentIsFailure);
+                let hits = history[i].nums.filter(n => res.pred.includes(n.toString().padStart(2,'0'))).length;
+                results.unshift({ date: history[i].displayDate, act: history[i].nums, pred: res.pred, hits: hits, isDefense: currentIsFailure });
                 if (hits < 2) consecutiveFailures++; else consecutiveFailures = 0;
                 if (consecutiveFailures >= 2) currentIsFailure = true; else if (hits >= 2) currentIsFailure = false;
             }
 
             results.forEach(r => {
-                stats.total++; 
-                stats[r.hits]++;
-                stats.totalStars += r.hits;
-                let starColor = r.hits >= 2 ? 'text-orange-500' : 'text-white';
-                let modeTag = r.isDefense ? '<span class="text-[9px] bg-red-900/50 text-red-400 px-1 rounded mr-1">止血</span>' : '';
+                stats.total++; stats[r.hits]++; stats.totalStars += r.hits;
                 let predHtml = r.pred.map(p => r.act.includes(parseInt(p)) ? `<span class="hit-num">${p}</span>` : p).join(',');
-
-                rows += `<tr class="border-b border-white/5">
-                    <td class="py-3 text-gray-500">${r.date}</td>
-                    <td class="text-white text-[11px]">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br>${modeTag}<span class="text-gray-600">→ ${predHtml}</span></td>
-                    <td class="text-right font-black ${starColor}">${r.hits}</td>
-                </tr>`;
+                rows += `<tr class="border-b border-white/5"><td class="py-3 text-gray-500 w-12">${r.date}</td><td class="text-white text-[11px]">${r.act.map(x=>x.toString().padStart(2,'0')).join(' ')}<br><span class="text-gray-600">→ ${predHtml}</span></td><td class="text-right font-black ${r.hits>=2?'text-orange-500':'text-white'}">${r.hits}</td></tr>`;
             });
 
-            // RTP 計算：總命中星數 / (總期數 * 8 碼成本) -> 此處簡化為相對回報率
             let rtp = stats.total > 0 ? ((stats.totalStars / (stats.total * 2)) * 100).toFixed(1) : 0;
-
-            const current = calculateSmartAPEX(history, currentMode, currentIsFailure);
-            const stateTag = document.getElementById('stateTag');
-            const statusPanel = document.getElementById('statusPanel');
             
-            if (currentIsFailure) {
-                statusPanel.classList.add('defense-mode');
-                stateTag.innerText = "● RECOVERY MODE ACTIVE";
-                stateTag.className = "text-[10px] font-bold text-red-500 animate-pulse";
-            } else {
-                statusPanel.classList.remove('defense-mode');
-                stateTag.innerText = "● APEX STABLE";
-                stateTag.className = "text-[10px] font-bold text-orange-500";
-            }
+            // 更新跟進標籤
+            const signal = document.getElementById('signalTag');
+            if (currentIsFailure || rtp < 55) { signal.innerText = "WAITING / 觀望"; signal.className = "px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase sig-wait"; }
+            else if (rtp < 75) { signal.innerText = "CAUTION / 謹慎"; signal.className = "px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase sig-caution"; }
+            else { signal.innerText = "STRONG BUY / 跟進"; signal.className = "px-2 py-0.5 rounded text-[9px] font-black bg-black uppercase sig-buy animate-pulse"; }
 
-            document.getElementById('logBox').innerHTML = `
-                <div class="grid grid-cols-2 gap-x-4">
-                    <span>總期數: ${stats.total}</span> <span class="text-orange-500">2星: ${stats[2]}</span>
-                    <span>0星: ${stats[0]} (RTP: ${rtp}%)</span> <span class="text-orange-500">3星: ${stats[3]}</span>
-                    <span>1星: ${stats[1]}</span> <span class="text-orange-500">4星: ${stats[4]}</span>
-                    <span>狀態: ${currentIsFailure ? '止血模式' : '主策略'}</span> <span class="text-orange-500 font-bold">5星: ${stats[5]}</span>
-                </div>`;
-            
-            document.getElementById('p1').innerText = `${current.pred[0]},${current.pred[1]}`;
-            document.getElementById('p2').innerText = `${current.pred[2]},${current.pred[3]}`;
-            document.getElementById('p3').innerText = `${current.pred[4]},${current.pred[5]}`;
-            document.getElementById('p4').innerText = `${current.pred[6]},${current.pred[7]}`;
+            document.getElementById('logBox').innerHTML = `<div class="grid grid-cols-2 gap-x-4"><span>總期數: ${stats.total}</span> <span class="text-orange-500">2星: ${stats[2]}</span><span>0星: ${stats[0]} (RTP: ${rtp}%)</span> <span class="text-orange-500">3星: ${stats[3]}</span><span>1星: ${stats[1]}</span> <span class="text-orange-500">狀態: ${currentIsFailure?'止血':'穩定'}</span></div>`;
+            const cur = calculateSmartAPEX(history, currentIsFailure);
+            document.getElementById('p1').innerText = `${cur.pred[0]},${cur.pred[1]}`;
+            document.getElementById('p2').innerText = `${cur.pred[2]},${cur.pred[3]}`;
+            document.getElementById('p3').innerText = `${cur.pred[4]},${cur.pred[5]}`;
+            document.getElementById('p4').innerText = `${cur.pred[6]},${cur.pred[7]}`;
             document.getElementById('historyTable').innerHTML = rows;
         }
     </script>
