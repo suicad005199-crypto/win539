@@ -3,83 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HAZY | Official</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+    <title>HAZY | Minimalist Collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #F9F8F4; --primary: #8C7867; --text: #333; }
-        body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-        
-        /* Logo 保持 Playfair Display 字體且不隨語系變動 */
-        header { 
-            background: #fff; padding: 1.5rem; display: flex; 
-            justify-content: space-between; align-items: center; 
-            border-bottom: 1px solid #EBE9E1; position: sticky; top: 0; 
+        :root {
+            --bg: #FDFCF8;
+            --primary: #8C7867;
+            --text: #2D2D2D;
+            --light-beige: #F4F1E9;
+            --white: #FFFFFF;
         }
-        .logo { font-family: 'Playfair Display', serif; font-size: 1.8rem; letter-spacing: 4px; }
 
-        .lang-switch button { 
-            background: none; border: 1px solid var(--primary); 
-            padding: 4px 12px; cursor: pointer; color: var(--primary); 
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background: var(--bg); color: var(--text); 
+            margin: 0; overflow-x: hidden;
         }
-        .hero { padding: 60px 20px; text-align: center; background: #EBE9E1; margin: 20px; border-radius: 4px; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: #fff; padding: 25px; border-radius: 4px; }
+
+        /* Header 優化 */
+        header { 
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.2rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .logo { 
+            font-family: 'Playfair Display', serif; 
+            font-size: 1.6rem; letter-spacing: 6px; font-weight: 600;
+        }
+
+        .nav-tools { display: flex; gap: 20px; align-items: center; }
+        .lang-switch span { 
+            cursor: pointer; font-size: 0.8rem; color: #999; transition: 0.3s;
+        }
+        .lang-switch span.active { color: var(--primary); font-weight: bold; }
+
+        /* Hero 區塊 */
+        .hero { 
+            height: 60vh; background: var(--light-beige);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; margin: 20px; border-radius: 2px;
+        }
+        .hero h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px; }
+
+        /* 商品網格 */
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        .section-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 30px; text-align: center; }
+        
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+            gap: 30px; 
+        }
+        .product-card { cursor: pointer; transition: 0.3s; }
+        .product-image { 
+            width: 100%; aspect-ratio: 3/4; background: #EEE; 
+            border-radius: 2px; transition: 0.5s; position: relative; overflow: hidden;
+        }
+        .product-card:hover .product-image { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .product-info { padding: 15px 0; text-align: center; }
+        .product-name { font-size: 0.9rem; margin: 5px 0; }
+        .price { color: var(--primary); font-weight: 500; }
+
+        /* 標籤功能區 */
+        .features { 
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 50px; 
+        }
+        .feature-item { 
+            background: var(--white); padding: 30px; border-radius: 4px; border: 1px solid var(--light-beige);
+        }
+
+        /* 線上客服 */
+        .chat-btn {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--primary); color: white;
+            padding: 12px 24px; border-radius: 30px; font-size: 0.8rem;
+            box-shadow: 0 4px 15px rgba(140, 120, 103, 0.3); cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo">HAZY</div>
-    <div class="lang-switch">
-        <button onclick="switchLang('zh')">中文</button>
-        <button onclick="switchLang('en')">EN</button>
+    <div class="nav-tools">
+        <div class="lang-switch">
+            <span id="btn-zh" class="active" onclick="switchLang('zh')">ZH</span> / 
+            <span id="btn-en" onclick="switchLang('en')">EN</span>
+        </div>
+        <div style="font-size: 1.2rem;">🛒</div>
     </div>
 </header>
 
 <div class="hero">
-    <h1 id="h-title">簡約，而不簡單</h1>
-    <p id="h-desc">探索專屬於妳的柔美米色系穿搭</p>
+    <h1 id="h-title">Essence of Simplicity</h1>
+    <p id="h-desc">專注於剪裁與米色系的純粹美學</p>
 </div>
 
 <div class="container">
-    <div class="grid">
-        <div class="card">
-            <h3 id="p-title">組合優惠</h3>
-            <p id="p-desc">任選兩件 9 折，積分可折抵現金。</p>
+    <div class="features">
+        <div class="feature-item">
+            <h3 id="f-offer-t">組合優惠</h3>
+            <p id="f-offer-d">任選兩件 9 折，積分可於下次結帳折抵。</p>
         </div>
-        <div class="card">
-            <h3 id="o-title">穿搭建議</h3>
-            <p id="o-desc">層次疊穿，營造法式高級感。</p>
+        <div class="feature-item">
+            <h3 id="f-tips-t">穿搭建議</h3>
+            <p id="f-tips-d">利用亞麻與針織疊穿，打造輕盈層次感。</p>
+        </div>
+    </div>
+
+    <h2 class="section-title" id="s-title">New Arrivals</h2>
+    <div class="product-grid">
+        <div class="product-card">
+            <div class="product-image"></div>
+            <div class="product-info">
+                <p class="product-name">Silk Wrap Dress</p>
+                <p class="price">$1,680</p>
+            </div>
+        </div>
+        <div class="product-card">
+            <div class="product-image"></div>
+            <div class="product-info">
+                <p class="product-name">Classic Beige Blazer</p>
+                <p class="price">$2,200</p>
+            </div>
         </div>
     </div>
 </div>
 
+<div class="chat-btn" onclick="alert('Connecting...')">Live Chat</div>
+
 <script>
     const i18n = {
         zh: {
-            'h-title': '簡約，而不簡單',
-            'h-desc': '探索專屬於妳的柔美米色系穿搭',
-            'p-title': '組合優惠',
-            'p-desc': '任選兩件 9 折，積分可折抵現金。',
-            'o-title': '穿搭建議',
-            'o-desc': '層次疊穿，營造法式高級感。'
+            'h-title': '簡約之萃',
+            'h-desc': '專注於剪裁與米色系的純粹美學',
+            'f-offer-t': '組合優惠',
+            'f-offer-d': '任選兩件 9 折，積分可於下次結帳折抵。',
+            'f-tips-t': '穿搭建議',
+            'f-tips-d': '利用亞麻與針織疊穿，打造輕盈層次感。',
+            's-title': '新品上市'
         },
         en: {
-            'h-title': 'Minimalism Aesthetics',
-            'h-desc': 'Discover your perfect beige outfit.',
-            'p-title': 'Bundle Offer',
-            'p-desc': '10% OFF for 2 items. Points redeemable for cash.',
-            'o-title': 'Styling Tips',
-            'o-desc': 'Layering tones for a chic French look.'
+            'h-title': 'Essence of Simplicity',
+            'h-desc': 'Pure aesthetics focused on cuts and beige tones.',
+            'f-offer-t': 'Bundle Offer',
+            'f-offer-d': '10% OFF for 2 items. Points redeemable on next order.',
+            'f-tips-t': 'Outfit Ideas',
+            'f-tips-d': 'Layering linen and knitwear for a light, chic look.',
+            's-title': 'New Arrivals'
         }
     };
 
     function switchLang(lang) {
-        // 只針對有定義 ID 的內容進行替換，完全不影響 .logo
+        // 更新文字內容
         Object.keys(i18n[lang]).forEach(id => {
             document.getElementById(id).innerText = i18n[lang][id];
         });
+
+        // 更新按鈕狀態顏色
+        document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
     }
 </script>
 
