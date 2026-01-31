@@ -2,10 +2,168 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>我的網站</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAZY | 簡約女裝 - 質感生活</title>
+    <style>
+        /* 簡約米色系風格設定 */
+        :root {
+            --bg-color: #F5F5F0;     /* 淺米色背景 */
+            --accent-color: #D2B48C; /* 駝色/大地色 */
+            --text-color: #4A4A4A;   /* 深灰文字 */
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: var(--white);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #E0E0E0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 2rem;
+            letter-spacing: 5px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        /* 優惠公告 */
+        .promo-banner {
+            background-color: var(--accent-color);
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 0.85rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 區塊樣式 */
+        section {
+            margin-bottom: 40px;
+            background: var(--white);
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        h2 {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* 會員積分區 */
+        .member-points {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 穿搭建議區 */
+        .outfit-tips img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        /* 線上客服按鈕 (右下角) */
+        .chat-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--accent-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World!</h1>
-    <p>這是用 HTML + Git 架設的網站。</p>
+
+<header>
+    <div class="logo">HAZY</div>
+    <nav>
+        <a href="#">NEW ARRIVAL</a>
+        <a href="#">ALL ITEMS</a>
+        <a href="#">OUTFIT IDEAS</a>
+        <a href="#">MEMBER</a>
+    </nav>
+</header>
+
+<div class="promo-banner">
+    ✨ 組合優惠：任選兩件簡約系列，現折 $200 ✨
+</div>
+
+<div class="container">
+    
+    <section class="member-points">
+        <div>
+            <h2>會員專屬權益</h2>
+            <p>累積積分：消費 $1 累積 1 點，點數可直接折抵現金。</p>
+        </div>
+        <button style="background:none; border: 1px solid var(--accent-color); padding: 10px;">查詢我的積分</button>
+    </section>
+
+    <section class="outfit-tips">
+        <h2>本週穿搭建議 (Weekly Outfit)</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <div style="background:#E0E0E0; height: 300px; display: flex; align-items: center; justify-content: center;">
+                    [ 穿搭示意圖：米色亞麻套裝 ]
+                </div>
+                <p><strong>微涼秋季：</strong>利用同色系疊穿，營造高級層次感。</p>
+            </div>
+            <div>
+                <div style="background:#E0E0E0; height: 300px; display: flex; align-items: center; justify-content: center;">
+                    [ 穿搭示意圖：針織長裙 ]
+                </div>
+                <p><strong>週末約會：</strong>柔軟針織材質，展現女性溫柔曲線。</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>新品上市</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;">
+            <div><div style="background:#eee; height:200px;"></div><p>簡約圓領針織衫<br>$880</p></div>
+            <div><div style="background:#eee; height:200px;"></div><p>高腰修身西裝褲<br>$1,200</p></div>
+            <div><div style="background:#eee; height:200px;"></div><p>法式優雅連身裙<br>$1,580</p></div>
+        </div>
+    </section>
+
+</div>
+
+<div class="chat-btn" onclick="alert('客服專員正在連線中...')">
+    Live Chat | 線上客服
+</div>
+
+<footer style="text-align: center; padding: 40px; color: #999; font-size: 0.8rem;">
+    &copy; 2026 HAZY Studio. All Rights Reserved.
+</footer>
+
 </body>
 </html>
