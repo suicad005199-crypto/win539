@@ -4,86 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #222; font-family: sans-serif; }
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 500px; }
-        .cell { 
-            aspect-ratio: 1; background: #444; border-radius: 4px; 
-            display: flex; justify-content: center; align-items: center; 
-            font-size: 1.5rem; transition: 0.2s; cursor: pointer;
-        }
-        .player { background: #007AFF; transform: scale(0.9); }
-        .boss { background: #FF3B30; }
-        .mob { background: #444; color: #fff; font-size: 1rem; }
-        .reachable { outline: 2px solid #4CD964; }
+        :root { --ios-blue: #007AFF; --ios-red: #FF3B30; --ios-green: #4CD964; }
+        body { margin: 0; background: #111; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        #status { width: 90vw; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; width: 95vw; max-width: 450px; background: #333; padding: 5px; border-radius: 12px; }
+        .cell { aspect-ratio: 1; background: #000; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; transition: background 0.3s; }
+        /* 迷霧效果 */
+        .fog { opacity: 0; }
+        .visible { opacity: 1; background: #444; }
+        .player { background: var(--ios-blue) !important; z-index: 2; box-shadow: 0 0 10px var(--ios-blue); }
+        .buff { color: #FFD700; } .heal { color: var(--ios-green); }
     </style>
 </head>
 <body>
-    <div class="grid" id="game-grid"></div>
+
+<div id="status">
+    <span>HP: <span id="hp">100</span></span>
+    <span>ATK: <span id="atk">10</span></span>
+    <span>LV: <span id="lv">1</span></span>
+</div>
+
+<div class="grid" id="grid"></div>
 
 <script>
-    const grid = document.getElementById('game-grid');
-    let cells = [];
-    let playerPos = -1;
+    const gridEl = document.getElementById('grid');
+    const stats = { hp: 100, atk: 10, lv: 1 };
+    let playerPos = 0;
+    let mapData = [];
 
-    function initGame() {
-        // 建立角色池：1玩家(P), 1Boss(B), 62小怪(M)
-        let pool = ['P', 'B', ...Array(62).fill('M')];
-        pool.sort(() => Math.random() - 0.5); // 隨機洗牌
-
-        grid.innerHTML = '';
-        pool.forEach((type, i) => {
-            const div = document.createElement('div');
-            div.className = 'cell';
-            div.dataset.index = i;
-            if (type === 'P') { 
-                div.classList.add('player'); div.innerHTML = '👤'; 
-                playerPos = i;
-            } else if (type === 'B') {
-                div.classList.add('boss'); div.innerHTML = '👹';
-            } else {
-                div.classList.add('mob'); div.innerHTML = '👾';
-            }
-            div.onclick = () => handleMove(i);
-            grid.appendChild(div);
-            cells[i] = div;
-        });
-        updateReachable();
+    function init() {
+        // 生成地圖資料
+        const types = ['B', 'P', ...Array(10).fill('H'), ...Array(10).fill('S'), ...Array(42).fill('M')];
+        mapData = types.sort(() => Math.random() - 0.5);
+        playerPos = mapData.indexOf('P');
+        render();
     }
 
-    function handleMove(targetIdx) {
-        if (!isAdjacent(playerPos, targetIdx)) return;
+    function render() {
+        gridEl.innerHTML = '';
+        mapData.forEach((type, i) => {
+            const cell = document.createElement('div');
+            const dist = getDist(playerPos, i);
+            cell.className = `cell ${dist <= 1 ? 'visible' : 'fog'}`;
+            
+            if (i === playerPos) {
+                cell.classList.add('player');
+                cell.innerHTML = '👤';
+            } else if (dist <= 1) {
+                if (type === 'M') cell.innerHTML = '👾';
+                else if (type === 'B') cell.innerHTML = '👹';
+                else if (type === 'H') cell.innerHTML = '❤️';
+                else if (type === 'S') cell.innerHTML = '⚡';
+            }
+            
+            cell.onclick = () => move(i);
+            gridEl.appendChild(cell);
+        });
+        updateStats();
+    }
 
-        const target = cells[targetIdx];
-        if (target.classList.contains('mob')) {
-            alert("遇到小怪！進入戰鬥！");
-        } else if (target.classList.contains('boss')) {
-            alert("🚨 遭遇 BOSS！準備決戰！");
+    function move(target) {
+        if (getDist(playerPos, target) !== 1) return;
+
+        const event = mapData[target];
+        if (event === 'M' || event === 'B') {
+            const isBoss = event === 'B';
+            const risk = Math.random() > 0.7; // 30% 機率遇到強敵
+            const damage = (isBoss ? 50 : (risk ? 30 : 10));
+            
+            if (confirm(`${isBoss ? 'BOSS' : (risk ? '強敵' : '小怪')}出現！受傷 ${damage}，確認戰鬥？`)) {
+                stats.hp -= damage;
+                stats.lv += 1;
+                stats.atk += 2;
+            } else return;
+        } else if (event === 'H') {
+            stats.hp += 20;
+            alert("喝下藥水，HP+20");
+        } else if (event === 'S') {
+            stats.atk += 5;
+            alert("獲得 Buff，ATK+5");
         }
 
-        // 移動邏輯：清空舊位，更新新位
-        cells[playerPos].classList.remove('player');
-        cells[playerPos].innerHTML = ''; 
-        
-        playerPos = targetIdx;
-        cells[playerPos].className = 'cell player';
-        cells[playerPos].innerHTML = '👤';
-        
-        updateReachable();
+        if (stats.hp <= 0) {
+            alert("你死了！遊戲重置");
+            location.reload();
+        }
+
+        mapData[playerPos] = 'E'; // 原位變空格
+        playerPos = target;
+        mapData[playerPos] = 'P';
+        render();
     }
 
-    function isAdjacent(p1, p2) {
+    function getDist(p1, p2) {
         const x1 = p1 % 8, y1 = Math.floor(p1 / 8);
         const x2 = p2 % 8, y2 = Math.floor(p2 / 8);
-        return Math.abs(x1 - x2) + Math.abs(y1 - y2) === 1;
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 
-    function updateReachable() {
-        cells.forEach((c, i) => {
-            c.classList.toggle('reachable', isAdjacent(playerPos, i));
-        });
+    function updateStats() {
+        document.getElementById('hp').innerText = stats.hp;
+        document.getElementById('atk').innerText = stats.atk;
+        document.getElementById('lv').innerText = stats.lv;
     }
 
-    initGame();
+    init();
 </script>
 </body>
 </html>
