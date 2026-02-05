@@ -3,123 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>極限離職挑戰 30 DAY</title>
+    <title>極限離職挑戰：30 DAY</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-        canvas { background: #2c3e50; border: 2px solid #34495e; }
-        #ui { position: absolute; top: 15px; color: #ecf0f1; font-weight: bold; pointer-events: none; width: 340px; display: flex; justify-content: space-between; }
+        body { margin: 0; overflow: hidden; background: #0a0a0c; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        canvas { background: #16161d; box-shadow: 0 0 20px rgba(0,0,0,0.5); touch-action: none; }
+        
+        /* 頂部 UI */
+        #info { position: absolute; top: 20px; width: 320px; color: white; pointer-events: none; z-index: 10; }
+        .stats { display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; text-shadow: 0 0 5px #000; }
+        .bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 8px; border-radius: 2px; }
+        #bar-fill { width: 0%; height: 100%; background: #00ffcc; box-shadow: 0 0 10px #00ffcc; transition: width 0.2s; }
+
+        /* 彈窗訊息 */
+        #popup { display: none; position: absolute; background: rgba(0,0,0,0.85); color: #00ffcc; padding: 20px; border: 2px solid #00ffcc; border-radius: 10px; text-align: center; z-index: 100; pointer-events: none; }
     </style>
 </head>
 <body>
-<div id="ui">
-    <span>DAY <span id="dayNum">1</span></span>
-    <span>PROGRESS <span id="prog">0</span>/2</span>
+
+<div id="info">
+    <div class="stats">
+        <span>DAY <span id="day">1</span>/30</span>
+        <span style="font-size: 14px; opacity: 0.8;">PROG <span id="prog">0</span>/2</span>
+    </div>
+    <div class="bar-bg"><div id="bar-fill"></div></div>
 </div>
+
+<div id="popup">
+    <h2 id="pop-title">自由 Day 1</h2>
+    <p id="pop-body">平安下班...</p>
+</div>
+
 <canvas id="gameCanvas"></canvas>
 
 <script>
+/** 核心配置 **/
+const CFG = {
+    P_SPD: 800, // 玩家速度
+    E_TYPES: [
+        { n: '老闆', c: '#ff4d4d', s: 1000, sz: 50 },
+        { n: '同事', c: '#ffa500', s: 1500, sz: 40 },
+        { n: '客戶', c: '#f1c40f', s: 2300, sz: 30 }
+    ],
+    GOAL: 2,
+    MAX_DAY: 30
+};
+
+/** 音頻引擎 **/
+const audio = new (window.AudioContext || window.webkitAudioContext)();
+function beep(f, t, d) {
+    if(audio.state === 'suspended') audio.resume();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = t; o.frequency.setValueAtTime(f, audio.currentTime);
+    g.gain.setValueAtTime(0.1, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g); g.connect(audio.destination);
+    o.start(); o.stop(audio.currentTime + d);
+}
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-canvas.width = 360;
-canvas.height = 640;
+canvas.width = 360; canvas.height = 640;
 
-// --- 精確速度配置 (px/s) ---
-const PLAYER_SPD = 800; 
-const ENEMY_TYPES = [
-    { name: '慢速老闆', color: '#e74c3c', spd: 1000, size: 50 },
-    { name: '中速同事', color: '#e67e22', spd: 1500, size: 40 },
-    { name: '快速客戶', color: '#f1c40f', spd: 2300, size: 30 }
-];
-
-let day = 1;
-let progress = 0;
+let day = 1, progress = 0, isPaused = false, lastT = 0;
 let player = { x: 165, y: 580, w: 30, h: 30, isFiring: false };
 let enemies = [];
-let lastTime = performance.now();
 
 function spawn() {
-    if (document.hidden) return;
-    const type = ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
+    if (isPaused) return;
+    const type = CFG.E_TYPES[Math.floor(Math.random() * CFG.E_TYPES.length)];
     const side = Math.random() > 0.5 ? 1 : -1;
     enemies.push({
         x: side === 1 ? -100 : canvas.width + 100,
-        y: 100 + Math.random() * 350,
-        w: type.size, h: type.size,
-        vx: type.spd * side,
+        y: 100 + Math.random() * 380,
+        w: type.sz, h: type.sz,
+        vx: type.s * side,
         ...type
     });
 }
-// 因為敵人極快，生成頻率稍微放慢一點，避免畫面死局
-setInterval(spawn, 400);
+setInterval(spawn, 380);
+
+function showMsg(t, b) {
+    isPaused = true;
+    const p = document.getElementById('popup');
+    document.getElementById('pop-title').innerText = t;
+    document.getElementById('pop-body').innerText = b;
+    p.style.display = 'block';
+    setTimeout(() => { p.style.display = 'none'; isPaused = false; }, 1500);
+}
 
 function update(dt) {
+    if (isPaused) return;
+
     if (player.isFiring) {
-        player.y -= PLAYER_SPD * dt;
+        player.y -= CFG.P_SPD * dt;
         if (player.y < 20) {
             progress++;
-            if (progress >= 2) {
-                day++;
-                progress = 0;
-                if(day > 30) alert("你自由了！徹底離職！");
+            beep(880, 'sine', 0.2);
+            if (progress >= CFG.GOAL) {
+                day++; progress = 0;
+                showMsg(`Day ${day-1} 達成`, day > 30 ? "你徹底自由了！" : "活著下班，明天繼續...");
             }
             resetPlayer();
         }
     }
 
     for (let i = enemies.length - 1; i >= 0; i--) {
-        let en = enemies[i];
-        en.x += en.vx * dt;
-
-        // 碰撞
-        if (player.isFiring &&
-            player.x < en.x + en.w && player.x + player.w > en.x &&
-            player.y < en.y + en.h && player.y + player.h > en.y) {
+        let e = enemies[i];
+        e.x += e.vx * dt;
+        if (player.isFiring && player.x < e.x + e.w && player.x + player.w > e.x &&
+            player.y < e.y + e.h && player.y + player.h > e.y) {
+            beep(150, 'sawtooth', 0.3);
             resetPlayer();
         }
-        // 出界判定 (範圍加大，因為敵人速度極快)
-        if (en.x < -200 || en.x > canvas.width + 200) enemies.splice(i, 1);
+        if (e.x < -200 || e.x > 560) enemies.splice(i, 1);
     }
     
-    document.getElementById('dayNum').innerText = day;
+    // UI
+    document.getElementById('day').innerText = Math.min(day, 30);
     document.getElementById('prog').innerText = progress;
+    document.getElementById('bar-fill').style.width = (progress / CFG.GOAL) * 100 + "%";
 }
 
-function resetPlayer() {
-    player.y = 580;
-    player.isFiring = false;
-}
+function resetPlayer() { player.y = 580; player.isFiring = false; }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 終點光帶
-    ctx.fillStyle = "rgba(46, 204, 113, 0.2)";
+    // 終點線
+    ctx.fillStyle = "rgba(0, 255, 204, 0.2)";
     ctx.fillRect(0, 0, canvas.width, 40);
 
     // 敵人
-    enemies.forEach(en => {
-        ctx.fillStyle = en.color;
-        ctx.fillRect(en.x, en.y, en.w, en.h);
-        // 速度極快時畫影子增加動感
-        ctx.fillStyle = "rgba(255,255,255,0.3)";
-        ctx.fillRect(en.x - (en.vx*0.01), en.y, en.w, en.h);
+    enemies.forEach(e => {
+        ctx.fillStyle = e.c;
+        ctx.fillRect(e.x, e.y, e.w, e.h);
+        // 超高速殘影
+        ctx.fillStyle = e.c + "33";
+        ctx.fillRect(e.x - (e.vx * 0.015), e.y, e.w, e.h);
     });
 
     // 玩家
-    ctx.fillStyle = "#2ecc71";
+    ctx.fillStyle = "#fff";
+    ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
     ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.shadowBlur = 0;
 }
 
 function loop(t) {
-    let dt = (t - lastTime) / 1000;
-    lastTime = t;
+    let dt = (t - lastT) / 1000;
+    lastT = t;
     update(dt > 0.1 ? 0 : dt);
     draw();
     requestAnimationFrame(loop);
 }
 
-canvas.addEventListener('mousedown', () => player.isFiring = true);
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); player.isFiring = true; });
+const action = () => { if(!player.isFiring && !isPaused) { player.isFiring = true; beep(440, 'triangle', 0.1); } };
+canvas.addEventListener('mousedown', action);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); action(); });
+
 requestAnimationFrame(loop);
 </script>
 </body>
