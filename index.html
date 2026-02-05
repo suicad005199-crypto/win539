@@ -4,37 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        :root { --ios-blue: #007AFF; --ios-red: #FF3B30; --ios-green: #4CD964; }
-        body { margin: 0; background: #111; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        #status { width: 90vw; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; width: 95vw; max-width: 450px; background: #333; padding: 5px; border-radius: 12px; }
-        .cell { aspect-ratio: 1; background: #000; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; transition: background 0.3s; }
-        /* 迷霧效果 */
-        .fog { opacity: 0; }
-        .visible { opacity: 1; background: #444; }
-        .player { background: var(--ios-blue) !important; z-index: 2; box-shadow: 0 0 10px var(--ios-blue); }
-        .buff { color: #FFD700; } .heal { color: var(--ios-green); }
+        :root { --ios-blue: #007AFF; --ios-red: #FF3B30; --ios-green: #4CD964; --ios-gold: #FFD700; }
+        body { margin: 0; background: #1c1c1e; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+        
+        /* 頂部狀態欄 */
+        #header { width: 90vw; max-width: 450px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .hp-container { width: 120px; height: 12px; background: #3a3a3c; border-radius: 6px; overflow: hidden; border: 1px solid #555; }
+        #hp-bar { width: 100%; height: 100%; background: var(--ios-green); transition: width 0.3s; }
+        
+        /* 網格 */
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 450px; background: #3a3a3c; padding: 6px; border-radius: 12px; }
+        .cell { aspect-ratio: 1; background: #48484a; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; position: relative; }
+        .player { background: var(--ios-blue) !important; box-shadow: 0 0 10px var(--ios-blue); }
+        .reachable { outline: 2px solid var(--ios-green); outline-offset: -2px; }
+
+        /* Slot 區域 */
+        #slot-machine { margin-top: 20px; width: 90vw; max-width: 300px; background: #2c2c2e; padding: 10px; border-radius: 15px; border: 2px solid var(--ios-gold); text-align: center; }
+        .slot-container { display: flex; justify-content: space-around; margin: 10px 0; font-size: 2rem; background: #000; padding: 10px; border-radius: 8px; }
+        .slot-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #1c1c1e; border-radius: 4px; }
+        .spin-btn { background: var(--ios-gold); color: #000; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; opacity: 0.3; pointer-events: none; }
+        .spin-active { opacity: 1; pointer-events: auto; box-shadow: 0 0 15px var(--ios-gold); }
     </style>
 </head>
 <body>
 
-<div id="status">
-    <span>HP: <span id="hp">100</span></span>
-    <span>ATK: <span id="atk">10</span></span>
-    <span>LV: <span id="lv">1</span></span>
+<div id="header">
+    <div>
+        <div style="font-size: 12px; margin-bottom: 2px;">PLAYER HP</div>
+        <div class="hp-container"><div id="hp-bar"></div></div>
+    </div>
+    <div style="text-align: right;">
+        <span style="color:var(--ios-gold)">ATK: <span id="atk">10</span></span><br>
+        <span style="font-size: 12px;">LV: <span id="lv">1</span></span>
+    </div>
 </div>
 
 <div class="grid" id="grid"></div>
 
+<div id="slot-machine">
+    <div style="font-size: 12px; color: var(--ios-gold);">SKILL SLOT</div>
+    <div class="slot-container">
+        <div class="slot-box" id="s1">?</div>
+        <div class="slot-box" id="s2">?</div>
+        <div class="slot-box" id="s3">?</div>
+    </div>
+    <button id="spin-btn" class="spin-btn" onclick="runSlot()">SPIN (0)</button>
+</div>
+
 <script>
     const gridEl = document.getElementById('grid');
-    const stats = { hp: 100, atk: 10, lv: 1 };
+    const stats = { hp: 100, maxHp: 100, atk: 10, lv: 1, spins: 0 };
+    const skills = ['🍎', '⚔️', '💣', '🛡️', '💎']; 
     let playerPos = 0;
     let mapData = [];
 
     function init() {
-        // 生成地圖資料
-        const types = ['B', 'P', ...Array(10).fill('H'), ...Array(10).fill('S'), ...Array(42).fill('M')];
+        const types = ['B', 'P', ...Array(8).fill('H'), ...Array(8).fill('S'), ...Array(46).fill('M')];
         mapData = types.sort(() => Math.random() - 0.5);
         playerPos = mapData.indexOf('P');
         render();
@@ -45,55 +70,58 @@
         mapData.forEach((type, i) => {
             const cell = document.createElement('div');
             const dist = getDist(playerPos, i);
-            cell.className = `cell ${dist <= 1 ? 'visible' : 'fog'}`;
-            
-            if (i === playerPos) {
-                cell.classList.add('player');
-                cell.innerHTML = '👤';
-            } else if (dist <= 1) {
-                if (type === 'M') cell.innerHTML = '👾';
-                else if (type === 'B') cell.innerHTML = '👹';
-                else if (type === 'H') cell.innerHTML = '❤️';
-                else if (type === 'S') cell.innerHTML = '⚡';
-            }
-            
+            cell.className = `cell ${i === playerPos ? 'player' : ''} ${dist === 1 ? 'reachable' : ''}`;
+            if (i === playerPos) cell.innerHTML = '👤';
+            else if (type === 'M') cell.innerHTML = '👾';
+            else if (type === 'B') cell.innerHTML = '👹';
+            else if (type === 'H') cell.innerHTML = '❤️';
+            else if (type === 'S') cell.innerHTML = '⚡';
             cell.onclick = () => move(i);
             gridEl.appendChild(cell);
         });
-        updateStats();
+        updateUI();
     }
 
     function move(target) {
         if (getDist(playerPos, target) !== 1) return;
-
         const event = mapData[target];
+
         if (event === 'M' || event === 'B') {
-            const isBoss = event === 'B';
-            const risk = Math.random() > 0.7; // 30% 機率遇到強敵
-            const damage = (isBoss ? 50 : (risk ? 30 : 10));
-            
-            if (confirm(`${isBoss ? 'BOSS' : (risk ? '強敵' : '小怪')}出現！受傷 ${damage}，確認戰鬥？`)) {
-                stats.hp -= damage;
-                stats.lv += 1;
-                stats.atk += 2;
-            } else return;
-        } else if (event === 'H') {
-            stats.hp += 20;
-            alert("喝下藥水，HP+20");
-        } else if (event === 'S') {
-            stats.atk += 5;
-            alert("獲得 Buff，ATK+5");
-        }
+            const dmg = event === 'B' ? 40 : 15;
+            stats.hp -= dmg;
+            stats.lv++;
+            // 擊敗怪物機率獲得 Spin
+            if (Math.random() < 0.3) {
+                stats.spins++;
+                alert(`戰鬥勝利！獲得 1 次抽獎機會！`);
+            }
+        } else if (event === 'H') { stats.hp = Math.min(stats.maxHp, stats.hp + 20); }
+        else if (event === 'S') { stats.atk += 5; }
 
-        if (stats.hp <= 0) {
-            alert("你死了！遊戲重置");
-            location.reload();
-        }
+        if (stats.hp <= 0) { alert("Game Over"); location.reload(); return; }
 
-        mapData[playerPos] = 'E'; // 原位變空格
+        mapData[playerPos] = 'E';
         playerPos = target;
         mapData[playerPos] = 'P';
         render();
+    }
+
+    function runSlot() {
+        if (stats.spins <= 0) return;
+        stats.spins--;
+        const results = [skills[Math.floor(Math.random()*5)], skills[Math.floor(Math.random()*5)], skills[Math.floor(Math.random()*5)]];
+        
+        results.forEach((s, i) => document.getElementById(`s${i+1}`).innerText = s);
+
+        // 簡單邏輯：如果有兩個相同就有加成
+        if (results[0] === results[1] && results[1] === results[2]) {
+            stats.atk += 20; stats.hp = stats.maxHp;
+            alert("大獎！ATK大幅提升 + HP全滿！");
+        } else {
+            stats.atk += 2;
+            alert("小獎：ATK +2");
+        }
+        updateUI();
     }
 
     function getDist(p1, p2) {
@@ -102,10 +130,13 @@
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 
-    function updateStats() {
-        document.getElementById('hp').innerText = stats.hp;
+    function updateUI() {
+        document.getElementById('hp-bar').style.width = `${(stats.hp / stats.maxHp) * 100}%`;
         document.getElementById('atk').innerText = stats.atk;
         document.getElementById('lv').innerText = stats.lv;
+        const btn = document.getElementById('spin-btn');
+        btn.innerText = `SPIN (${stats.spins})`;
+        btn.className = stats.spins > 0 ? 'spin-btn spin-active' : 'spin-btn';
     }
 
     init();
