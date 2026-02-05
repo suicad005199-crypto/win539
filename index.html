@@ -3,58 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iOS 8x8 Grid</title>
     <style>
-        :root {
-            --gap: 4px;
+        body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #222; font-family: sans-serif; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 500px; }
+        .cell { 
+            aspect-ratio: 1; background: #444; border-radius: 4px; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 1.5rem; transition: 0.2s; cursor: pointer;
         }
-
-        body {
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f0f5; /* iOS 淺色背景 */
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr); /* 8列 */
-            gap: var(--gap);
-            width: 95vw; /* 適合手機寬度 */
-            max-width: 500px;
-            padding: var(--gap);
-            background-color: #ddd;
-            border-radius: 8px;
-        }
-
-        .grid-item {
-            background-color: #fff;
-            aspect-ratio: 1 / 1; /* 保持正方形 */
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-            color: #888;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
+        .player { background: #007AFF; transform: scale(0.9); }
+        .boss { background: #FF3B30; }
+        .mob { background: #444; color: #fff; font-size: 1rem; }
+        .reachable { outline: 2px solid #4CD964; }
     </style>
 </head>
 <body>
+    <div class="grid" id="game-grid"></div>
 
-    <div class="grid-container" id="grid">
-        </div>
+<script>
+    const grid = document.getElementById('game-grid');
+    let cells = [];
+    let playerPos = -1;
 
-    <script>
-        const grid = document.getElementById('grid');
-        for (let i = 1; i <= 64; i++) {
-            const item = document.createElement('div');
-            item.className = 'grid-item';
-            item.textContent = i;
-            grid.appendChild(item);
+    function initGame() {
+        // 建立角色池：1玩家(P), 1Boss(B), 62小怪(M)
+        let pool = ['P', 'B', ...Array(62).fill('M')];
+        pool.sort(() => Math.random() - 0.5); // 隨機洗牌
+
+        grid.innerHTML = '';
+        pool.forEach((type, i) => {
+            const div = document.createElement('div');
+            div.className = 'cell';
+            div.dataset.index = i;
+            if (type === 'P') { 
+                div.classList.add('player'); div.innerHTML = '👤'; 
+                playerPos = i;
+            } else if (type === 'B') {
+                div.classList.add('boss'); div.innerHTML = '👹';
+            } else {
+                div.classList.add('mob'); div.innerHTML = '👾';
+            }
+            div.onclick = () => handleMove(i);
+            grid.appendChild(div);
+            cells[i] = div;
+        });
+        updateReachable();
+    }
+
+    function handleMove(targetIdx) {
+        if (!isAdjacent(playerPos, targetIdx)) return;
+
+        const target = cells[targetIdx];
+        if (target.classList.contains('mob')) {
+            alert("遇到小怪！進入戰鬥！");
+        } else if (target.classList.contains('boss')) {
+            alert("🚨 遭遇 BOSS！準備決戰！");
         }
-    </script>
+
+        // 移動邏輯：清空舊位，更新新位
+        cells[playerPos].classList.remove('player');
+        cells[playerPos].innerHTML = ''; 
+        
+        playerPos = targetIdx;
+        cells[playerPos].className = 'cell player';
+        cells[playerPos].innerHTML = '👤';
+        
+        updateReachable();
+    }
+
+    function isAdjacent(p1, p2) {
+        const x1 = p1 % 8, y1 = Math.floor(p1 / 8);
+        const x2 = p2 % 8, y2 = Math.floor(p2 / 8);
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2) === 1;
+    }
+
+    function updateReachable() {
+        cells.forEach((c, i) => {
+            c.classList.toggle('reachable', isAdjacent(playerPos, i));
+        });
+    }
+
+    initGame();
+</script>
 </body>
 </html>
