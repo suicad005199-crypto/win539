@@ -5,83 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
         :root { --ios-red: #FF3B30; --ios-yellow: #FFCC00; --ios-blue: #007AFF; --ios-bg: #000; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--ios-bg); color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
-        #start-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .start-btn { background: none; border: 2px solid var(--ios-blue); color: var(--ios-blue); padding: 12px 40px; border-radius: 30px; font-size: 1.2rem; font-weight: bold; margin-top: 30px; }
+        body { 
+            background: var(--ios-bg); 
+            color: white; 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; /* 垂直置中 */
+            min-height: 100dvh; /* 適應 iOS 底部動態列 */
+            overflow: hidden;
+        }
 
-        #status-bar { width: 95vw; max-width: 450px; padding: 15px 5px; display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 50px; height: 50px; background: #2c2c2e; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid #444; }
+        /* 狀態列 */
+        #status-bar { 
+            width: 92vw; 
+            max-width: 420px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 20px;
+        }
+        .avatar { width: 48px; height: 48px; background: #2c2c2e; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid #444; }
         .info-panel { flex: 1; }
-        .bar-container { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 6px; position: relative; }
+        .bar-container { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 6px; }
         .bar-fill { height: 100%; transition: width 0.3s; }
         .hp-fill { background: var(--ios-red); }
         .exp-fill { background: var(--ios-yellow); }
 
-        /* 網格容器：解決位移關鍵 */
-        .grid-container { position: relative; width: 95vw; max-width: 450px; background: #1c1c1e; padding: 6px; border-radius: 12px; }
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 100%; }
-        .cell { aspect-ratio: 1; background: #333; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; font-size: 1.4rem; }
-        
-        /* 懸浮 Token：戰鬥時才顯現 */
+        /* 遊戲網格：確保置中且不位移 */
+        .grid-container { 
+            position: relative; 
+            width: 92vw; 
+            max-width: 420px; 
+            background: #1c1c1e; 
+            padding: 6px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(8, 1fr); 
+            gap: 4px; 
+            width: 100%;
+        }
+        .cell { 
+            aspect-ratio: 1; 
+            background: #333; 
+            border-radius: 4px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            position: relative; 
+            font-size: 1.2rem;
+        }
+
+        /* 懸浮 Token */
         #player-fx-token {
-            position: fixed; /* 改用 fixed 配合 getBoundingClientRect */
-            z-index: 1000; background: var(--ios-blue); border-radius: 4px;
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-            pointer-events: none; visibility: hidden; transition: transform 0.15s ease-out;
+            position: fixed; 
+            z-index: 1000; 
+            background: var(--ios-blue); 
+            border-radius: 4px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.4rem;
+            pointer-events: none; 
+            visibility: hidden; 
+            transition: transform 0.15s ease-out;
             box-shadow: 0 0 15px rgba(0,122,255,0.6);
         }
 
+        /* 怪物血條 */
         .mob-bar-bg { width: 80%; height: 3px; background: #000; position: absolute; bottom: 4px; border-radius: 2px; }
         .mob-bar-fill { height: 100%; background: var(--ios-red); transition: width 0.2s; }
 
         .dmg-popup {
-            position: absolute; font-weight: 900; font-size: 15px; color: var(--ios-red);
+            position: absolute; font-weight: 900; font-size: 14px; color: var(--ios-red);
             text-shadow: 0 0 4px #000; animation: floatUp 0.6s forwards; z-index: 1100;
         }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px); } }
 
-        #room-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; opacity: 0; pointer-events: none; z-index: 1500; }
+        /* 過場 */
+        #room-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; opacity: 0; pointer-events: none; z-index: 1500; background: rgba(0,0,0,0.4); }
         .flash { animation: textFlash 1.5s forwards; }
         @keyframes textFlash { 0% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
+
+        /* 隱藏原生捲軸 */
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <div style="color:#888; line-height:1.6">獨自踏入地牢...<br>這是屬於你的試煉。</div>
-        <button class="start-btn" onclick="startGame()">進入地下城</button>
+    <div id="status-bar">
+        <div class="avatar">👤</div>
+        <div class="info-panel">
+            <div style="font-size:12px; font-weight:bold; letter-spacing:1px">LV <span id="pl-lv">1</span> | ATK <span id="pl-atk">15</span></div>
+            <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill" style="width:100%"></div></div>
+            <div class="bar-container"><div id="exp-bar" class="bar-fill exp-fill" style="width:0%"></div></div>
+        </div>
     </div>
 
-    <div id="game-ui" style="display:none">
-        <div id="status-bar">
-            <div class="avatar">👤</div>
-            <div class="info-panel">
-                <div style="font-size:12px; font-weight:bold">LV <span id="pl-lv">1</span> | ATK <span id="pl-atk">15</span></div>
-                <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill"></div></div>
-                <div class="bar-container"><div id="exp-bar" class="bar-fill exp-fill"></div></div>
-            </div>
-        </div>
-
-        <div class="grid-container">
-            <div id="player-fx-token">👤</div>
-            <div class="grid" id="grid"></div>
-        </div>
-        <div style="margin-top:20px; color:#444; font-size:11px">AREA <span id="room-num">1</span></div>
+    <div class="grid-container">
+        <div id="player-fx-token">👤</div>
+        <div class="grid" id="grid"></div>
     </div>
+
+    <div style="margin-top:20px; color:#444; font-size:11px; font-weight:bold">AREA <span id="room-num">1</span></div>
 
     <div id="room-overlay"></div>
 
 <script>
     let state = { hp: 100, maxHp: 100, exp: 0, nextExp: 100, atk: 15, lv: 1, room: 1, playerPos: 0, isActing: false };
     let map = [];
-
-    function startGame() {
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('game-ui').style.display = 'flex';
-        initRoom(true);
-    }
 
     async function initRoom(anim = false) {
         if (anim) {
@@ -91,7 +130,8 @@
             await new Promise(r => setTimeout(r, 1500));
             over.classList.remove('flash');
         }
-        map = Array.from({length: 64}, (_, i) => ({ type: 'E', hp: 0, maxHp: 0 }));
+        
+        map = Array.from({length: 64}, () => ({ type: 'E', hp: 0, maxHp: 0 }));
         let pool = ['B', ...Array(6).fill('H'), ...Array(6).fill('S'), ...Array(40).fill('M')].sort(() => Math.random() - 0.5);
         
         state.playerPos = Math.floor(Math.random() * 64);
@@ -103,7 +143,7 @@
             if (poolIdx < pool.length) {
                 cell.type = pool[poolIdx++];
                 if (cell.type === 'M' || cell.type === 'B') {
-                    cell.maxHp = cell.hp = (cell.type === 'M' ? 30 : 200) + (state.room * 20);
+                    cell.maxHp = cell.hp = (cell.type === 'M' ? 30 : 220) + (state.room * 25);
                 }
             }
         });
@@ -142,7 +182,6 @@
         const targetObj = map[target];
 
         if (targetObj.hp > 0) {
-            // 抓取精確座標
             const pRect = pCell.getBoundingClientRect();
             const tRect = tCell.getBoundingClientRect();
 
@@ -154,7 +193,6 @@
             pCell.style.opacity = '0';
 
             while (targetObj.hp > 0 && state.hp > 0) {
-                // 衝撞
                 const deltaX = (tRect.left - pRect.left) * 0.7;
                 const deltaY = (tRect.top - pRect.top) * 0.7;
                 fxToken.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
@@ -166,9 +204,8 @@
 
                 if (targetObj.hp <= 0) break;
 
-                // 回彈與怪物反擊
                 fxToken.style.transform = `translate(0,0)`;
-                let dmg = Math.max(2, Math.floor(targetObj.hp / 10));
+                let dmg = Math.max(2, Math.floor(targetObj.hp / 12));
                 state.hp -= dmg;
                 showDmg(fxToken, dmg);
                 updateUI();
@@ -192,7 +229,7 @@
             movePlayer(target);
         }
 
-        if (state.hp <= 0) { alert("冒險終結..."); location.reload(); }
+        if (state.hp <= 0) { alert("Game Over"); location.reload(); }
         fxToken.style.visibility = 'hidden';
         state.isActing = false;
         render();
@@ -229,6 +266,8 @@
         document.getElementById('pl-atk').innerText = state.atk;
         document.getElementById('room-num').innerText = state.room;
     }
+
+    initRoom();
 </script>
 </body>
 </html>
