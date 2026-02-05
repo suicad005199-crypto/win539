@@ -1,110 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <title>HTML5 魚機原型</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>躲避老闆大作戰</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #001a33; }
-        canvas { display: block; background: url('https://bit.ly/3QW6R9x') center/cover; }
+        body { margin: 0; overflow: hidden; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        canvas { background: #87CEEB; box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: crosshair; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
+
+<canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// 設定直式比例
+canvas.width = 360;
+canvas.height = 640;
 
-let score = 0;
-const fishes = [];
-const bullets = [];
+const player = { x: canvas.width / 2 - 15, y: canvas.height - 50, w: 30, h: 30, speed: 8, isFiring: false };
+const enemies = [];
+const enemyTypes = [
+    { name: '老闆', color: 'red', msg: '被抓去加班了！😵' },
+    { name: '同事', color: 'orange', msg: '被拉去開會了！Boring~' },
+    { name: '獎金', color: 'gold', msg: '拿到獎金，準時下班！🚀' }
+];
 
-// 1. 魚的類別
-class Fish {
-    constructor() {
-        this.x = -100;
-        this.y = Math.random() * (canvas.height - 100);
-        this.speed = Math.random() * 2 + 1;
-        this.radius = 30;
-    }
-    update() {
-        this.x += this.speed;
-    }
-    draw() {
-        ctx.fillStyle = 'orange';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-    }
+// 生成敵人
+function spawnEnemy() {
+    const side = Math.random() > 0.5 ? 'left' : 'right';
+    const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+    enemies.push({
+        x: side === 'left' ? -40 : canvas.width + 40,
+        y: Math.random() * (canvas.height - 150) + 50,
+        w: 40, h: 40,
+        speed: (Math.random() * 3 + 2) * (side === 'left' ? 1 : -1),
+        ...type
+    });
 }
 
-// 2. 砲彈類別
-class Bullet {
-    constructor(tx, ty) {
-        this.x = canvas.width / 2;
-        this.y = canvas.height - 20;
-        const angle = Math.atan2(ty - this.y, tx - this.x);
-        this.vx = Math.cos(angle) * 10;
-        this.vy = Math.sin(angle) * 10;
-        this.radius = 5;
+setInterval(spawnEnemy, 800);
+
+function update() {
+    // 玩家射擊邏輯
+    if (player.isFiring) {
+        player.y -= player.speed;
+        if (player.y < -30) resetPlayer();
     }
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-    }
-    draw() {
-        ctx.fillStyle = 'yellow';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-    }
+
+    // 敵人移動與碰撞
+    enemies.forEach((en, index) => {
+        en.x += en.speed;
+
+        // 碰撞檢查
+        if (player.isFiring && 
+            player.x < en.x + en.w && player.x + player.w > en.x &&
+            player.y < en.y + en.h && player.y + player.h > en.y) {
+            
+            alert(en.msg);
+            resetPlayer();
+            enemies.splice(index, 1);
+        }
+
+        // 移除出界敵人
+        if (en.x > canvas.width + 50 || en.x < -100) enemies.splice(index, 1);
+    });
 }
 
-// 點擊發射
-canvas.addEventListener('mousedown', (e) => {
-    bullets.push(new Bullet(e.clientX, e.clientY));
-});
-
-function gameLoop() {
+function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 處理魚群
-    if (Math.random() < 0.02) fishes.push(new Fish());
-    fishes.forEach((fish, fIdx) => {
-        fish.update();
-        fish.draw();
-        if (fish.x > canvas.width) fishes.splice(fIdx, 1);
+    // 畫玩家
+    ctx.fillStyle = '#00ff00';
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = '#000';
+    ctx.fillText("我", player.x + 10, player.y + 20);
+
+    // 畫敵人
+    enemies.forEach(en => {
+        ctx.fillStyle = en.color;
+        ctx.fillRect(en.x, en.y, en.w, en.h);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(en.name, en.x + 5, en.y + 25);
     });
-
-    // 處理砲彈與碰撞偵測
-    bullets.forEach((bullet, bIdx) => {
-        bullet.update();
-        bullet.draw();
-
-        fishes.forEach((fish, fIdx) => {
-            const dist = Math.hypot(bullet.x - fish.x, bullet.y - fish.y);
-            if (dist < fish.radius + bullet.radius) {
-                // 擊中魚
-                fishes.splice(fIdx, 1);
-                bullets.splice(bIdx, 1);
-                score += 10;
-            }
-        });
-
-        if (bullet.y < 0 || bullet.x < 0 || bullet.x > canvas.width) bullets.splice(bIdx, 1);
-    });
-
-    // 顯示分數
-    ctx.fillStyle = 'white';
-    ctx.font = '24px Arial';
-    ctx.fillText(`Score: ${score}`, 20, 40);
-
-    requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
+function resetPlayer() {
+    player.y = canvas.height - 50;
+    player.isFiring = false;
+}
+
+canvas.addEventListener('click', () => {
+    if (!player.isFiring) player.isFiring = true;
+});
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
 </script>
 </body>
 </html>
