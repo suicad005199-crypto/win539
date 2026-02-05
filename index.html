@@ -5,88 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root { --ios-red: #FF3B30; --ios-yellow: #FFCC00; --ios-blue: #007AFF; --ios-bg: #1c1c1e; }
-        body { margin: 0; background: var(--ios-bg); color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
         
-        /* 狀態列 */
-        #status-bar { width: 90vw; max-width: 400px; padding: 20px 0; display: flex; align-items: flex-start; gap: 12px; }
-        .avatar { width: 50px; height: 50px; background: #3a3a3c; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 1px solid #555; }
-        .info-panel { flex: 1; }
-        .bar-container { width: 100%; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-bottom: 6px; position: relative; }
-        .bar-fill { height: 100%; transition: width 0.2s; }
+        /* 故事與開始介面 */
+        #start-screen {
+            position: fixed; inset: 0; background: #000; z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; text-align: center; transition: opacity 0.8s;
+        }
+        .story-text { font-size: 1.1rem; line-height: 1.8; color: #ccc; margin-bottom: 40px; max-width: 300px; }
+        .start-btn { 
+            background: none; border: 2px solid var(--ios-blue); color: var(--ios-blue);
+            padding: 12px 40px; border-radius: 30px; font-size: 1.2rem; font-weight: bold;
+            box-shadow: 0 0 15px rgba(0,122,255,0.3); cursor: pointer;
+        }
+
+        /* 遊戲介面 (初始隱藏) */
+        #game-ui { opacity: 0; transition: opacity 1s; display: flex; flex-direction: column; align-items: center; }
+        
+        #status-bar { width: 90vw; max-width: 400px; padding: 20px 0; display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 50px; height: 50px; background: #3a3a3c; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .bar-container { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+        .bar-fill { height: 100%; transition: width 0.3s; }
         .hp-fill { background: var(--ios-red); }
         .exp-fill { background: var(--ios-yellow); }
 
-        /* 遊戲網格 */
+        /* 網格系統 */
         .grid-container { position: relative; padding: 6px; background: #2c2c2e; border-radius: 12px; }
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 400px; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 90vw; max-width: 380px; }
         .cell { aspect-ratio: 1; background: #444; border-radius: 4px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; }
         
-        /* 實體組件 */
-        .entity { font-size: 1.4rem; flex-grow: 1; display: flex; align-items: center; }
-        .mob-bar-bg { width: 80%; height: 3px; background: #000; margin-bottom: 4px; border-radius: 2px; }
-        .mob-bar-fill { height: 100%; background: var(--ios-red); transition: width 0.2s; }
-
-        /* 玩家懸浮方框 */
+        /* 玩家實體 */
         #player-token {
-            position: absolute; width: calc((95vw - 12px - 28px) / 8); height: calc((95vw - 12px - 28px) / 8);
-            max-width: 45.5px; max-height: 45.5px;
-            background: var(--ios-blue); border-radius: 4px; z-index: 100;
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none; box-shadow: 0 0 15px rgba(0,122,255,0.5);
+            position: absolute; width: calc((90vw - 12px - 28px) / 8); height: calc((90vw - 12px - 28px) / 8);
+            max-width: 43px; max-height: 43px; background: var(--ios-blue); border-radius: 4px; z-index: 100;
+            display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+            transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1); pointer-events: none;
         }
 
-        /* 傷害數值動畫 */
-        .dmg-popup {
-            position: absolute; color: var(--ios-red); font-weight: bold; font-size: 14px;
-            animation: floatUp 0.6s ease-out forwards; z-index: 200; pointer-events: none;
-        }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+        /* 怪物血條 */
+        .mob-bar-bg { width: 80%; height: 3px; background: #000; margin-bottom: 3px; border-radius: 2px; }
+        .mob-bar-fill { height: 100%; background: var(--ios-red); }
 
-        /* 震動效果 */
-        .shake { animation: shake 0.2s; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+        /* 動畫效果 */
+        .room-title { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 3rem; font-weight: 900; pointer-events: none; opacity: 0; z-index: 1500;
         }
+        .flash-text { animation: textAnim 1.5s forwards; }
+        @keyframes textAnim { 
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+        .dmg-popup { position: absolute; color: var(--ios-red); font-weight: bold; animation: floatUp 0.6s forwards; z-index: 200; }
+        @keyframes floatUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-30px); } }
     </style>
 </head>
 <body>
 
-<div id="status-bar">
-    <div class="avatar">👤</div>
-    <div class="info-panel">
-        <span style="font-weight:bold">LV <span id="pl-lv">1</span></span>
-        <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div></div>
-        <div class="bar-container"><div id="exp-bar" class="bar-fill exp-fill" style="width: 0%;"></div></div>
-        <div style="font-size:11px; color:var(--ios-yellow)">ATK: <span id="pl-atk">10</span></div>
+    <div id="start-screen">
+        <div class="story-text" id="story-box">
+            古老的鐘聲敲響，<br>
+            最後的光芒在裂谷中熄滅。<br>
+            你握緊殘破的劍柄，<br>
+            隻身踏入這座永夜的地牢...
+        </div>
+        <button class="start-btn" onclick="startGame()">ENTER DUNGEON</button>
     </div>
-</div>
 
-<div class="grid-container" id="main-container">
-    <div id="player-token">👤</div>
-    <div class="grid" id="grid"></div>
-</div>
+    <div id="game-ui">
+        <div id="status-bar">
+            <div class="avatar">👤</div>
+            <div class="info-panel" style="flex:1">
+                <div style="font-size:12px">LV <span id="pl-lv">1</span> | ATK: <span id="pl-atk">15</span></div>
+                <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill" style="width:100%"></div></div>
+                <div class="bar-container"><div id="exp-bar" class="bar-fill exp-fill" style="width:0%"></div></div>
+            </div>
+        </div>
 
-<div id="room-tag" style="margin-top:10px; color:#888">AREA <span id="room-num">1</span></div>
+        <div class="grid-container" id="map-wrap">
+            <div id="player-token">👤</div>
+            <div class="grid" id="grid"></div>
+        </div>
+        <div style="margin-top:15px; color:#666; font-size:12px">AREA <span id="room-num">1</span></div>
+    </div>
+
+    <div id="room-title" class="room-title"></div>
 
 <script>
-    let state = { hp: 100, maxHp: 100, exp: 0, nextExp: 100, atk: 10, lv: 1, room: 1, playerPos: 0, isActing: false };
+    let state = { hp: 100, maxHp: 100, exp: 0, nextExp: 100, atk: 15, lv: 1, room: 1, playerPos: 0, isActing: false };
     let map = [];
 
-    function initRoom() {
+    async function startGame() {
+        document.getElementById('start-screen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-ui').style.opacity = '1';
+            initRoom(true);
+        }, 800);
+    }
+
+    async function initRoom(showTitle = false) {
+        if (showTitle) {
+            const title = document.getElementById('room-title');
+            title.innerText = `ROOM ${state.room}`;
+            title.classList.add('flash-text');
+            await new Promise(r => setTimeout(r, 1500));
+            title.classList.remove('flash-text');
+        }
+
         map = [];
-        let pool = ['P', 'B', ...Array(6).fill('H'), ...Array(6).fill('S'), ...Array(50).fill('M')];
+        let pool = ['P', 'B', ...Array(5).fill('H'), ...Array(5).fill('S'), ...Array(52).fill('M')];
         pool.sort(() => Math.random() - 0.5);
         pool.forEach((type, i) => {
             let obj = { type, hp: 0, maxHp: 0 };
             if (type === 'M' || type === 'B') {
-                obj.maxHp = obj.hp = (type === 'M' ? 30 : 200) + (state.room * 10);
+                obj.maxHp = obj.hp = (type === 'M' ? 30 : 250) + (state.room * 20);
             }
             if (type === 'P') state.playerPos = i;
             map.push(obj);
         });
+        
         render();
         syncPlayerToken();
     }
@@ -98,19 +138,22 @@
             const div = document.createElement('div');
             div.className = 'cell';
             if (cell.type === 'M' || cell.type === 'B') {
-                div.innerHTML = `<div class="entity">${cell.type === 'M'?'👾':'👹'}</div>
+                div.innerHTML = `<div style="flex:1;display:flex;align-items:center;font-size:1.4rem">${cell.type === 'M'?'👾':'👹'}</div>
                                  <div class="mob-bar-bg"><div class="mob-bar-fill" style="width:${(cell.hp/cell.maxHp)*100}%"></div></div>`;
-            } else if (cell.type === 'H') div.innerHTML = '❤️';
-            else if (cell.type === 'S') div.innerHTML = '⚡';
+            } else if (cell.type === 'H') div.innerHTML = '<div style="flex:1;display:flex;align-items:center">❤️</div>';
+            else if (cell.type === 'S') div.innerHTML = '<div style="flex:1;display:flex;align-items:center">⚡</div>';
             div.onclick = () => handleAction(i);
             gridEl.appendChild(div);
         });
+        updateUI();
     }
 
     function syncPlayerToken() {
-        const targetCell = document.querySelectorAll('.cell')[state.playerPos];
+        const cells = document.querySelectorAll('.cell');
+        if (!cells[state.playerPos]) return;
+        const target = cells[state.playerPos];
         const token = document.getElementById('player-token');
-        token.style.transform = `translate(${targetCell.offsetLeft}px, ${targetCell.offsetTop}px)`;
+        token.style.transform = `translate(${target.offsetLeft}px, ${target.offsetTop}px)`;
     }
 
     async function handleAction(target) {
@@ -118,40 +161,37 @@
         state.isActing = true;
         const targetObj = map[target];
         const token = document.getElementById('player-token');
+        const targetCell = document.querySelectorAll('.cell')[target];
 
         if (targetObj.hp > 0) {
-            const targetCell = document.querySelectorAll('.cell')[target];
-            // 戰鬥循環
             while (targetObj.hp > 0 && state.hp > 0) {
-                // 玩家衝擊
+                // 玩家攻擊
                 token.style.transform = `translate(${targetCell.offsetLeft}px, ${targetCell.offsetTop}px) scale(1.1)`;
                 targetObj.hp -= state.atk;
                 showDmg(targetCell, state.atk);
-                targetCell.classList.add('shake');
-                
-                await new Promise(r => setTimeout(r, 200));
-                targetCell.classList.remove('shake');
+                await new Promise(r => setTimeout(r, 150));
                 render();
 
                 if (targetObj.hp <= 0) break;
 
                 // 怪物反擊
-                token.style.transform = `translate(${token.offsetLeft}px, ${token.offsetTop}px)`; // 彈回
-                const mobDmg = Math.max(2, Math.floor(targetObj.hp / 8));
-                state.hp -= mobDmg;
-                showDmg(token, mobDmg);
-                token.classList.add('shake');
+                token.style.transform = `translate(${token.offsetLeft}px, ${token.offsetTop}px)`;
+                let dmg = Math.max(2, Math.floor(targetObj.hp/10));
+                state.hp -= dmg;
+                showDmg(token, dmg);
                 updateUI();
-                
-                await new Promise(r => setTimeout(r, 200));
-                token.classList.remove('shake');
+                await new Promise(r => setTimeout(r, 150));
             }
 
             if (state.hp > 0) {
                 state.exp += (targetObj.type === 'B' ? 100 : 40);
                 if (state.exp >= state.nextExp) levelUp();
-                if (targetObj.type === 'B') { alert("Next Floor"); state.room++; initRoom(); }
-                else { movePlayer(target); }
+                if (targetObj.type === 'B') {
+                    state.room++;
+                    await initRoom(true);
+                } else {
+                    movePlayer(target);
+                }
             }
         } else {
             if (targetObj.type === 'H') state.hp = Math.min(state.maxHp, state.hp+30);
@@ -159,20 +199,18 @@
             movePlayer(target);
         }
 
-        if (state.hp <= 0) { alert("Game Over"); location.reload(); }
+        if (state.hp <= 0) { alert("你已力竭，倒在陰影之中..."); location.reload(); }
         state.isActing = false;
-        render();
         syncPlayerToken();
+        render();
     }
 
     function showDmg(el, val) {
-        const popup = document.createElement('div');
-        popup.className = 'dmg-popup';
-        popup.innerText = `-${val}`;
-        popup.style.left = `20px`;
-        popup.style.top = `0px`;
-        el.appendChild(popup);
-        setTimeout(() => popup.remove(), 600);
+        const d = document.createElement('div');
+        d.className = 'dmg-popup';
+        d.innerText = `-${val}`;
+        el.appendChild(d);
+        setTimeout(() => d.remove(), 600);
     }
 
     function movePlayer(t) {
@@ -182,8 +220,7 @@
     }
 
     function levelUp() {
-        state.lv++; state.exp = 0; state.nextExp += 50;
-        state.atk += 5; state.maxHp += 20;
+        state.lv++; state.exp = 0; state.nextExp += 50; state.atk += 5; state.maxHp += 20;
     }
 
     function getDist(p1, p2) {
@@ -198,7 +235,6 @@
         document.getElementById('room-num').innerText = state.room;
     }
 
-    initRoom();
     window.onresize = syncPlayerToken;
 </script>
 </body>
