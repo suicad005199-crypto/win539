@@ -3,84 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>社畜脫逃日記：30天離職挑戰</title>
+    <title>極限離職挑戰 30 DAY</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'PingFang TC', sans-serif; touch-action: manipulation; }
-        canvas { background: #87CEEB; border-radius: 8px; }
-        #ui { position: absolute; top: 20px; width: 320px; display: flex; justify-content: space-between; color: white; text-shadow: 1px 1px 2px #000; pointer-events: none; }
-        #msg-box { position: absolute; top: 40%; width: 80%; background: rgba(0,0,0,0.8); color: #fff; padding: 20px; border-radius: 15px; text-align: center; display: none; font-size: 1.2rem; border: 2px solid gold; }
+        body { margin: 0; overflow: hidden; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        canvas { background: #2c3e50; border: 2px solid #34495e; }
+        #ui { position: absolute; top: 15px; color: #ecf0f1; font-weight: bold; pointer-events: none; width: 340px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
-
 <div id="ui">
-    <div>DAY <span id="day">1</span>/30</div>
-    <div>進度 <span id="progress">0</span>/2</div>
+    <span>DAY <span id="dayNum">1</span></span>
+    <span>PROGRESS <span id="prog">0</span>/2</span>
 </div>
-<div id="msg-box"></div>
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const msgBox = document.getElementById('msg-box');
-
 canvas.width = 360;
 canvas.height = 640;
 
+// --- 精確速度配置 (px/s) ---
+const PLAYER_SPD = 800; 
+const ENEMY_TYPES = [
+    { name: '慢速老闆', color: '#e74c3c', spd: 1000, size: 50 },
+    { name: '中速同事', color: '#e67e22', spd: 1500, size: 40 },
+    { name: '快速客戶', color: '#f1c40f', spd: 2300, size: 30 }
+];
+
 let day = 1;
 let progress = 0;
-const reqProgress = 2; // 每關成功穿越 2 次進下一天
-let isPaused = false;
-let gameSpeed = 1;
+let player = { x: 165, y: 580, w: 30, h: 30, isFiring: false };
+let enemies = [];
+let lastTime = performance.now();
 
-const player = { x: 165, y: 580, w: 30, h: 30, speed: 12, isFiring: false };
-const enemies = [];
-const quotes = ["加班是常態", "老闆在背後很火", "客戶又改稿了", "沒錢就認命", "我想回家", "捷運好擠"];
-
-function spawnEnemy() {
-    if (isPaused) return;
-    const side = Math.random() > 0.5 ? 'left' : 'right';
-    const isSpecial = Math.random() > 0.85; // 15% 機率出現獎勵
+function spawn() {
+    if (document.hidden) return;
+    const type = ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
+    const side = Math.random() > 0.5 ? 1 : -1;
     enemies.push({
-        x: side === 'left' ? -50 : canvas.width + 50,
-        y: 80 + Math.random() * 400,
-        w: isSpecial ? 35 : 50,
-        h: 40,
-        speed: (2 + Math.random() * 3 + (day * 0.1)) * (side === 'left' ? 1 : -1),
-        type: isSpecial ? 'BONUS' : 'BOSS',
-        text: isSpecial ? '💰 獎金' : '🏢 老闆'
+        x: side === 1 ? -100 : canvas.width + 100,
+        y: 100 + Math.random() * 350,
+        w: type.size, h: type.size,
+        vx: type.spd * side,
+        ...type
     });
 }
-setInterval(spawnEnemy, 600);
+// 因為敵人極快，生成頻率稍微放慢一點，避免畫面死局
+setInterval(spawn, 400);
 
-function showPopup(text, duration) {
-    isPaused = true;
-    msgBox.innerText = text;
-    msgBox.style.display = 'block';
-    setTimeout(() => {
-        msgBox.style.display = 'none';
-        isPaused = false;
-        if (progress >= reqProgress) nextDay();
-    }, duration);
-}
-
-function nextDay() {
-    day++;
-    progress = 0;
-    if (day > 30) {
-        alert("恭喜！你成功離職了！獲得自由！");
-        day = 1;
+function update(dt) {
+    if (player.isFiring) {
+        player.y -= PLAYER_SPD * dt;
+        if (player.y < 20) {
+            progress++;
+            if (progress >= 2) {
+                day++;
+                progress = 0;
+                if(day > 30) alert("你自由了！徹底離職！");
+            }
+            resetPlayer();
+        }
     }
-    updateUI();
-    // 背景顏色隨關卡變換 (早中晚循環)
-    const hue = 200 - (day * 5 % 100);
-    canvas.style.background = `hsl(${hue}, 50%, 60%)`;
-}
 
-function updateUI() {
-    document.getElementById('day').innerText = day;
-    document.getElementById('progress').innerText = progress;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        let en = enemies[i];
+        en.x += en.vx * dt;
+
+        // 碰撞
+        if (player.isFiring &&
+            player.x < en.x + en.w && player.x + player.w > en.x &&
+            player.y < en.y + en.h && player.y + player.h > en.y) {
+            resetPlayer();
+        }
+        // 出界判定 (範圍加大，因為敵人速度極快)
+        if (en.x < -200 || en.x > canvas.width + 200) enemies.splice(i, 1);
+    }
+    
+    document.getElementById('dayNum').innerText = day;
+    document.getElementById('prog').innerText = progress;
 }
 
 function resetPlayer() {
@@ -88,73 +89,38 @@ function resetPlayer() {
     player.isFiring = false;
 }
 
-function update() {
-    if (isPaused) return;
-
-    if (player.isFiring) {
-        player.y -= player.speed;
-        if (player.y < 20) {
-            progress++;
-            updateUI();
-            if (progress >= reqProgress) {
-                showPopup(`第 ${day} 天平安下班！\n「${quotes[day % quotes.length]}」`, 1500);
-            } else {
-                resetPlayer();
-            }
-        }
-    }
-
-    enemies.forEach((en, i) => {
-        en.x += en.speed;
-        // 碰撞偵測
-        if (player.isFiring && player.x < en.x + en.w && player.x + player.w > en.x &&
-            player.y < en.y + en.h && player.y + player.h > en.y) {
-            
-            if (en.type === 'BOSS') {
-                showPopup("慘！被抓去加班了！", 1000);
-            } else {
-                progress = Math.min(reqProgress, progress + 1);
-                updateUI();
-            }
-            resetPlayer();
-            enemies.splice(i, 1);
-        }
-        if (en.x < -100 || en.x > 500) enemies.splice(i, 1);
-    });
-}
-
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // 終點線
-    ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = "white";
-    ctx.strokeRect(10, 10, 340, 40);
     
-    // 玩家 (角色)
-    ctx.fillStyle = "#FFD700";
-    ctx.fillRect(player.x, player.y, player.w, player.h);
-    ctx.fillStyle = "#000";
-    ctx.font = "12px Arial";
-    ctx.fillText("me", player.x + 8, player.y + 20);
+    // 終點光帶
+    ctx.fillStyle = "rgba(46, 204, 113, 0.2)";
+    ctx.fillRect(0, 0, canvas.width, 40);
 
     // 敵人
     enemies.forEach(en => {
-        ctx.fillStyle = en.type === 'BOSS' ? "#ff4d4d" : "#00ff88";
+        ctx.fillStyle = en.color;
         ctx.fillRect(en.x, en.y, en.w, en.h);
-        ctx.fillStyle = "white";
-        ctx.font = "14px Arial";
-        ctx.fillText(en.text, en.x + 2, en.y + 25);
+        // 速度極快時畫影子增加動感
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.fillRect(en.x - (en.vx*0.01), en.y, en.w, en.h);
     });
+
+    // 玩家
+    ctx.fillStyle = "#2ecc71";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
 }
 
-canvas.addEventListener('mousedown', () => { if(!isPaused) player.isFiring = true; });
-canvas.addEventListener('touchstart', (e) => { 
-    e.preventDefault();
-    if(!isPaused) player.isFiring = true; 
-}, {passive: false});
+function loop(t) {
+    let dt = (t - lastTime) / 1000;
+    lastTime = t;
+    update(dt > 0.1 ? 0 : dt);
+    draw();
+    requestAnimationFrame(loop);
+}
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
-loop();
+canvas.addEventListener('mousedown', () => player.isFiring = true);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); player.isFiring = true; });
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
