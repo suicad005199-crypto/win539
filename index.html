@@ -1,273 +1,110 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HTML5 魚機原型</title>
     <style>
-        :root { --ios-red: #FF3B30; --ios-yellow: #FFCC00; --ios-blue: #007AFF; --ios-bg: #000; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        
-        body { 
-            background: var(--ios-bg); 
-            color: white; 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; /* 垂直置中 */
-            min-height: 100dvh; /* 適應 iOS 底部動態列 */
-            overflow: hidden;
-        }
-
-        /* 狀態列 */
-        #status-bar { 
-            width: 92vw; 
-            max-width: 420px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            margin-bottom: 20px;
-        }
-        .avatar { width: 48px; height: 48px; background: #2c2c2e; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid #444; }
-        .info-panel { flex: 1; }
-        .bar-container { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 6px; }
-        .bar-fill { height: 100%; transition: width 0.3s; }
-        .hp-fill { background: var(--ios-red); }
-        .exp-fill { background: var(--ios-yellow); }
-
-        /* 遊戲網格：確保置中且不位移 */
-        .grid-container { 
-            position: relative; 
-            width: 92vw; 
-            max-width: 420px; 
-            background: #1c1c1e; 
-            padding: 6px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(8, 1fr); 
-            gap: 4px; 
-            width: 100%;
-        }
-        .cell { 
-            aspect-ratio: 1; 
-            background: #333; 
-            border-radius: 4px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            position: relative; 
-            font-size: 1.2rem;
-        }
-
-        /* 懸浮 Token */
-        #player-fx-token {
-            position: fixed; 
-            z-index: 1000; 
-            background: var(--ios-blue); 
-            border-radius: 4px;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 1.4rem;
-            pointer-events: none; 
-            visibility: hidden; 
-            transition: transform 0.15s ease-out;
-            box-shadow: 0 0 15px rgba(0,122,255,0.6);
-        }
-
-        /* 怪物血條 */
-        .mob-bar-bg { width: 80%; height: 3px; background: #000; position: absolute; bottom: 4px; border-radius: 2px; }
-        .mob-bar-fill { height: 100%; background: var(--ios-red); transition: width 0.2s; }
-
-        .dmg-popup {
-            position: absolute; font-weight: 900; font-size: 14px; color: var(--ios-red);
-            text-shadow: 0 0 4px #000; animation: floatUp 0.6s forwards; z-index: 1100;
-        }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px); } }
-
-        /* 過場 */
-        #room-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; opacity: 0; pointer-events: none; z-index: 1500; background: rgba(0,0,0,0.4); }
-        .flash { animation: textFlash 1.5s forwards; }
-        @keyframes textFlash { 0% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
-
-        /* 隱藏原生捲軸 */
-        ::-webkit-scrollbar { display: none; }
+        body { margin: 0; overflow: hidden; background: #001a33; }
+        canvas { display: block; background: url('https://bit.ly/3QW6R9x') center/cover; }
     </style>
 </head>
 <body>
-
-    <div id="status-bar">
-        <div class="avatar">👤</div>
-        <div class="info-panel">
-            <div style="font-size:12px; font-weight:bold; letter-spacing:1px">LV <span id="pl-lv">1</span> | ATK <span id="pl-atk">15</span></div>
-            <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill" style="width:100%"></div></div>
-            <div class="bar-container"><div id="exp-bar" class="bar-fill exp-fill" style="width:0%"></div></div>
-        </div>
-    </div>
-
-    <div class="grid-container">
-        <div id="player-fx-token">👤</div>
-        <div class="grid" id="grid"></div>
-    </div>
-
-    <div style="margin-top:20px; color:#444; font-size:11px; font-weight:bold">AREA <span id="room-num">1</span></div>
-
-    <div id="room-overlay"></div>
+    <canvas id="gameCanvas"></canvas>
 
 <script>
-    let state = { hp: 100, maxHp: 100, exp: 0, nextExp: 100, atk: 15, lv: 1, room: 1, playerPos: 0, isActing: false };
-    let map = [];
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    async function initRoom(anim = false) {
-        if (anim) {
-            const over = document.getElementById('room-overlay');
-            over.innerText = `ROOM ${state.room}`;
-            over.classList.add('flash');
-            await new Promise(r => setTimeout(r, 1500));
-            over.classList.remove('flash');
-        }
-        
-        map = Array.from({length: 64}, () => ({ type: 'E', hp: 0, maxHp: 0 }));
-        let pool = ['B', ...Array(6).fill('H'), ...Array(6).fill('S'), ...Array(40).fill('M')].sort(() => Math.random() - 0.5);
-        
-        state.playerPos = Math.floor(Math.random() * 64);
-        map[state.playerPos].type = 'P';
-        
-        let poolIdx = 0;
-        map.forEach((cell, i) => {
-            if (i === state.playerPos) return;
-            if (poolIdx < pool.length) {
-                cell.type = pool[poolIdx++];
-                if (cell.type === 'M' || cell.type === 'B') {
-                    cell.maxHp = cell.hp = (cell.type === 'M' ? 30 : 220) + (state.room * 25);
-                }
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let score = 0;
+const fishes = [];
+const bullets = [];
+
+// 1. 魚的類別
+class Fish {
+    constructor() {
+        this.x = -100;
+        this.y = Math.random() * (canvas.height - 100);
+        this.speed = Math.random() * 2 + 1;
+        this.radius = 30;
+    }
+    update() {
+        this.x += this.speed;
+    }
+    draw() {
+        ctx.fillStyle = 'orange';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// 2. 砲彈類別
+class Bullet {
+    constructor(tx, ty) {
+        this.x = canvas.width / 2;
+        this.y = canvas.height - 20;
+        const angle = Math.atan2(ty - this.y, tx - this.x);
+        this.vx = Math.cos(angle) * 10;
+        this.vy = Math.sin(angle) * 10;
+        this.radius = 5;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+    }
+    draw() {
+        ctx.fillStyle = 'yellow';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// 點擊發射
+canvas.addEventListener('mousedown', (e) => {
+    bullets.push(new Bullet(e.clientX, e.clientY));
+});
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 處理魚群
+    if (Math.random() < 0.02) fishes.push(new Fish());
+    fishes.forEach((fish, fIdx) => {
+        fish.update();
+        fish.draw();
+        if (fish.x > canvas.width) fishes.splice(fIdx, 1);
+    });
+
+    // 處理砲彈與碰撞偵測
+    bullets.forEach((bullet, bIdx) => {
+        bullet.update();
+        bullet.draw();
+
+        fishes.forEach((fish, fIdx) => {
+            const dist = Math.hypot(bullet.x - fish.x, bullet.y - fish.y);
+            if (dist < fish.radius + bullet.radius) {
+                // 擊中魚
+                fishes.splice(fIdx, 1);
+                bullets.splice(bIdx, 1);
+                score += 10;
             }
         });
-        render();
-    }
 
-    function render() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        map.forEach((cell, i) => {
-            const div = document.createElement('div');
-            div.className = 'cell';
-            if (i === state.playerPos) {
-                div.innerText = '👤';
-                div.style.background = 'var(--ios-blue)';
-            } else if (cell.type === 'M' || cell.type === 'B') {
-                div.innerHTML = `<span>${cell.type === 'M'?'👾':'👹'}</span>
-                                 <div class="mob-bar-bg"><div class="mob-bar-fill" style="width:${(cell.hp/cell.maxHp)*100}%"></div></div>`;
-            } else if (cell.type === 'H') div.innerText = '❤️';
-            else if (cell.type === 'S') div.innerText = '⚡';
-            
-            div.onclick = () => handleAction(i);
-            grid.appendChild(div);
-        });
-        updateUI();
-    }
+        if (bullet.y < 0 || bullet.x < 0 || bullet.x > canvas.width) bullets.splice(bIdx, 1);
+    });
 
-    async function handleAction(target) {
-        if (state.isActing || getDist(state.playerPos, target) !== 1) return;
-        state.isActing = true;
+    // 顯示分數
+    ctx.fillStyle = 'white';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Score: ${score}`, 20, 40);
 
-        const cells = document.querySelectorAll('.cell');
-        const pCell = cells[state.playerPos];
-        const tCell = cells[target];
-        const fxToken = document.getElementById('player-fx-token');
-        const targetObj = map[target];
+    requestAnimationFrame(gameLoop);
+}
 
-        if (targetObj.hp > 0) {
-            const pRect = pCell.getBoundingClientRect();
-            const tRect = tCell.getBoundingClientRect();
-
-            fxToken.style.width = pRect.width + 'px';
-            fxToken.style.height = pRect.height + 'px';
-            fxToken.style.left = pRect.left + 'px';
-            fxToken.style.top = pRect.top + 'px';
-            fxToken.style.visibility = 'visible';
-            pCell.style.opacity = '0';
-
-            while (targetObj.hp > 0 && state.hp > 0) {
-                const deltaX = (tRect.left - pRect.left) * 0.7;
-                const deltaY = (tRect.top - pRect.top) * 0.7;
-                fxToken.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                
-                targetObj.hp -= state.atk;
-                showDmg(tCell, state.atk);
-                await new Promise(r => setTimeout(r, 150));
-                render();
-
-                if (targetObj.hp <= 0) break;
-
-                fxToken.style.transform = `translate(0,0)`;
-                let dmg = Math.max(2, Math.floor(targetObj.hp / 12));
-                state.hp -= dmg;
-                showDmg(fxToken, dmg);
-                updateUI();
-                await new Promise(r => setTimeout(r, 150));
-            }
-
-            if (state.hp > 0) {
-                state.exp += (targetObj.type === 'B' ? 100 : 40);
-                if (state.exp >= state.nextExp) levelUp();
-                if (targetObj.type === 'B') {
-                    state.room++;
-                    fxToken.style.visibility = 'hidden';
-                    await initRoom(true);
-                } else {
-                    movePlayer(target);
-                }
-            }
-        } else {
-            if (targetObj.type === 'H') state.hp = Math.min(state.maxHp, state.hp + 30);
-            if (targetObj.type === 'S') state.atk += 4;
-            movePlayer(target);
-        }
-
-        if (state.hp <= 0) { alert("Game Over"); location.reload(); }
-        fxToken.style.visibility = 'hidden';
-        state.isActing = false;
-        render();
-    }
-
-    function showDmg(el, val) {
-        const d = document.createElement('div');
-        d.className = 'dmg-popup';
-        d.innerText = `-${val}`;
-        d.style.left = '50%';
-        d.style.transform = 'translateX(-50%)';
-        el.appendChild(d);
-        setTimeout(() => d.remove(), 600);
-    }
-
-    function movePlayer(t) {
-        map[state.playerPos] = { type: 'E' };
-        state.playerPos = t;
-        map[state.playerPos] = { type: 'P' };
-    }
-
-    function levelUp() {
-        state.lv++; state.exp = 0; state.nextExp += 50; state.atk += 6; state.maxHp += 20;
-    }
-
-    function getDist(p1, p2) {
-        return Math.abs(p1 % 8 - p2 % 8) + Math.abs(Math.floor(p1 / 8) - Math.floor(p2 / 8));
-    }
-
-    function updateUI() {
-        document.getElementById('hp-bar').style.width = `${(state.hp/state.maxHp)*100}%`;
-        document.getElementById('exp-bar').style.width = `${(state.exp/state.nextExp)*100}%`;
-        document.getElementById('pl-lv').innerText = state.lv;
-        document.getElementById('pl-atk').innerText = state.atk;
-        document.getElementById('room-num').innerText = state.room;
-    }
-
-    initRoom();
+gameLoop();
 </script>
 </body>
 </html>
