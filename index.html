@@ -4,89 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        :root { --ios-blue: #007AFF; --ios-red: #FF3B30; --ios-green: #4CD964; --ios-gold: #FFD700; }
-        body { margin: 0; background: #1c1c1e; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 10px; overflow: hidden; }
+        :root { --ios-red: #FF3B30; --ios-yellow: #FFCC00; --ios-blue: #007AFF; --ios-bg: #1c1c1e; }
+        body { margin: 0; background: var(--ios-bg); color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; touch-action: manipulation; }
         
-        /* 狀態欄 */
-        #header { width: 90vw; max-width: 400px; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
-        .hp-bar-bg { width: 120px; height: 10px; background: #3a3a3c; border-radius: 5px; overflow: hidden; }
-        #hp-fill { width: 100%; height: 100%; background: var(--ios-green); transition: width 0.3s; }
+        /* 狀態列 */
+        #status-bar { width: 90vw; max-width: 400px; padding: 20px 0; display: flex; align-items: flex-start; gap: 12px; }
+        .avatar { width: 50px; height: 50px; background: #3a3a3c; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 1px solid #555; }
+        .info-panel { flex: 1; }
+        .lv-txt { font-weight: bold; font-size: 14px; margin-bottom: 4px; display: block; }
         
-        /* 網格 */
+        /* 進度條系統 */
+        .bar-container { width: 100%; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-bottom: 6px; position: relative; border: 1px solid #444; }
+        .bar-fill { height: 100%; transition: width 0.2s; }
+        .hp-fill { background: var(--ios-red); }
+        .exp-fill { background: var(--ios-yellow); }
+        .bar-label { position: absolute; font-size: 8px; top: 50%; left: 4px; transform: translateY(-50%); font-weight: bold; text-shadow: 1px 1px 2px black; }
+
+        /* 8x8 網格 */
         .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 400px; background: #2c2c2e; padding: 6px; border-radius: 12px; position: relative; }
-        .cell { aspect-ratio: 1; background: #444; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1.2rem; transition: transform 0.1s; position: relative; }
-        .player { background: var(--ios-blue) !important; z-index: 10; font-size: 1.5rem; }
-        .mob-hp { font-size: 8px; color: #ff9999; margin-top: 2px; font-weight: bold; }
+        .cell { aspect-ratio: 1; background: #444; border-radius: 4px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; overflow: hidden; }
+        .entity { font-size: 1.4rem; margin-bottom: 4px; flex-grow: 1; display: flex; align-items: center; }
+        .player { background: var(--ios-blue) !important; z-index: 10; box-shadow: 0 0 10px var(--ios-blue); transition: transform 0.1s; }
+        
+        /* 怪物方格血條 */
+        .mob-bar-bg { width: 85%; height: 4px; background: #000; margin-bottom: 4px; border-radius: 2px; overflow: hidden; }
+        .mob-bar-fill { height: 100%; background: var(--ios-red); width: 100%; }
         
         /* 碰撞動畫 */
-        .bump { transform: scale(1.2); z-index: 11; }
+        @keyframes bump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2) translate(0, -2px); }
+            100% { transform: scale(1); }
+        }
+        .bumping { animation: bump 0.15s infinite; }
         
-        /* Slot */
-        #slot-area { margin-top: 15px; text-align: center; }
-        .slot-box { display: inline-flex; gap: 5px; background: #000; padding: 8px; border-radius: 8px; border: 1px solid var(--ios-gold); margin-bottom: 5px; }
-        .s-item { width: 40px; height: 40px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .spin-btn { background: var(--ios-gold); border: none; padding: 8px 20px; border-radius: 15px; font-weight: bold; opacity: 0.3; }
-        .active { opacity: 1; }
+        #room-tag { margin-top: 15px; font-size: 12px; color: #888; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-<div id="header">
-    <div>
-        <div style="font-size: 12px;">ROOM <span id="room-lv">1</span></div>
-        <div style="font-size: 14px; font-weight: bold;">HP <span id="hp-txt">100</span></div>
-        <div class="hp-bar-bg"><div id="hp-fill"></div></div>
-    </div>
-    <div style="text-align: right;">
-        <span style="color:var(--ios-gold)">ATK: <span id="atk">10</span></span><br>
-        <span style="font-size: 12px;">LV: <span id="pl-lv">1</span></span>
+<div id="status-bar">
+    <div class="avatar">👤</div>
+    <div class="info-panel">
+        <span class="lv-txt">LV <span id="pl-lv">1</span></span>
+        <div class="bar-container">
+            <div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div>
+            <span class="bar-label">HP</span>
+        </div>
+        <div class="bar-container">
+            <div id="exp-bar" class="bar-fill exp-fill" style="width: 0%;"></div>
+            <span class="bar-label">EXP</span>
+        </div>
+        <div style="font-size: 11px; color: var(--ios-yellow); font-weight: bold;">ATK: <span id="pl-atk">10</span></div>
     </div>
 </div>
 
 <div class="grid" id="grid"></div>
-
-<div id="slot-area">
-    <div class="slot-box" id="slots">
-        <div class="s-item">❓</div><div class="s-item">❓</div><div class="s-item">❓</div>
-    </div><br>
-    <button id="spin-btn" class="spin-btn" onclick="runSpin()">SPIN (<span id="spins">0</span>)</button>
-</div>
+<div id="room-tag">AREA <span id="room-num">1</span></div>
 
 <script>
-    let state = { hp: 100, maxHp: 100, atk: 10, lv: 1, room: 1, spins: 0, playerPos: 0 };
+    let state = { 
+        hp: 100, maxHp: 100, exp: 0, nextExp: 100, 
+        atk: 10, lv: 1, room: 1, playerPos: 0, isActing: false 
+    };
     let map = [];
-    const gridEl = document.getElementById('grid');
 
     function initRoom() {
         map = [];
-        // 生成地圖資料：1P, 1Boss, 5Heal, 5Buff, 其餘怪
-        let pool = ['P', 'B', ...Array(5).fill('H'), ...Array(5).fill('S'), ...Array(52).fill('M')];
-        pool = pool.sort(() => Math.random() - 0.5);
+        let pool = ['P', 'B', ...Array(6).fill('H'), ...Array(6).fill('S'), ...Array(50).fill('M')];
+        pool.sort(() => Math.random() - 0.5);
         
         pool.forEach((type, i) => {
-            let obj = { type, hp: 0 };
-            if (type === 'M') obj.hp = 15 + (state.room * 5);
-            if (type === 'B') obj.hp = 100 + (state.room * 20);
-            if (type === 'P') state.playerPos = i;
+            let obj = { type, hp: 0, maxHp: 0 };
+            if (type === 'M') { 
+                obj.maxHp = obj.hp = 20 + (state.room * 10); 
+            } else if (type === 'B') { 
+                obj.maxHp = obj.hp = 150 + (state.room * 50); 
+            } else if (type === 'P') { 
+                state.playerPos = i; 
+            }
             map.push(obj);
         });
         render();
     }
 
     function render() {
+        const gridEl = document.getElementById('grid');
         gridEl.innerHTML = '';
         map.forEach((cell, i) => {
             const div = document.createElement('div');
-            const dist = getDist(state.playerPos, i);
             div.className = `cell ${i === state.playerPos ? 'player' : ''}`;
             
-            if (i === state.playerPos) div.innerHTML = '👤';
-            else if (cell.type === 'M') div.innerHTML = `👾<div class="mob-hp">${cell.hp}</div>`;
-            else if (cell.type === 'B') div.innerHTML = `👹<div class="mob-hp">BOSS:${cell.hp}</div>`;
-            else if (cell.type === 'H') div.innerHTML = '❤️';
-            else if (cell.type === 'S') div.innerHTML = '⚡';
-            else if (cell.type === 'E') div.innerHTML = '';
-
+            let content = '';
+            if (i === state.playerPos) {
+                content = '<div class="entity">👤</div>';
+            } else if (cell.type === 'M' || cell.type === 'B') {
+                const icon = cell.type === 'M' ? '👾' : '👹';
+                const hpPercent = (cell.hp / cell.maxHp) * 100;
+                content = `
+                    <div class="entity">${icon}</div>
+                    <div class="mob-bar-bg"><div class="mob-bar-fill" style="width:${hpPercent}%"></div></div>
+                `;
+            } else if (cell.type === 'H') content = '<div class="entity">❤️</div>';
+            else if (cell.type === 'S') content = '<div class="entity">⚡</div>';
+            
+            div.innerHTML = content;
             div.onclick = () => handleAction(i);
             gridEl.appendChild(div);
         });
@@ -94,47 +116,65 @@
     }
 
     async function handleAction(target) {
-        if (getDist(state.playerPos, target) !== 1) return;
+        if (state.isActing || getDist(state.playerPos, target) !== 1) return;
+        state.isActing = true;
         
         const targetObj = map[target];
-        const playerDiv = gridEl.children[state.playerPos];
-
-        // 碰撞動畫
-        playerDiv.classList.add('bump');
-        await new Promise(r => setTimeout(r, 100));
-        playerDiv.classList.remove('bump');
+        const playerDiv = document.querySelectorAll('.cell')[state.playerPos];
 
         if (targetObj.type === 'M' || targetObj.type === 'B') {
-            // 戰鬥邏輯
-            targetObj.hp -= state.atk;
-            state.hp -= Math.floor(targetObj.hp / 5); // 怪物反擊傷害基於剩餘血量
+            // 進入戰鬥循環
+            playerDiv.classList.add('bumping');
+            
+            while(targetObj.hp > 0 && state.hp > 0) {
+                targetObj.hp -= state.atk;
+                state.hp -= Math.max(1, Math.floor(targetObj.hp / 10)); // 反擊傷害
+                
+                render(); // 更新怪物血條與玩家狀態
+                updateUI();
+                
+                if (state.hp <= 0) break;
+                await new Promise(r => setTimeout(r, 200)); // 碰撞間隔
+            }
+            
+            playerDiv.classList.remove('bumping');
 
-            if (targetObj.hp <= 0) {
+            if (state.hp > 0) {
+                state.exp += (targetObj.type === 'B' ? 100 : 40);
+                if (state.exp >= state.nextExp) levelUp();
                 if (targetObj.type === 'B') {
-                    alert(`恭喜通過 Room ${state.room}！進入下一層。`);
+                    alert("區域清理完成，前往下一層。");
                     state.room++;
                     initRoom();
-                    return;
+                } else {
+                    movePlayer(target);
                 }
-                if (Math.random() < 0.3) state.spins++;
-                state.lv++;
-                movePlayer(target);
             }
         } else if (targetObj.type === 'H') {
-            state.hp = Math.min(state.maxHp, state.hp + 20);
+            state.hp = Math.min(state.maxHp, state.hp + 30);
             movePlayer(target);
         } else if (targetObj.type === 'S') {
-            state.atk += 5;
+            state.atk += 3;
             movePlayer(target);
         } else {
             movePlayer(target);
         }
 
         if (state.hp <= 0) {
-            alert("你已陣亡！地圖重置。");
+            alert("你倒下了。冒險結束。");
             location.reload();
         }
+        
+        state.isActing = false;
         render();
+    }
+
+    function levelUp() {
+        state.lv++;
+        state.exp = 0;
+        state.nextExp += 50;
+        state.atk += 5;
+        state.maxHp += 20;
     }
 
     function movePlayer(target) {
@@ -149,34 +189,12 @@
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 
-    function runSpin() {
-        if (state.spins <= 0) return;
-        state.spins--;
-        const items = ['🍎','⚔️','💣'];
-        const res = [items[Math.floor(Math.random()*3)], items[Math.floor(Math.random()*3)], items[Math.floor(Math.random()*3)]];
-        
-        const boxes = document.querySelectorAll('.s-item');
-        res.forEach((symbol, i) => boxes[i].innerText = symbol);
-
-        if (res[0] === res[1] && res[1] === res[2]) {
-            if (res[0] === '🍎') { state.maxHp += 30; state.hp = state.maxHp; alert("大獎：HP上限提升並補滿！"); }
-            if (res[0] === '⚔️') { state.atk += 15; alert("大獎：ATK大幅提升！"); }
-            if (res[0] === '💣') { 
-                map.forEach(c => { if(c.type === 'M') c.hp = Math.floor(c.hp/2); });
-                alert("大獎：全場怪物 HP 減半！");
-            }
-        }
-        render();
-    }
-
     function updateUI() {
-        document.getElementById('hp-fill').style.width = `${(state.hp/state.maxHp)*100}%`;
-        document.getElementById('hp-txt').innerText = state.hp;
-        document.getElementById('atk').innerText = state.atk;
+        document.getElementById('hp-bar').style.width = `${Math.max(0, (state.hp / state.maxHp) * 100)}%`;
+        document.getElementById('exp-bar').style.width = `${(state.exp / state.nextExp) * 100}%`;
         document.getElementById('pl-lv').innerText = state.lv;
-        document.getElementById('room-lv').innerText = state.room;
-        document.getElementById('spins').innerText = state.spins;
-        document.getElementById('spin-btn').className = `spin-btn ${state.spins > 0 ? 'active' : ''}`;
+        document.getElementById('pl-atk').innerText = state.atk;
+        document.getElementById('room-num').innerText = state.room;
     }
 
     initRoom();
