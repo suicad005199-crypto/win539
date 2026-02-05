@@ -5,58 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root { --ios-blue: #007AFF; --ios-red: #FF3B30; --ios-green: #4CD964; --ios-gold: #FFD700; }
-        body { margin: 0; background: #1c1c1e; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+        body { margin: 0; background: #1c1c1e; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 15px; }
         
-        /* 頂部狀態欄 */
-        #header { width: 90vw; max-width: 450px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .hp-container { width: 120px; height: 12px; background: #3a3a3c; border-radius: 6px; overflow: hidden; border: 1px solid #555; }
+        /* 狀態列 */
+        #header { width: 90vw; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .hp-box { width: 150px; }
+        .hp-bar-bg { width: 100%; height: 10px; background: #3a3a3c; border-radius: 5px; overflow: hidden; margin-top: 4px; }
         #hp-bar { width: 100%; height: 100%; background: var(--ios-green); transition: width 0.3s; }
         
         /* 網格 */
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 450px; background: #3a3a3c; padding: 6px; border-radius: 12px; }
-        .cell { aspect-ratio: 1; background: #48484a; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; position: relative; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 400px; background: #2c2c2e; padding: 6px; border-radius: 12px; }
+        .cell { aspect-ratio: 1; background: #444; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
         .player { background: var(--ios-blue) !important; box-shadow: 0 0 10px var(--ios-blue); }
         .reachable { outline: 2px solid var(--ios-green); outline-offset: -2px; }
 
-        /* Slot 區域 */
-        #slot-machine { margin-top: 20px; width: 90vw; max-width: 300px; background: #2c2c2e; padding: 10px; border-radius: 15px; border: 2px solid var(--ios-gold); text-align: center; }
-        .slot-container { display: flex; justify-content: space-around; margin: 10px 0; font-size: 2rem; background: #000; padding: 10px; border-radius: 8px; }
-        .slot-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #1c1c1e; border-radius: 4px; }
-        .spin-btn { background: var(--ios-gold); color: #000; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; opacity: 0.3; pointer-events: none; }
-        .spin-active { opacity: 1; pointer-events: auto; box-shadow: 0 0 15px var(--ios-gold); }
+        /* Slot 動畫優化 */
+        #slot-machine { margin-top: 20px; width: 280px; background: #2c2c2e; padding: 15px; border-radius: 20px; border: 2px solid var(--ios-gold); text-align: center; }
+        .slot-container { display: flex; justify-content: space-between; margin: 10px 0; }
+        .slot-box { 
+            width: 70px; height: 70px; background: #1c1c1e; border-radius: 8px; 
+            font-size: 2rem; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
+        }
+        .spinning { animation: roll 0.1s linear infinite; }
+        @keyframes roll {
+            0% { transform: translateY(-10px); opacity: 0.5; }
+            100% { transform: translateY(10px); opacity: 1; }
+        }
+
+        .spin-btn { 
+            background: var(--ios-gold); color: #000; border: none; width: 100%; padding: 10px; 
+            border-radius: 25px; font-weight: bold; font-size: 1rem; opacity: 0.3; pointer-events: none; 
+        }
+        .spin-active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body>
 
 <div id="header">
-    <div>
-        <div style="font-size: 12px; margin-bottom: 2px;">PLAYER HP</div>
-        <div class="hp-container"><div id="hp-bar"></div></div>
+    <div class="hp-box">
+        <span style="font-size: 12px; font-weight: bold;">HP <span id="hp-txt">100</span></span>
+        <div class="hp-bar-bg"><div id="hp-bar"></div></div>
     </div>
-    <div style="text-align: right;">
-        <span style="color:var(--ios-gold)">ATK: <span id="atk">10</span></span><br>
-        <span style="font-size: 12px;">LV: <span id="lv">1</span></span>
+    <div style="text-align: right; font-weight: bold;">
+        <span style="color:var(--ios-gold)">ATK: <span id="atk">10</span></span>
     </div>
 </div>
 
 <div class="grid" id="grid"></div>
 
 <div id="slot-machine">
-    <div style="font-size: 12px; color: var(--ios-gold);">SKILL SLOT</div>
     <div class="slot-container">
-        <div class="slot-box" id="s1">?</div>
-        <div class="slot-box" id="s2">?</div>
-        <div class="slot-box" id="s3">?</div>
+        <div class="slot-box" id="s1">❓</div>
+        <div class="slot-box" id="s2">❓</div>
+        <div class="slot-box" id="s3">❓</div>
     </div>
-    <button id="spin-btn" class="spin-btn" onclick="runSlot()">SPIN (0)</button>
+    <button id="spin-btn" class="spin-btn" onclick="startSpin()">SPIN (0)</button>
 </div>
 
 <script>
-    const gridEl = document.getElementById('grid');
-    const stats = { hp: 100, maxHp: 100, atk: 10, lv: 1, spins: 0 };
-    const skills = ['🍎', '⚔️', '💣', '🛡️', '💎']; 
+    const skills = ['🍎', '⚔️', '💣', '🛡️'];
+    const stats = { hp: 100, maxHp: 100, atk: 10, spins: 0, shield: false };
     let playerPos = 0;
     let mapData = [];
+    let isSpinning = false;
 
     function init() {
         const types = ['B', 'P', ...Array(8).fill('H'), ...Array(8).fill('S'), ...Array(46).fill('M')];
@@ -66,6 +78,7 @@
     }
 
     function render() {
+        gridEl = document.getElementById('grid');
         gridEl.innerHTML = '';
         mapData.forEach((type, i) => {
             const cell = document.createElement('div');
@@ -83,43 +96,63 @@
     }
 
     function move(target) {
-        if (getDist(playerPos, target) !== 1) return;
-        const event = mapData[target];
+        if (getDist(playerPos, target) !== 1 || isSpinning) return;
+        const type = mapData[target];
 
-        if (event === 'M' || event === 'B') {
-            const dmg = event === 'B' ? 40 : 15;
-            stats.hp -= dmg;
-            stats.lv++;
-            // 擊敗怪物機率獲得 Spin
-            if (Math.random() < 0.3) {
-                stats.spins++;
-                alert(`戰鬥勝利！獲得 1 次抽獎機會！`);
+        if (type === 'M' || type === 'B') {
+            if (!stats.shield) {
+                stats.hp -= type === 'B' ? 50 : 15;
+            } else {
+                alert("護盾抵擋了傷害！");
+                stats.shield = false;
             }
-        } else if (event === 'H') { stats.hp = Math.min(stats.maxHp, stats.hp + 20); }
-        else if (event === 'S') { stats.atk += 5; }
+            if (Math.random() < 0.4) stats.spins++; 
+        } else if (type === 'H') stats.hp = Math.min(stats.maxHp, stats.hp + 20);
+        else if (type === 'S') stats.atk += 5;
 
-        if (stats.hp <= 0) { alert("Game Over"); location.reload(); return; }
-
+        if (stats.hp <= 0) { alert("戰敗！"); location.reload(); return; }
         mapData[playerPos] = 'E';
         playerPos = target;
         mapData[playerPos] = 'P';
         render();
     }
 
-    function runSlot() {
-        if (stats.spins <= 0) return;
+    function startSpin() {
+        if (stats.spins <= 0 || isSpinning) return;
+        isSpinning = true;
         stats.spins--;
-        const results = [skills[Math.floor(Math.random()*5)], skills[Math.floor(Math.random()*5)], skills[Math.floor(Math.random()*5)]];
-        
-        results.forEach((s, i) => document.getElementById(`s${i+1}`).innerText = s);
+        updateUI();
 
-        // 簡單邏輯：如果有兩個相同就有加成
-        if (results[0] === results[1] && results[1] === results[2]) {
-            stats.atk += 20; stats.hp = stats.maxHp;
-            alert("大獎！ATK大幅提升 + HP全滿！");
+        const boxes = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+        boxes.forEach(b => b.classList.add('spinning'));
+
+        // 模擬滾動停止時間
+        boxes.forEach((box, i) => {
+            setTimeout(() => {
+                box.classList.remove('spinning');
+                box.innerText = skills[Math.floor(Math.random() * skills.length)];
+                if (i === 2) checkWin(boxes.map(b => b.innerText));
+            }, 800 + (i * 400));
+        });
+    }
+
+    function checkWin(res) {
+        isSpinning = false;
+        if (res[0] === res[1] && res[1] === res[2]) {
+            const win = res[0];
+            if (win === '🍎') { stats.maxHp += 50; stats.hp = stats.maxHp; alert("【生命泉源】HP上限增加並補滿！"); }
+            if (win === '⚔️') { stats.atk += 20; alert("【狂戰士】攻擊力大幅提升！"); }
+            if (win === '💣') { 
+                alert("【核爆】隨機清除地圖上的 5 隻怪物！");
+                for(let i=0; i<5; i++) {
+                    let idx = mapData.indexOf('M');
+                    if(idx !== -1) mapData[idx] = 'E';
+                }
+                render();
+            }
+            if (win === '🛡️') { stats.shield = true; alert("【神聖護盾】下次戰鬥免傷！"); }
         } else {
-            stats.atk += 2;
-            alert("小獎：ATK +2");
+            alert("很可惜，沒有連線。");
         }
         updateUI();
     }
@@ -132,11 +165,11 @@
 
     function updateUI() {
         document.getElementById('hp-bar').style.width = `${(stats.hp / stats.maxHp) * 100}%`;
+        document.getElementById('hp-txt').innerText = stats.hp;
         document.getElementById('atk').innerText = stats.atk;
-        document.getElementById('lv').innerText = stats.lv;
         const btn = document.getElementById('spin-btn');
         btn.innerText = `SPIN (${stats.spins})`;
-        btn.className = stats.spins > 0 ? 'spin-btn spin-active' : 'spin-btn';
+        btn.className = (stats.spins > 0 && !isSpinning) ? 'spin-btn spin-active' : 'spin-btn';
     }
 
     init();
