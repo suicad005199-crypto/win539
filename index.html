@@ -3,165 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>極限離職挑戰：30 DAY</title>
+    <title>社畜 30 天：逃離辦公室</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #0a0a0c; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        canvas { background: #16161d; box-shadow: 0 0 20px rgba(0,0,0,0.5); touch-action: none; }
+        body { margin: 0; background: #111; overflow: hidden; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+        #game-container { position: relative; width: 100vw; height: 100vh; max-width: 450px; margin: auto; }
+        canvas { background: #f0f0f0; display: block; }
         
-        /* 頂部 UI */
-        #info { position: absolute; top: 20px; width: 320px; color: white; pointer-events: none; z-index: 10; }
-        .stats { display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; text-shadow: 0 0 5px #000; }
-        .bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 8px; border-radius: 2px; }
-        #bar-fill { width: 0%; height: 100%; background: #00ffcc; box-shadow: 0 0 10px #00ffcc; transition: width 0.2s; }
+        /* 關卡進度條 */
+        #ui-layer { position: absolute; top: 0; width: 100%; pointer-events: none; }
+        .day-banner { background: #ff4d4d; color: white; padding: 10px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .progress-bar { height: 8px; background: #ddd; width: 80%; margin: 10px auto; border-radius: 4px; overflow: hidden; }
+        #fill { height: 100%; background: #4caf50; width: 0%; transition: width 0.3s; }
 
-        /* 彈窗訊息 */
-        #popup { display: none; position: absolute; background: rgba(0,0,0,0.85); color: #00ffcc; padding: 20px; border: 2px solid #00ffcc; border-radius: 10px; text-align: center; z-index: 100; pointer-events: none; }
+        /* 浮動訊息 */
+        #msg-layer { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); text-align: center; display: none; }
+        .comic-box { background: white; border: 4px solid #000; padding: 20px; display: inline-block; border-radius: 10px; font-weight: bold; position: relative; }
+        .comic-box::after { content: ''; position: absolute; bottom: -15px; left: 50%; border-width: 15px 15px 0; border-style: solid; border-color: #000 transparent; margin-left: -15px; }
     </style>
 </head>
 <body>
 
-<div id="info">
-    <div class="stats">
-        <span>DAY <span id="day">1</span>/30</span>
-        <span style="font-size: 14px; opacity: 0.8;">PROG <span id="prog">0</span>/2</span>
+<div id="game-container">
+    <div id="ui-layer">
+        <div class="day-banner">📅 DAY <span id="day-num">1</span> / 30</div>
+        <div class="progress-bar"><div id="fill"></div></div>
     </div>
-    <div class="bar-bg"><div id="bar-fill"></div></div>
+    
+    <div id="msg-layer">
+        <div class="comic-box" id="msg-text">被抓去改 PPT！</div>
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
 </div>
-
-<div id="popup">
-    <h2 id="pop-title">自由 Day 1</h2>
-    <p id="pop-body">平安下班...</p>
-</div>
-
-<canvas id="gameCanvas"></canvas>
 
 <script>
-/** 核心配置 **/
-const CFG = {
-    P_SPD: 800, // 玩家速度
-    E_TYPES: [
-        { n: '老闆', c: '#ff4d4d', s: 1000, sz: 50 },
-        { n: '同事', c: '#ffa500', s: 1500, sz: 40 },
-        { n: '客戶', c: '#f1c40f', s: 2300, sz: 30 }
-    ],
-    GOAL: 2,
-    MAX_DAY: 30
-};
-
-/** 音頻引擎 **/
-const audio = new (window.AudioContext || window.webkitAudioContext)();
-function beep(f, t, d) {
-    if(audio.state === 'suspended') audio.resume();
-    const o = audio.createOscillator(), g = audio.createGain();
-    o.type = t; o.frequency.setValueAtTime(f, audio.currentTime);
-    g.gain.setValueAtTime(0.1, audio.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
-    o.connect(g); g.connect(audio.destination);
-    o.start(); o.stop(audio.currentTime + d);
-}
-
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-canvas.width = 360; canvas.height = 640;
+const fill = document.getElementById('fill');
+const dayNum = document.getElementById('day-num');
+const msgLayer = document.getElementById('msg-layer');
+const msgText = document.getElementById('msg-text');
 
-let day = 1, progress = 0, isPaused = false, lastT = 0;
-let player = { x: 165, y: 580, w: 30, h: 30, isFiring: false };
-let enemies = [];
+canvas.width = window.innerWidth > 450 ? 450 : window.innerWidth;
+canvas.height = window.innerHeight;
+
+let day = 1;
+let subLevel = 0;
+const subsPerDay = 3;
+let isPaused = false;
+
+const player = { x: canvas.width/2 - 20, y: canvas.height - 80, w: 40, h: 40, speed: 15, isFiring: false };
+const enemies = [];
+
+// 搞笑事件庫
+const fails = ["老闆叫你進辦公室", "幫隔壁桌訂便當", "影印機夾紙了", "客戶說回歸初版", "被拉進無意義會議", "這週要加班喔"];
+const wins = ["成功準時打卡！", "老闆沒看到你", "假裝去廁所成功", "閃過主管視線"];
 
 function spawn() {
     if (isPaused) return;
-    const type = CFG.E_TYPES[Math.floor(Math.random() * CFG.E_TYPES.length)];
-    const side = Math.random() > 0.5 ? 1 : -1;
+    const isLeft = Math.random() > 0.5;
     enemies.push({
-        x: side === 1 ? -100 : canvas.width + 100,
-        y: 100 + Math.random() * 380,
-        w: type.sz, h: type.sz,
-        vx: type.s * side,
-        ...type
+        x: isLeft ? -60 : canvas.width + 60,
+        y: 120 + Math.random() * (canvas.height - 250),
+        w: 60, h: 50,
+        speed: (2 + (day * 0.2)) * (isLeft ? 1 : -1),
+        label: ["老闆", "主管", "改稿", "會議"][Math.floor(Math.random()*4)]
     });
 }
-setInterval(spawn, 380);
+setInterval(spawn, 700 - (day * 10));
 
-function showMsg(t, b) {
+function triggerEvent(text, isWin) {
     isPaused = true;
-    const p = document.getElementById('popup');
-    document.getElementById('pop-title').innerText = t;
-    document.getElementById('pop-body').innerText = b;
-    p.style.display = 'block';
-    setTimeout(() => { p.style.display = 'none'; isPaused = false; }, 1500);
+    msgText.innerText = text;
+    msgText.style.borderColor = isWin ? "#4caf50" : "#ff4d4d";
+    msgLayer.style.display = 'block';
+    
+    setTimeout(() => {
+        msgLayer.style.display = 'none';
+        isPaused = false;
+        if(isWin && subLevel >= subsPerDay) nextDay();
+        resetPlayer();
+    }, 1200);
 }
 
-function update(dt) {
+function nextDay() {
+    day++;
+    subLevel = 0;
+    dayNum.innerText = day;
+    fill.style.width = "0%";
+    if(day > 30) alert("你自由了！光榮退休！");
+}
+
+function resetPlayer() {
+    player.y = canvas.height - 80;
+    player.isFiring = false;
+}
+
+function update() {
     if (isPaused) return;
 
     if (player.isFiring) {
-        player.y -= CFG.P_SPD * dt;
-        if (player.y < 20) {
-            progress++;
-            beep(880, 'sine', 0.2);
-            if (progress >= CFG.GOAL) {
-                day++; progress = 0;
-                showMsg(`Day ${day-1} 達成`, day > 30 ? "你徹底自由了！" : "活著下班，明天繼續...");
-            }
-            resetPlayer();
+        player.y -= player.speed;
+        if (player.y < 50) {
+            subLevel++;
+            fill.style.width = (subLevel / subsPerDay) * 100 + "%";
+            triggerEvent(wins[Math.floor(Math.random()*wins.length)], true);
         }
     }
 
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        let e = enemies[i];
-        e.x += e.vx * dt;
-        if (player.isFiring && player.x < e.x + e.w && player.x + player.w > e.x &&
-            player.y < e.y + e.h && player.y + player.h > e.y) {
-            beep(150, 'sawtooth', 0.3);
-            resetPlayer();
+    enemies.forEach((en, i) => {
+        en.x += en.speed;
+        if (player.isFiring && 
+            player.x < en.x + en.w && player.x + player.w > en.x &&
+            player.y < en.y + en.h && player.y + player.h > en.y) {
+            triggerEvent(fails[Math.floor(Math.random()*fails.length)], false);
+            enemies.length = 0; // 清空敵人
         }
-        if (e.x < -200 || e.x > 560) enemies.splice(i, 1);
-    }
-    
-    // UI
-    document.getElementById('day').innerText = Math.min(day, 30);
-    document.getElementById('prog').innerText = progress;
-    document.getElementById('bar-fill').style.width = (progress / CFG.GOAL) * 100 + "%";
+        if (en.x < -100 || en.x > canvas.width + 100) enemies.splice(i, 1);
+    });
 }
-
-function resetPlayer() { player.y = 580; player.isFiring = false; }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 終點線
-    ctx.fillStyle = "rgba(0, 255, 204, 0.2)";
-    ctx.fillRect(0, 0, canvas.width, 40);
+    // 繪製終點線 (公司大門)
+    ctx.fillStyle = "#333";
+    ctx.fillRect(0, 50, canvas.width, 10);
+    ctx.fillText("🚪 公司大門 (自由出口)", canvas.width/2 - 50, 40);
 
-    // 敵人
-    enemies.forEach(e => {
-        ctx.fillStyle = e.c;
-        ctx.fillRect(e.x, e.y, e.w, e.h);
-        // 超高速殘影
-        ctx.fillStyle = e.c + "33";
-        ctx.fillRect(e.x - (e.vx * 0.015), e.y, e.w, e.h);
-    });
-
-    // 玩家
-    ctx.fillStyle = "#fff";
-    ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
+    // 繪製玩家 (像個小方塊人)
+    ctx.fillStyle = "#FFD700";
     ctx.fillRect(player.x, player.y, player.w, player.h);
-    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText("🏃 我", player.x + 5, player.y + 25);
+
+    // 繪製敵人
+    enemies.forEach(en => {
+        ctx.fillStyle = "#fff";
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(en.x, en.y, en.w, en.h);
+        ctx.fillRect(en.x, en.y, en.w, en.h);
+        ctx.fillStyle = "#ff4d4d";
+        ctx.fillText("👿" + en.label, en.x + 5, en.y + 30);
+    });
 }
 
-function loop(t) {
-    let dt = (t - lastT) / 1000;
-    lastT = t;
-    update(dt > 0.1 ? 0 : dt);
-    draw();
-    requestAnimationFrame(loop);
-}
+canvas.addEventListener('touchstart', (e) => { 
+    if(!isPaused && !player.isFiring) player.isFiring = true; 
+});
+canvas.addEventListener('mousedown', () => { 
+    if(!isPaused && !player.isFiring) player.isFiring = true; 
+});
 
-const action = () => { if(!player.isFiring && !isPaused) { player.isFiring = true; beep(440, 'triangle', 0.1); } };
-canvas.addEventListener('mousedown', action);
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); action(); });
-
-requestAnimationFrame(loop);
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+loop();
 </script>
 </body>
 </html>
