@@ -3,87 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>躲避老闆大作戰</title>
+    <title>直式遊戲：逃離公司</title>
     <style>
         body { margin: 0; overflow: hidden; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-        canvas { background: #87CEEB; box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: crosshair; }
+        canvas { background: #87CEEB; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        #overlay { 
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8); color: gold; padding: 20px 40px; border-radius: 10px; font-size: 24px; text-align: center;
+        }
     </style>
 </head>
 <body>
 
+<div id="overlay">自由 Day <span id="levelNum">1</span></div>
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const levelNumText = document.getElementById('levelNum');
 
-// 設定直式比例
 canvas.width = 360;
 canvas.height = 640;
 
-const player = { x: canvas.width / 2 - 15, y: canvas.height - 50, w: 30, h: 30, speed: 8, isFiring: false };
+let currentLevel = 1;
+let isPaused = false;
+let enemySpeedMultiplier = 1;
+
+const player = { x: canvas.width / 2 - 15, y: canvas.height - 50, w: 30, h: 30, speed: 10, isFiring: false };
 const enemies = [];
 const enemyTypes = [
-    { name: '老闆', color: 'red', msg: '被抓去加班了！😵' },
-    { name: '同事', color: 'orange', msg: '被拉去開會了！Boring~' },
-    { name: '獎金', color: 'gold', msg: '拿到獎金，準時下班！🚀' }
+    { name: '老闆', color: 'red', msg: '被抓去上班了！' },
+    { name: '客戶', color: 'purple', msg: '被留下來改稿！' }
 ];
 
-// 生成敵人
 function spawnEnemy() {
+    if (isPaused) return;
     const side = Math.random() > 0.5 ? 'left' : 'right';
     const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
     enemies.push({
         x: side === 'left' ? -40 : canvas.width + 40,
-        y: Math.random() * (canvas.height - 150) + 50,
-        w: 40, h: 40,
-        speed: (Math.random() * 3 + 2) * (side === 'left' ? 1 : -1),
+        y: Math.random() * (canvas.height - 200) + 80,
+        w: 45, h: 45,
+        speed: (Math.random() * 2 + 2) * (side === 'left' ? 1 : -1) * enemySpeedMultiplier,
         ...type
     });
 }
 
-setInterval(spawnEnemy, 800);
+setInterval(spawnEnemy, 700);
+
+function nextLevel() {
+    isPaused = true;
+    player.isFiring = false;
+    
+    // 顯示自由 Day 彈窗
+    levelNumText.innerText = currentLevel;
+    overlay.style.display = 'block';
+
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        currentLevel++;
+        enemySpeedMultiplier += 0.5; // 難度提升
+        resetPlayer();
+        enemies.length = 0;
+        isPaused = false;
+    }, 2000);
+}
 
 function update() {
-    // 玩家射擊邏輯
+    if (isPaused) return;
+
     if (player.isFiring) {
         player.y -= player.speed;
-        if (player.y < -30) resetPlayer();
+        // 抵達頂端（終點）
+        if (player.y < 20) {
+            nextLevel();
+        }
     }
 
-    // 敵人移動與碰撞
     enemies.forEach((en, index) => {
         en.x += en.speed;
 
-        // 碰撞檢查
         if (player.isFiring && 
             player.x < en.x + en.w && player.x + player.w > en.x &&
             player.y < en.y + en.h && player.y + player.h > en.y) {
             
             alert(en.msg);
             resetPlayer();
-            enemies.splice(index, 1);
         }
 
-        // 移除出界敵人
-        if (en.x > canvas.width + 50 || en.x < -100) enemies.splice(index, 1);
+        if (en.x > canvas.width + 100 || en.x < -100) enemies.splice(index, 1);
     });
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 畫玩家
+    // 終點線
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, 30);
+    ctx.fillStyle = '#000';
+    ctx.fillText("自由終點線", 150, 20);
+
+    // 玩家
     ctx.fillStyle = '#00ff00';
     ctx.fillRect(player.x, player.y, player.w, player.h);
-    ctx.fillStyle = '#000';
-    ctx.fillText("我", player.x + 10, player.y + 20);
 
-    // 畫敵人
+    // 敵人
     enemies.forEach(en => {
         ctx.fillStyle = en.color;
         ctx.fillRect(en.x, en.y, en.w, en.h);
         ctx.fillStyle = '#fff';
+        ctx.font = "14px Arial";
         ctx.fillText(en.name, en.x + 5, en.y + 25);
     });
 }
@@ -94,7 +126,7 @@ function resetPlayer() {
 }
 
 canvas.addEventListener('click', () => {
-    if (!player.isFiring) player.isFiring = true;
+    if (!player.isFiring && !isPaused) player.isFiring = true;
 });
 
 function loop() {
