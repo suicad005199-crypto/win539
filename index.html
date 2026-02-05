@@ -5,40 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root { --ios-red: #FF3B30; --ios-yellow: #FFCC00; --ios-blue: #007AFF; --ios-bg: #1c1c1e; }
-        body { margin: 0; background: var(--ios-bg); color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; touch-action: manipulation; }
+        body { margin: 0; background: var(--ios-bg); color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
         
         /* 狀態列 */
         #status-bar { width: 90vw; max-width: 400px; padding: 20px 0; display: flex; align-items: flex-start; gap: 12px; }
         .avatar { width: 50px; height: 50px; background: #3a3a3c; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 1px solid #555; }
         .info-panel { flex: 1; }
-        .lv-txt { font-weight: bold; font-size: 14px; margin-bottom: 4px; display: block; }
-        
-        /* 進度條系統 */
-        .bar-container { width: 100%; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-bottom: 6px; position: relative; border: 1px solid #444; }
+        .bar-container { width: 100%; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-bottom: 6px; position: relative; }
         .bar-fill { height: 100%; transition: width 0.2s; }
         .hp-fill { background: var(--ios-red); }
         .exp-fill { background: var(--ios-yellow); }
-        .bar-label { position: absolute; font-size: 8px; top: 50%; left: 4px; transform: translateY(-50%); font-weight: bold; text-shadow: 1px 1px 2px black; }
 
-        /* 8x8 網格 */
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 400px; background: #2c2c2e; padding: 6px; border-radius: 12px; position: relative; }
-        .cell { aspect-ratio: 1; background: #444; border-radius: 4px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; overflow: hidden; }
-        .entity { font-size: 1.4rem; margin-bottom: 4px; flex-grow: 1; display: flex; align-items: center; }
-        .player { background: var(--ios-blue) !important; z-index: 10; box-shadow: 0 0 10px var(--ios-blue); transition: transform 0.1s; }
+        /* 遊戲網格 */
+        .grid-container { position: relative; padding: 6px; background: #2c2c2e; border-radius: 12px; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: 95vw; max-width: 400px; }
+        .cell { aspect-ratio: 1; background: #444; border-radius: 4px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; }
         
-        /* 怪物方格血條 */
-        .mob-bar-bg { width: 85%; height: 4px; background: #000; margin-bottom: 4px; border-radius: 2px; overflow: hidden; }
-        .mob-bar-fill { height: 100%; background: var(--ios-red); width: 100%; }
-        
-        /* 碰撞動畫 */
-        @keyframes bump {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2) translate(0, -2px); }
-            100% { transform: scale(1); }
+        /* 實體組件 */
+        .entity { font-size: 1.4rem; flex-grow: 1; display: flex; align-items: center; }
+        .mob-bar-bg { width: 80%; height: 3px; background: #000; margin-bottom: 4px; border-radius: 2px; }
+        .mob-bar-fill { height: 100%; background: var(--ios-red); transition: width 0.2s; }
+
+        /* 玩家懸浮方框 */
+        #player-token {
+            position: absolute; width: calc((95vw - 12px - 28px) / 8); height: calc((95vw - 12px - 28px) / 8);
+            max-width: 45.5px; max-height: 45.5px;
+            background: var(--ios-blue); border-radius: 4px; z-index: 100;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none; box-shadow: 0 0 15px rgba(0,122,255,0.5);
         }
-        .bumping { animation: bump 0.15s infinite; }
-        
-        #room-tag { margin-top: 15px; font-size: 12px; color: #888; letter-spacing: 1px; }
+
+        /* 傷害數值動畫 */
+        .dmg-popup {
+            position: absolute; color: var(--ios-red); font-weight: bold; font-size: 14px;
+            animation: floatUp 0.6s ease-out forwards; z-index: 200; pointer-events: none;
+        }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+
+        /* 震動效果 */
+        .shake { animation: shake 0.2s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
     </style>
 </head>
 <body>
@@ -46,46 +57,38 @@
 <div id="status-bar">
     <div class="avatar">👤</div>
     <div class="info-panel">
-        <span class="lv-txt">LV <span id="pl-lv">1</span></span>
-        <div class="bar-container">
-            <div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div>
-            <span class="bar-label">HP</span>
-        </div>
-        <div class="bar-container">
-            <div id="exp-bar" class="bar-fill exp-fill" style="width: 0%;"></div>
-            <span class="bar-label">EXP</span>
-        </div>
-        <div style="font-size: 11px; color: var(--ios-yellow); font-weight: bold;">ATK: <span id="pl-atk">10</span></div>
+        <span style="font-weight:bold">LV <span id="pl-lv">1</span></span>
+        <div class="bar-container"><div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div></div>
+        <div class="bar-container"><div id="exp-bar" class="bar-fill exp-fill" style="width: 0%;"></div></div>
+        <div style="font-size:11px; color:var(--ios-yellow)">ATK: <span id="pl-atk">10</span></div>
     </div>
 </div>
 
-<div class="grid" id="grid"></div>
-<div id="room-tag">AREA <span id="room-num">1</span></div>
+<div class="grid-container" id="main-container">
+    <div id="player-token">👤</div>
+    <div class="grid" id="grid"></div>
+</div>
+
+<div id="room-tag" style="margin-top:10px; color:#888">AREA <span id="room-num">1</span></div>
 
 <script>
-    let state = { 
-        hp: 100, maxHp: 100, exp: 0, nextExp: 100, 
-        atk: 10, lv: 1, room: 1, playerPos: 0, isActing: false 
-    };
+    let state = { hp: 100, maxHp: 100, exp: 0, nextExp: 100, atk: 10, lv: 1, room: 1, playerPos: 0, isActing: false };
     let map = [];
 
     function initRoom() {
         map = [];
         let pool = ['P', 'B', ...Array(6).fill('H'), ...Array(6).fill('S'), ...Array(50).fill('M')];
         pool.sort(() => Math.random() - 0.5);
-        
         pool.forEach((type, i) => {
             let obj = { type, hp: 0, maxHp: 0 };
-            if (type === 'M') { 
-                obj.maxHp = obj.hp = 20 + (state.room * 10); 
-            } else if (type === 'B') { 
-                obj.maxHp = obj.hp = 150 + (state.room * 50); 
-            } else if (type === 'P') { 
-                state.playerPos = i; 
+            if (type === 'M' || type === 'B') {
+                obj.maxHp = obj.hp = (type === 'M' ? 30 : 200) + (state.room * 10);
             }
+            if (type === 'P') state.playerPos = i;
             map.push(obj);
         });
         render();
+        syncPlayerToken();
     }
 
     function render() {
@@ -93,111 +96,110 @@
         gridEl.innerHTML = '';
         map.forEach((cell, i) => {
             const div = document.createElement('div');
-            div.className = `cell ${i === state.playerPos ? 'player' : ''}`;
-            
-            let content = '';
-            if (i === state.playerPos) {
-                content = '<div class="entity">👤</div>';
-            } else if (cell.type === 'M' || cell.type === 'B') {
-                const icon = cell.type === 'M' ? '👾' : '👹';
-                const hpPercent = (cell.hp / cell.maxHp) * 100;
-                content = `
-                    <div class="entity">${icon}</div>
-                    <div class="mob-bar-bg"><div class="mob-bar-fill" style="width:${hpPercent}%"></div></div>
-                `;
-            } else if (cell.type === 'H') content = '<div class="entity">❤️</div>';
-            else if (cell.type === 'S') content = '<div class="entity">⚡</div>';
-            
-            div.innerHTML = content;
+            div.className = 'cell';
+            if (cell.type === 'M' || cell.type === 'B') {
+                div.innerHTML = `<div class="entity">${cell.type === 'M'?'👾':'👹'}</div>
+                                 <div class="mob-bar-bg"><div class="mob-bar-fill" style="width:${(cell.hp/cell.maxHp)*100}%"></div></div>`;
+            } else if (cell.type === 'H') div.innerHTML = '❤️';
+            else if (cell.type === 'S') div.innerHTML = '⚡';
             div.onclick = () => handleAction(i);
             gridEl.appendChild(div);
         });
-        updateUI();
+    }
+
+    function syncPlayerToken() {
+        const targetCell = document.querySelectorAll('.cell')[state.playerPos];
+        const token = document.getElementById('player-token');
+        token.style.transform = `translate(${targetCell.offsetLeft}px, ${targetCell.offsetTop}px)`;
     }
 
     async function handleAction(target) {
         if (state.isActing || getDist(state.playerPos, target) !== 1) return;
         state.isActing = true;
-        
         const targetObj = map[target];
-        const playerDiv = document.querySelectorAll('.cell')[state.playerPos];
+        const token = document.getElementById('player-token');
 
-        if (targetObj.type === 'M' || targetObj.type === 'B') {
-            // 進入戰鬥循環
-            playerDiv.classList.add('bumping');
-            
-            while(targetObj.hp > 0 && state.hp > 0) {
+        if (targetObj.hp > 0) {
+            const targetCell = document.querySelectorAll('.cell')[target];
+            // 戰鬥循環
+            while (targetObj.hp > 0 && state.hp > 0) {
+                // 玩家衝擊
+                token.style.transform = `translate(${targetCell.offsetLeft}px, ${targetCell.offsetTop}px) scale(1.1)`;
                 targetObj.hp -= state.atk;
-                state.hp -= Math.max(1, Math.floor(targetObj.hp / 10)); // 反擊傷害
+                showDmg(targetCell, state.atk);
+                targetCell.classList.add('shake');
                 
-                render(); // 更新怪物血條與玩家狀態
+                await new Promise(r => setTimeout(r, 200));
+                targetCell.classList.remove('shake');
+                render();
+
+                if (targetObj.hp <= 0) break;
+
+                // 怪物反擊
+                token.style.transform = `translate(${token.offsetLeft}px, ${token.offsetTop}px)`; // 彈回
+                const mobDmg = Math.max(2, Math.floor(targetObj.hp / 8));
+                state.hp -= mobDmg;
+                showDmg(token, mobDmg);
+                token.classList.add('shake');
                 updateUI();
                 
-                if (state.hp <= 0) break;
-                await new Promise(r => setTimeout(r, 200)); // 碰撞間隔
+                await new Promise(r => setTimeout(r, 200));
+                token.classList.remove('shake');
             }
-            
-            playerDiv.classList.remove('bumping');
 
             if (state.hp > 0) {
                 state.exp += (targetObj.type === 'B' ? 100 : 40);
                 if (state.exp >= state.nextExp) levelUp();
-                if (targetObj.type === 'B') {
-                    alert("區域清理完成，前往下一層。");
-                    state.room++;
-                    initRoom();
-                } else {
-                    movePlayer(target);
-                }
+                if (targetObj.type === 'B') { alert("Next Floor"); state.room++; initRoom(); }
+                else { movePlayer(target); }
             }
-        } else if (targetObj.type === 'H') {
-            state.hp = Math.min(state.maxHp, state.hp + 30);
-            movePlayer(target);
-        } else if (targetObj.type === 'S') {
-            state.atk += 3;
-            movePlayer(target);
         } else {
+            if (targetObj.type === 'H') state.hp = Math.min(state.maxHp, state.hp+30);
+            if (targetObj.type === 'S') state.atk += 3;
             movePlayer(target);
         }
 
-        if (state.hp <= 0) {
-            alert("你倒下了。冒險結束。");
-            location.reload();
-        }
-        
+        if (state.hp <= 0) { alert("Game Over"); location.reload(); }
         state.isActing = false;
         render();
+        syncPlayerToken();
     }
 
-    function levelUp() {
-        state.lv++;
-        state.exp = 0;
-        state.nextExp += 50;
-        state.atk += 5;
-        state.maxHp += 20;
+    function showDmg(el, val) {
+        const popup = document.createElement('div');
+        popup.className = 'dmg-popup';
+        popup.innerText = `-${val}`;
+        popup.style.left = `20px`;
+        popup.style.top = `0px`;
+        el.appendChild(popup);
+        setTimeout(() => popup.remove(), 600);
     }
 
-    function movePlayer(target) {
+    function movePlayer(t) {
         map[state.playerPos] = { type: 'E' };
-        state.playerPos = target;
+        state.playerPos = t;
         map[state.playerPos] = { type: 'P' };
     }
 
+    function levelUp() {
+        state.lv++; state.exp = 0; state.nextExp += 50;
+        state.atk += 5; state.maxHp += 20;
+    }
+
     function getDist(p1, p2) {
-        const x1 = p1 % 8, y1 = Math.floor(p1 / 8);
-        const x2 = p2 % 8, y2 = Math.floor(p2 / 8);
-        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+        return Math.abs(p1%8 - p2%8) + Math.abs(Math.floor(p1/8) - Math.floor(p2/8));
     }
 
     function updateUI() {
-        document.getElementById('hp-bar').style.width = `${Math.max(0, (state.hp / state.maxHp) * 100)}%`;
-        document.getElementById('exp-bar').style.width = `${(state.exp / state.nextExp) * 100}%`;
+        document.getElementById('hp-bar').style.width = `${(state.hp/state.maxHp)*100}%`;
+        document.getElementById('exp-bar').style.width = `${(state.exp/state.nextExp)*100}%`;
         document.getElementById('pl-lv').innerText = state.lv;
         document.getElementById('pl-atk').innerText = state.atk;
         document.getElementById('room-num').innerText = state.room;
     }
 
     initRoom();
+    window.onresize = syncPlayerToken;
 </script>
 </body>
 </html>
