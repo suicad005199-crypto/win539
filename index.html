@@ -5,17 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>直式遊戲：逃離公司</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: '微軟正黑體', 'Arial', sans-serif; color: #eee; }
         canvas { background: #87CEEB; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         #overlay { 
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8); color: gold; padding: 20px 40px; border-radius: 10px; font-size: 24px; text-align: center;
+            background: rgba(0,0,0,0.8); color: gold; padding: 20px 40px; border-radius: 10px; font-size: 28px; text-align: center;
+            z-index: 10;
         }
+        #scoreDisplay, #levelDisplay, #speedDisplay {
+            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px;
+            font-size: 16px; color: white;
+        }
+        #levelDisplay { left: auto; right: 10px; }
+        #speedDisplay { top: 40px; left: 10px; }
     </style>
 </head>
 <body>
 
 <div id="overlay">自由 Day <span id="levelNum">1</span></div>
+<div id="scoreDisplay">分數: <span id="currentScore">0</span></div>
+<div id="levelDisplay">關卡: <span id="currentLevelNum">1</span></div>
+<div id="speedDisplay">速度: <span id="currentSpeed">1x</span></div>
 <canvas id="gameCanvas"></canvas>
 
 <script>
@@ -23,6 +33,9 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const levelNumText = document.getElementById('levelNum');
+const scoreDisplay = document.getElementById('currentScore');
+const levelDisplay = document.getElementById('currentLevelNum');
+const speedDisplay = document.getElementById('currentSpeed');
 
 canvas.width = 360;
 canvas.height = 640;
@@ -30,18 +43,35 @@ canvas.height = 640;
 let currentLevel = 1;
 let isPaused = false;
 let enemySpeedMultiplier = 1;
+let score = 0;
+
+const playerStates = [
+    { text: '厭世的我', color: '#00ff00' },
+    { text: '爆肝的我', color: '#ff6666' },
+    { text: '薪水小偷的我', color: '#66ccff' },
+    { text: '想下班的我', color: '#ffff99' },
+    { text: '燃燒生命的我', color: '#ff00ff' }
+];
+let currentPlayerState = playerStates[0];
 
 const player = { x: canvas.width / 2 - 15, y: canvas.height - 50, w: 30, h: 30, speed: 10, isFiring: false };
 const enemies = [];
 const enemyTypes = [
-    { name: '老闆', color: 'red', msg: '被抓去上班了！' },
-    { name: '客戶', color: 'purple', msg: '被留下來改稿！' }
+    { name: '老闆', color: 'red', msg: '被抓去上班了！', points: -10 },
+    { name: '客戶', color: 'purple', msg: '被留下來改稿！', points: -5 },
+    { name: '薪水', color: 'gold', msg: '拿到薪水，再撐一下！', points: 20, special: true }
 ];
+
+// 音效
+const hitSound = new Audio('https://www.soundjay.com/buttons/beep-07a.mp3'); // 替換成你的音效路徑
+const winSound = new Audio('https://www.soundjay.com/misc/success-sound-2.mp3'); // 替換成你的音效路徑
 
 function spawnEnemy() {
     if (isPaused) return;
     const side = Math.random() > 0.5 ? 'left' : 'right';
-    const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+    // 有機率生成薪水
+    const type = Math.random() < 0.2 ? enemyTypes[2] : enemyTypes[Math.floor(Math.random() * 2)]; 
+    
     enemies.push({
         x: side === 'left' ? -40 : canvas.width + 40,
         y: Math.random() * (canvas.height - 200) + 80,
@@ -56,18 +86,24 @@ setInterval(spawnEnemy, 700);
 function nextLevel() {
     isPaused = true;
     player.isFiring = false;
-    
-    // 顯示自由 Day 彈窗
+    winSound.play();
+    score += 50; // 成功穿越獎勵
+
     levelNumText.innerText = currentLevel;
     overlay.style.display = 'block';
 
     setTimeout(() => {
         overlay.style.display = 'none';
         currentLevel++;
-        enemySpeedMultiplier += 0.5; // 難度提升
+        enemySpeedMultiplier += 0.2; // 難度提升
         resetPlayer();
         enemies.length = 0;
         isPaused = false;
+        updateUI();
+        // 隨機更換玩家狀態
+        currentPlayerState = playerStates[Math.floor(Math.random() * playerStates.length)];
+        // 背景顏色變深
+        canvas.style.backgroundColor = `hsl(200, 50%, ${40 - currentLevel * 2}%)`;
     }, 2000);
 }
 
@@ -76,7 +112,6 @@ function update() {
 
     if (player.isFiring) {
         player.y -= player.speed;
-        // 抵達頂端（終點）
         if (player.y < 20) {
             nextLevel();
         }
@@ -85,12 +120,26 @@ function update() {
     enemies.forEach((en, index) => {
         en.x += en.speed;
 
+        // 碰撞檢查
         if (player.isFiring && 
             player.x < en.x + en.w && player.x + player.w > en.x &&
             player.y < en.y + en.h && player.y + player.h > en.y) {
             
-            alert(en.msg);
-            resetPlayer();
+            hitSound.play();
+            score += en.points; // 增加分數或扣分
+            updateUI();
+            
+            // 碰撞特效
+            canvas.style.filter = 'brightness(1.5)';
+            setTimeout(() => canvas.style.filter = 'brightness(1)', 100);
+
+            if (en.special) { // 薪水不會導致遊戲重置
+                alert(en.msg);
+                enemies.splice(index, 1); // 移除薪水
+            } else {
+                alert(en.msg);
+                resetPlayer();
+            }
         }
 
         if (en.x > canvas.width + 100 || en.x < -100) enemies.splice(index, 1);
@@ -104,11 +153,17 @@ function draw() {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.fillRect(0, 0, canvas.width, 30);
     ctx.fillStyle = '#000';
-    ctx.fillText("自由終點線", 150, 20);
+    ctx.font = "16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("自由終點線", canvas.width / 2, 20);
 
     // 玩家
-    ctx.fillStyle = '#00ff00';
+    ctx.fillStyle = currentPlayerState.color;
     ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = '#000';
+    ctx.font = "12px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(currentPlayerState.text, player.x + player.w / 2, player.y + player.h / 2 + 4);
 
     // 敵人
     enemies.forEach(en => {
@@ -116,13 +171,21 @@ function draw() {
         ctx.fillRect(en.x, en.y, en.w, en.h);
         ctx.fillStyle = '#fff';
         ctx.font = "14px Arial";
-        ctx.fillText(en.name, en.x + 5, en.y + 25);
+        ctx.textAlign = "center";
+        ctx.fillText(en.name, en.x + en.w / 2, en.y + en.h / 2 + 4);
     });
 }
 
 function resetPlayer() {
     player.y = canvas.height - 50;
     player.isFiring = false;
+    currentPlayerState = playerStates[Math.floor(Math.random() * playerStates.length)]; // 每次重置更換玩家狀態
+}
+
+function updateUI() {
+    scoreDisplay.innerText = score;
+    levelDisplay.innerText = currentLevel;
+    speedDisplay.innerText = `${enemySpeedMultiplier.toFixed(1)}x`;
 }
 
 canvas.addEventListener('click', () => {
@@ -135,6 +198,10 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
+// 初始化UI
+updateUI();
+// 初始化玩家狀態
+currentPlayerState = playerStates[Math.floor(Math.random() * playerStates.length)];
 loop();
 </script>
 </body>
