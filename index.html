@@ -3,162 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>社畜 30 天：逃離辦公室</title>
+    <title>離職衝鋒：30 Days</title>
     <style>
-        body { margin: 0; background: #111; overflow: hidden; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
-        #game-container { position: relative; width: 100vw; height: 100vh; max-width: 450px; margin: auto; }
-        canvas { background: #f0f0f0; display: block; }
+        body { margin: 0; overflow: hidden; background: #050508; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'PingFang TC', sans-serif; }
+        canvas { background: #0d1117; border: 2px solid #30363d; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,0.5); touch-action: none; }
         
-        /* 關卡進度條 */
-        #ui-layer { position: absolute; top: 0; width: 100%; pointer-events: none; }
-        .day-banner { background: #ff4d4d; color: white; padding: 10px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .progress-bar { height: 8px; background: #ddd; width: 80%; margin: 10px auto; border-radius: 4px; overflow: hidden; }
-        #fill { height: 100%; background: #4caf50; width: 0%; transition: width 0.3s; }
+        /* 質感 UI */
+        #ui { position: absolute; top: 30px; width: 320px; color: #fff; pointer-events: none; }
+        .day-label { font-size: 28px; font-weight: 800; letter-spacing: 2px; color: #00f2ff; text-shadow: 0 0 15px #00f2ff; margin-bottom: 5px; }
+        .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+        #fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00f2ff, #7000ff); box-shadow: 0 0 10px #00f2ff; transition: 0.3s; }
 
-        /* 浮動訊息 */
-        #msg-layer { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); text-align: center; display: none; }
-        .comic-box { background: white; border: 4px solid #000; padding: 20px; display: inline-block; border-radius: 10px; font-weight: bold; position: relative; }
-        .comic-box::after { content: ''; position: absolute; bottom: -15px; left: 50%; border-width: 15px 15px 0; border-style: solid; border-color: #000 transparent; margin-left: -15px; }
+        /* 彈窗訊息 */
+        #msg { display: none; position: absolute; background: rgba(13, 17, 23, 0.95); border: 1px solid #00f2ff; color: #00f2ff; padding: 25px; border-radius: 4px; text-align: center; z-index: 100; box-shadow: 0 0 30px rgba(0,242,255,0.2); backdrop-filter: blur(5px); }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="ui-layer">
-        <div class="day-banner">📅 DAY <span id="day-num">1</span> / 30</div>
-        <div class="progress-bar"><div id="fill"></div></div>
-    </div>
-    
-    <div id="msg-layer">
-        <div class="comic-box" id="msg-text">被抓去改 PPT！</div>
-    </div>
-    
-    <canvas id="gameCanvas"></canvas>
+<div id="ui">
+    <div class="day-label">DAY <span id="day">1</span></div>
+    <div class="progress-bar"><div id="fill"></div></div>
 </div>
 
+<div id="msg">
+    <h2 id="m-title" style="margin:0"></h2>
+    <p id="m-body" style="color:#8b949e"></p>
+</div>
+
+<canvas id="game"></canvas>
+
 <script>
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const fill = document.getElementById('fill');
-const dayNum = document.getElementById('day-num');
-const msgLayer = document.getElementById('msg-layer');
-const msgText = document.getElementById('msg-text');
+canvas.width = 360; canvas.height = 640;
 
-canvas.width = window.innerWidth > 450 ? 450 : window.innerWidth;
-canvas.height = window.innerHeight;
+const CONFIG = {
+    P_SPD: 800,
+    ENEMIES: [
+        { n: '😈 主管', c: '#ff3131', s: 1000, sz: 55 },
+        { n: '😤 改稿', c: '#ff914d', s: 1500, sz: 45 },
+        { n: '💀 會議', c: '#ffde59', s: 2300, sz: 35 }
+    ]
+};
 
-let day = 1;
-let subLevel = 0;
-const subsPerDay = 3;
-let isPaused = false;
+let day = 1, progress = 0, isPaused = false, lastT = 0, shake = 0;
+let player = { x: 155, y: 560, w: 50, h: 50, isFiring: false };
+let enemies = [];
 
-const player = { x: canvas.width/2 - 20, y: canvas.height - 80, w: 40, h: 40, speed: 15, isFiring: false };
-const enemies = [];
-
-// 搞笑事件庫
-const fails = ["老闆叫你進辦公室", "幫隔壁桌訂便當", "影印機夾紙了", "客戶說回歸初版", "被拉進無意義會議", "這週要加班喔"];
-const wins = ["成功準時打卡！", "老闆沒看到你", "假裝去廁所成功", "閃過主管視線"];
+const audio = new (window.AudioContext || window.webkitAudioContext)();
+function play(f, t, d, v=0.1) {
+    if(audio.state === 'suspended') audio.resume();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = t; o.frequency.setValueAtTime(f, audio.currentTime);
+    g.gain.setValueAtTime(v, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+    o.connect(g); g.connect(audio.destination);
+    o.start(); o.stop(audio.currentTime + d);
+}
 
 function spawn() {
     if (isPaused) return;
-    const isLeft = Math.random() > 0.5;
-    enemies.push({
-        x: isLeft ? -60 : canvas.width + 60,
-        y: 120 + Math.random() * (canvas.height - 250),
-        w: 60, h: 50,
-        speed: (2 + (day * 0.2)) * (isLeft ? 1 : -1),
-        label: ["老闆", "主管", "改稿", "會議"][Math.floor(Math.random()*4)]
-    });
+    const side = Math.random() > 0.5 ? 1 : -1;
+    const type = CONFIG.ENEMIES[Math.floor(Math.random() * CONFIG.ENEMIES.length)];
+    enemies.push({ x: side === 1 ? -100 : 460, y: 120 + Math.random() * 320, vx: type.s * side, ...type });
 }
-setInterval(spawn, 700 - (day * 10));
+setInterval(spawn, 400);
 
-function triggerEvent(text, isWin) {
+function showMsg(t, b) {
     isPaused = true;
-    msgText.innerText = text;
-    msgText.style.borderColor = isWin ? "#4caf50" : "#ff4d4d";
-    msgLayer.style.display = 'block';
-    
-    setTimeout(() => {
-        msgLayer.style.display = 'none';
-        isPaused = false;
-        if(isWin && subLevel >= subsPerDay) nextDay();
-        resetPlayer();
-    }, 1200);
+    const m = document.getElementById('msg');
+    document.getElementById('m-title').innerText = t;
+    document.getElementById('m-body').innerText = b;
+    m.style.display = 'block';
+    setTimeout(() => { m.style.display = 'none'; isPaused = false; }, 1200);
 }
 
-function nextDay() {
-    day++;
-    subLevel = 0;
-    dayNum.innerText = day;
-    fill.style.width = "0%";
-    if(day > 30) alert("你自由了！光榮退休！");
-}
-
-function resetPlayer() {
-    player.y = canvas.height - 80;
-    player.isFiring = false;
-}
-
-function update() {
+function update(dt) {
     if (isPaused) return;
+    if (shake > 0) shake -= dt * 10;
 
     if (player.isFiring) {
-        player.y -= player.speed;
-        if (player.y < 50) {
-            subLevel++;
-            fill.style.width = (subLevel / subsPerDay) * 100 + "%";
-            triggerEvent(wins[Math.floor(Math.random()*wins.length)], true);
+        player.y -= CONFIG.P_SPD * dt;
+        if (player.y < 30) {
+            progress++;
+            play(1000, 'sine', 0.2);
+            if (progress >= 2) { day++; progress = 0; showMsg(`DAY ${day-1} CLEAR`, "離自由更近一步..."); }
+            reset();
         }
     }
 
-    enemies.forEach((en, i) => {
-        en.x += en.speed;
-        if (player.isFiring && 
-            player.x < en.x + en.w && player.x + player.w > en.x &&
-            player.y < en.y + en.h && player.y + player.h > en.y) {
-            triggerEvent(fails[Math.floor(Math.random()*fails.length)], false);
-            enemies.length = 0; // 清空敵人
+    enemies.forEach((e, i) => {
+        e.x += e.vx * dt;
+        if (player.isFiring && player.x < e.x + e.sz && player.x + player.w > e.x && player.y < e.y + e.sz && player.y + player.h > e.y) {
+            play(100, 'square', 0.4, 0.2);
+            shake = 5; // 震動感
+            reset();
         }
-        if (en.x < -100 || en.x > canvas.width + 100) enemies.splice(i, 1);
+        if (e.x < -150 || e.x > 500) enemies.splice(i, 1);
     });
+    
+    document.getElementById('day').innerText = day;
+    document.getElementById('fill').style.width = (progress / 2) * 100 + "%";
 }
+
+function reset() { player.y = 560; player.isFiring = false; }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    if (shake > 0) ctx.translate(Math.random()*shake - shake/2, Math.random()*shake - shake/2);
     
-    // 繪製終點線 (公司大門)
-    ctx.fillStyle = "#333";
-    ctx.fillRect(0, 50, canvas.width, 10);
-    ctx.fillText("🚪 公司大門 (自由出口)", canvas.width/2 - 50, 40);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 繪製玩家 (像個小方塊人)
-    ctx.fillStyle = "#FFD700";
+    // 背景網格
+    ctx.strokeStyle = "rgba(0, 242, 255, 0.05)";
+    for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,640); ctx.stroke(); }
+    for(let i=0; i<canvas.height; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(360,i); ctx.stroke(); }
+
+    // 敵人
+    enemies.forEach(e => {
+        ctx.shadowBlur = 15; ctx.shadowColor = e.c;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(e.x, e.y, e.sz, e.sz);
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 14px sans-serif";
+        ctx.fillText(e.n, e.x + 4, e.y + e.sz/2 + 5);
+        
+        // 極速殘影
+        ctx.fillStyle = e.c + "33";
+        ctx.fillRect(e.x - (e.vx * 0.01), e.y, e.sz, e.sz);
+    });
+
+    // 玩家 (黃色方塊風格改良)
+    ctx.shadowBlur = 20; ctx.shadowColor = "#ffde59";
+    ctx.fillStyle = "#ffde59";
     ctx.fillRect(player.x, player.y, player.w, player.h);
     ctx.fillStyle = "#000";
-    ctx.font = "bold 14px Arial";
-    ctx.fillText("🏃 我", player.x + 5, player.y + 25);
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillText("🏃 我", player.x + 5, player.y + 32);
 
-    // 繪製敵人
-    enemies.forEach(en => {
-        ctx.fillStyle = "#fff";
-        ctx.strokeStyle = "#000";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(en.x, en.y, en.w, en.h);
-        ctx.fillRect(en.x, en.y, en.w, en.h);
-        ctx.fillStyle = "#ff4d4d";
-        ctx.fillText("👿" + en.label, en.x + 5, en.y + 30);
-    });
+    ctx.restore();
 }
 
-canvas.addEventListener('touchstart', (e) => { 
-    if(!isPaused && !player.isFiring) player.isFiring = true; 
-});
-canvas.addEventListener('mousedown', () => { 
-    if(!isPaused && !player.isFiring) player.isFiring = true; 
-});
+function loop(t) {
+    let dt = (t - lastT) / 1000;
+    lastT = t;
+    update(dt > 0.1 ? 0 : dt);
+    draw();
+    requestAnimationFrame(loop);
+}
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
-loop();
+const act = () => { if(!player.isFiring && !isPaused) { player.isFiring = true; play(400, 'triangle', 0.1); }};
+canvas.addEventListener('mousedown', act);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); act(); });
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
