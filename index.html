@@ -2,176 +2,139 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Office Royale Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>逃離生活 - Escape Life</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
-        /* 全螢幕 iOS 適配 */
-        body { 
-            margin: 0; overflow: hidden; background: #000; 
-            display: flex; flex-direction: column; height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica;
-        }
-        
-        /* 截圖中的頂部紅色狀態列 */
-        #ios-header { 
-            width: 100%; height: 65px; background: #ff4d4d;
-            display: flex; justify-content: center; align-items: flex-end;
-            padding-bottom: 8px; box-sizing: border-box;
-            border-bottom: 4px solid #333; z-index: 20;
-        }
-
-        .day-display {
-            color: white; font-size: 22px; font-weight: 800;
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        /* 畫布適配：填滿剩餘空間 */
-        #canvas-wrap { flex: 1; position: relative; background: #f0f0f0; width: 100%; }
-        canvas { width: 100% !important; height: 100% !important; display: block; touch-action: none; }
-
-        /* 聖水能量條：置底於黑色導航列上方 */
-        #bottom-ui {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 85%; z-index: 30; pointer-events: none;
-        }
-        #elixir-bg { 
-            width: 100%; height: 14px; background: rgba(0,0,0,0.6); 
-            border-radius: 10px; border: 2px solid #546e7a; overflow: hidden;
-        }
-        #elixir-fill { 
-            width: 0%; height: 100%; 
-            background: linear-gradient(90deg, #ea80fc, #e040fb); 
-            box-shadow: 0 0 10px #e040fb;
-        }
+        body { margin: 0; background: #000; overflow: hidden; touch-action: none; }
+        canvas { display: block; margin: 0 auto; }
     </style>
 </head>
 <body>
 
-<div id="ios-header">
-    <div class="day-display">📅 DAY <span id="day-val">1</span> / 30</div>
-</div>
-
-<div id="canvas-wrap">
-    <canvas id="game"></canvas>
-    <div id="bottom-ui">
-        <div id="elixir-bg"><div id="elixir-fill"></div></div>
-    </div>
-</div>
-
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const config = {
+    type: Phaser.AUTO,
+    width: 400,
+    height: 700,
+    backgroundColor: '#87CEEB',
+    parent: 'game-container',
+    physics: {
+        default: 'arcade',
+        arcade: { debug: false }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
 
-// 自動偵測全螢幕尺寸
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - 65; // 扣除頂部高度
+const game = new Phaser.Game(config);
+
+let player;
+let enemies;
+let cursors;
+let score = 0;
+let scoreText;
+let isGameOver = false;
+let enemyTypes = ['老闆', '老婆', '主管', '房貸', '車貸', 'KPI'];
+
+function preload() {
+    // 這裡可以預載入圖片，目前使用幾何圖形代替
 }
-window.addEventListener('resize', resize);
-resize();
 
-// 素材與配置
-const IMG_URLS = {
-    me: 'https://openmoji.org/data/color/svg/1F3C3.svg',
-    boss: 'https://openmoji.org/data/color/svg/1F47A.svg',
-    edit: 'https://openmoji.org/data/color/svg/1F4DC.svg',
-    meet: 'https://openmoji.org/data/color/svg/23F0.svg'
-};
-const imgs = {};
-Object.entries(IMG_URLS).forEach(([k, s]) => { imgs[k] = new Image(); imgs[k].src = s; });
+function create() {
+    // 1. 地板與背景
+    this.add.rectangle(200, 350, 400, 700, 0x555555); // 模擬道路
 
-const CFG = {
-    P_SPD: 900,
-    E_BASE: [
-        { n: '主管', c: '#ff5252', s: 1000, sz: 65, img: 'boss' },
-        { n: '改稿', c: '#ffab40', s: 1500, sz: 55, img: 'edit' },
-        { n: '會議', c: '#ffd740', s: 2300, sz: 45, img: 'meet' }
-    ]
-};
+    // 2. 玩家 (社畜)
+    player = this.add.rectangle(200, 600, 40, 60, 0xffcc00);
+    this.physics.add.existing(player);
+    player.body.setCollideWorldBounds(true);
 
-let day = 1, progress = 0, lastT = performance.now();
-let player = { x: canvas.width/2 - 30, y: canvas.height - 120, w: 60, h: 60, isFiring: false };
-let elixir = 100;
-let enemies = [];
+    this.add.text(180, 590, '社畜', { fontSize: '14px', fill: '#000' });
 
-function spawn(isAmbush = false, side = null) {
-    const type = isAmbush ? CFG.E_BASE[2] : CFG.E_BASE[Math.floor(Math.random()*3)];
-    const s = side || (Math.random() > 0.5 ? 1 : -1);
-    enemies.push({
-        x: s === 1 ? -100 : canvas.width + 100,
-        y: 80 + Math.random() * (canvas.height - 250),
-        vx: (isAmbush ? 2600 : type.s) * s,
-        vVar: Math.random() * 5,
-        ...type
+    // 3. 障礙物群組
+    enemies = this.physics.add.group();
+
+    // 4. 定時生成敵人
+    this.time.addEvent({
+        delay: 1000,
+        callback: spawnEnemy,
+        callbackScope: this,
+        loop: true
     });
-}
-setInterval(() => { if(!player.isFiring) spawn(); }, 320);
 
-function update(dt) {
-    if (!player.isFiring) elixir = Math.min(100, elixir + dt * 50);
-    document.getElementById('elixir-fill').style.width = elixir + '%';
+    // 5. 分數
+    scoreText = this.add.text(16, 16, '逃離值: 0', { fontSize: '24px', fill: '#fff' });
 
-    if (player.isFiring) {
-        player.y -= CFG.P_SPD * dt;
-        if (player.y < -60) {
-            progress++;
-            if (progress >= 2) { day++; progress = 0; }
-            reset();
+    // 6. 輸入控制
+    cursors = this.input.keyboard.createCursorKeys();
+    
+    // iOS 觸控支持
+    this.input.on('pointerdown', (pointer) => {
+        if (pointer.x < 200) {
+            player.body.setVelocityX(-300);
+        } else {
+            player.body.setVelocityX(300);
         }
+    });
+    this.input.on('pointerup', () => player.body.setVelocityX(0));
+
+    // 碰撞偵測
+    this.physics.add.overlap(player, enemies, hitEnemy, null, this);
+}
+
+function update() {
+    if (isGameOver) return;
+
+    // PC 鍵盤控制
+    if (cursors.left.isDown) {
+        player.body.setVelocityX(-300);
+    } else if (cursors.right.isDown) {
+        player.body.setVelocityX(300);
+    } else if (this.input.pointer1.isDown === false) {
+        player.body.setVelocityX(0);
     }
 
-    enemies.forEach((e, i) => {
-        const wave = Math.sin(Date.now() / 180 + e.vVar) * 130;
-        e.x += (e.vx + wave) * dt;
-        if (player.isFiring && player.x < e.x + e.sz - 12 && player.x + player.w > e.x + 12 && 
-            player.y < e.y + e.sz - 12 && player.y + player.h > e.y + 12) reset();
-        if (e.x < -300 || e.x > canvas.width + 300) enemies.splice(i, 1);
+    // 更新分數
+    score += 1;
+    scoreText.setText('逃離值: ' + score);
+
+    // 清除出界敵人
+    enemies.children.iterate(enemy => {
+        if (enemy && enemy.y > 750) enemy.destroy();
     });
-    document.getElementById('day-val').innerText = day;
 }
 
-function reset() { 
-    player.y = canvas.height - 120; 
-    player.isFiring = false; 
-    elixir = 0; 
-}
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function spawnEnemy() {
+    if (isGameOver) return;
     
-    // 背景：簡潔淺灰道路
-    ctx.fillStyle = "#f0f0f0"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    let x = Phaser.Math.Between(50, 350);
+    let type = enemyTypes[Phaser.Math.Between(0, enemyTypes.length - 1)];
     
-    // 敵人繪製
-    enemies.forEach(e => {
-        ctx.fillStyle = "rgba(0,0,0,0.1)";
-        ctx.beginPath(); ctx.ellipse(e.x + e.sz/2, e.y + e.sz, e.sz/2, 8, 0, 0, Math.PI*2); ctx.fill();
-        if(imgs[e.img]) ctx.drawImage(imgs[e.img], e.x, e.y, e.sz, e.sz);
-    });
-
-    // 玩家繪製
-    if(imgs.me) ctx.drawImage(imgs.me, player.x, player.y, player.w, player.h);
+    let enemyBase = this.add.rectangle(x, -50, 80, 40, 0xff0000);
+    let enemyText = this.add.text(x - 25, -60, type, { fontSize: '18px', fill: '#fff' });
+    
+    enemies.add(enemyBase);
+    enemyBase.body.setVelocityY(250 + (score / 100)); // 隨時間變快
+    
+    // 讓文字跟著方塊動 (簡化版直接給文字速度)
+    this.physics.add.existing(enemyText);
+    enemyText.body.setVelocityY(250 + (score / 100));
 }
 
-function loop(t) {
-    let dt = (t - lastT) / 1000;
-    lastT = t;
-    update(dt > 0.1 ? 0 : dt);
-    draw();
-    requestAnimationFrame(loop);
+function hitEnemy(player, enemy) {
+    this.physics.pause();
+    isGameOver = true;
+    player.setAlpha(0.5);
+    this.add.text(100, 300, '被現實追上了...', { fontSize: '40px', fill: '#ff0000' });
+    this.add.text(130, 360, '點擊畫面重開', { fontSize: '20px', fill: '#fff' });
+    
+    this.input.on('pointerdown', () => window.location.reload());
 }
-
-const launch = (e) => {
-    e.preventDefault();
-    if(!player.isFiring && elixir >= 90) {
-        player.isFiring = true;
-        if(Math.random() < 0.45) { spawn(true, 1); spawn(true, -1); }
-    }
-};
-
-canvas.addEventListener('touchstart', launch);
-canvas.addEventListener('mousedown', launch);
-requestAnimationFrame(loop);
 </script>
+
 </body>
 </html>
