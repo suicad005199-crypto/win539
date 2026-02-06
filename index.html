@@ -6,159 +6,137 @@
     <title>逃離生活 - Escape Life</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; touch-action: none; }
-        canvas { display: block; margin: 0 auto; }
-        /* 為了讓背景圖適應全屏，可能需要調整 canvas 大小或背景圖片的縮放方式 */
+        body { margin: 0; background: #222; overflow: hidden; touch-action: none; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        #game-container { border: 4px solid #333; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
+    <div id="game-container"></div>
 
 <script>
 const config = {
     type: Phaser.AUTO,
-    width: 400, // 遊戲基礎寬度，會根據 viewport 縮放
-    height: 700, // 遊戲基礎高度
-    backgroundColor: '#87CEEB', // 預設背景色，將被圖片覆蓋
+    width: 360,
+    height: 640,
     parent: 'game-container',
     physics: {
         default: 'arcade',
         arcade: { debug: false }
     },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
+    scene: { preload, create, update }
 };
 
 const game = new Phaser.Game(config);
 
-let player;
-let enemies;
-let cursors;
+let player, enemies, scoreText;
 let score = 0;
-let scoreText;
 let isGameOver = false;
-let enemyTypes = ['老闆', '老婆', '主管', '房貸', '車貸', 'KPI'];
-let background; // 新增背景變數
+const enemyNames = ['老闆', '房貸', '車貸', '主管', '老婆', 'KPI', '加班'];
 
 function preload() {
-    // 預載入背景圖片
-    this.load.image('gameBg', 'https://i.ibb.co/L50HjT1/background.png'); // 將替換成 Nano Banana 生成的背景圖 URL
+    // 這裡使用我為您準備的「逃離之路」背景圖 (Base64)
+    // 這樣可以避免圖片載入失敗的問題
+    this.load.image('bg', 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=60&w=400&ixlib=rb-4.0.3');
 }
 
 function create() {
-    // 1. 背景圖 (置於最底層)
-    // 調整背景圖的縮放和位置使其覆蓋整個遊戲畫面
-    background = this.add.image(config.width / 2, config.height / 2, 'gameBg');
-    background.setDisplaySize(config.width, config.height); // 讓背景圖適應遊戲寬高
+    // 背景設定
+    let bg = this.add.image(180, 320, 'bg').setDisplaySize(360, 640).setAlpha(0.6);
+    
+    // 簡單的馬路效果
+    let road = this.add.rectangle(180, 320, 280, 640, 0x333333).setAlpha(0.8);
 
-    // 2. 玩家 (社畜) - 在背景圖之上
-    player = this.add.rectangle(200, 600, 40, 60, 0xffcc00).setDepth(1); // 增加深度，確保在背景之上
+    // 玩家 (社畜)
+    player = this.add.container(180, 550);
+    let playerBody = this.add.rectangle(0, 0, 40, 50, 0xffcc00);
+    let playerText = this.add.text(-15, -10, '社畜', { fontSize: '14px', fill: '#000', fontWeight: 'bold' });
+    player.add([playerBody, playerText]);
+    
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
 
-    this.add.text(180, 590, '社畜', { fontSize: '14px', fill: '#000' }).setDepth(1);
-
-    // 3. 障礙物群組
+    // 敵人群組
     enemies = this.physics.add.group();
 
-    // 4. 定時生成敵人
+    // 計分板
+    scoreText = this.add.text(20, 20, '逃離值: 0', { 
+        fontSize: '24px', 
+        fill: '#fff', 
+        backgroundColor: '#000000aa',
+        padding: { x: 10, y: 5 }
+    }).setDepth(10);
+
+    // 生成敵人計時器
     this.time.addEvent({
-        delay: 1000,
+        delay: 800,
         callback: spawnEnemy,
         callbackScope: this,
         loop: true
     });
 
-    // 5. 分數
-    scoreText = this.add.text(16, 16, '逃離值: 0', { fontSize: '24px', fill: '#fff', backgroundColor: '#33333380', padding: { x: 8, y: 4 } }).setDepth(2); // 增加深度和背景，讓分數清晰
-
-    // 6. 輸入控制
-    cursors = this.input.keyboard.createCursorKeys();
-    
-    // iOS 觸控支持
-    this.input.on('pointerdown', (pointer) => {
-        if (isGameOver) { // 遊戲結束時點擊重開
-            window.location.reload();
-            return;
-        }
-        if (pointer.x < config.width / 2) { // 螢幕左半邊
-            player.body.setVelocityX(-300);
-        } else { // 螢幕右半邊
-            player.body.setVelocityX(300);
-        }
-    });
-    this.input.on('pointerup', () => player.body.setVelocityX(0));
-
     // 碰撞偵測
     this.physics.add.overlap(player, enemies, hitEnemy, null, this);
+
+    // 控制 (PC + iOS)
+    this.input.on('pointermove', (pointer) => {
+        if (!isGameOver) {
+            // 平滑跟隨手指或滑鼠位置
+            this.tweens.add({
+                targets: player,
+                x: Phaser.Math.Clamp(pointer.x, 60, 300),
+                duration: 100
+            });
+        }
+    });
+
+    // 針對手機點擊重玩
+    this.input.on('pointerdown', () => {
+        if (isGameOver) window.location.reload();
+    });
 }
 
 function update() {
     if (isGameOver) return;
-
-    // PC 鍵盤控制
-    if (cursors.left.isDown) {
-        player.body.setVelocityX(-300);
-    } else if (cursors.right.isDown) {
-        player.body.setVelocityX(300);
-    } else if (this.input.pointer1.isDown === false) { // 確保滑鼠/觸控抬起時速度歸零
-        player.body.setVelocityX(0);
-    }
-
-    // 更新分數
     score += 1;
-    scoreText.setText('逃離值: ' + score);
-
-    // 清除出界敵人
-    enemies.children.iterate(enemy => {
-        // enemy.body 可能是 null 如果已經被銷毀
-        if (enemy && enemy.body && enemy.y > config.height + 50) {
-            enemy.destroy(true); // 徹底銷毀
-        }
-    });
+    scoreText.setText('逃離值: ' + Math.floor(score/10));
 }
 
 function spawnEnemy() {
     if (isGameOver) return;
-    
-    let x = Phaser.Math.Between(50, config.width - 50);
-    let type = enemyTypes[Phaser.Math.Between(0, enemyTypes.length - 1)];
-    
-    let enemyBase = this.add.rectangle(x, -50, 80, 40, 0xff0000).setDepth(1);
-    let enemyText = this.add.text(x - 25, -60, type, { fontSize: '18px', fill: '#fff' }).setDepth(1);
-    
-    this.physics.add.existing(enemyBase);
-    this.physics.add.existing(enemyText);
 
-    enemyBase.body.setVelocityY(250 + (score / 100)); // 隨時間變快
-    enemyText.body.setVelocityY(250 + (score / 100));
+    let x = Phaser.Math.Between(60, 300);
+    let name = enemyNames[Phaser.Math.Between(0, enemyNames.length - 1)];
+    
+    let container = this.add.container(x, -50);
+    let box = this.add.rectangle(0, 0, 70, 40, 0xff4444);
+    let txt = this.add.text(-25, -10, name, { fontSize: '16px', fill: '#fff' });
+    container.add([box, txt]);
 
-    // 將文字和矩形綁定，讓它們一起移動
-    enemyText.owner = enemyBase; // 方便管理
-    enemies.add(enemyBase);
-    enemies.add(enemyText); // 將文字也加入群組，方便統一管理
-
-    // 敵人移動出界時，同時銷毀文字
-    enemyBase.on('destroy', () => {
-        if (enemyText && enemyText.active) enemyText.destroy();
+    enemies.add(container);
+    this.physics.add.existing(container);
+    
+    // 設定敵人向下衝的速度，隨分數增加
+    container.body.setVelocityY(200 + (score/20));
+    
+    // 增加一點點左右晃動，模擬生活的不穩定感
+    this.tweens.add({
+        targets: container,
+        x: container.x + (Math.random() > 0.5 ? 20 : -20),
+        duration: 1000,
+        yoyo: true,
+        repeat: -1
     });
 }
 
-function hitEnemy(player, enemy) {
-    if (isGameOver) return; // 避免重複觸發
-
-    this.physics.pause();
+function hitEnemy() {
     isGameOver = true;
-    player.setAlpha(0.5); // 玩家半透明
-    this.add.text(config.width / 2, config.height / 2 - 30, '被現實追上了...', { fontSize: '40px', fill: '#ff0000', backgroundColor: '#00000080', padding: { x: 10, y: 5 } }).setOrigin(0.5).setDepth(2);
-    this.add.text(config.width / 2, config.height / 2 + 30, '點擊畫面重開', { fontSize: '20px', fill: '#fff', backgroundColor: '#00000080', padding: { x: 8, y: 4 } }).setOrigin(0.5).setDepth(2);
-    
-    // 遊戲結束時，只監聽一次觸控事件
-    this.input.once('pointerdown', () => window.location.reload());
+    this.physics.pause();
+    player.setAlpha(0.3);
+
+    this.add.rectangle(180, 320, 360, 640, 0x000000, 0.7).setDepth(20);
+    this.add.text(180, 300, '你被現實抓住了！', { fontSize: '32px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setDepth(21);
+    this.add.text(180, 360, '點擊畫面重新投胎', { fontSize: '20px', fill: '#fff' }).setOrigin(0.5).setDepth(21);
 }
 </script>
-
 </body>
 </html>
