@@ -3,34 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Office Royale: 30 Days</title>
+    <title>Office Royale: Extreme Edition</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial', sans-serif; }
+        /* 皇室戰爭質感 UI 背景 */
+        body { 
+            margin: 0; overflow: hidden; background: #1a1a1d; 
+            display: flex; justify-content: center; align-items: center; height: 100vh; 
+            [cite_start]font-family: 'Arial', sans-serif; [cite: 2]
+        }
         
-        /* 皇室戰爭風格 UI */
-        #game-container { position: relative; border: 8px solid #5d4037; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #game-container { 
+            position: relative; border: 6px solid #4e342e; border-radius: 20px; 
+            [cite_start]overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); [cite: 4]
+        }
         
+        /* 頂部資訊列：皇室木紋風 */
         #ui-header { 
-            position: absolute; top: 0; width: 100%; height: 60px; 
-            background: linear-gradient(to bottom, #8d6e63, #5d4037);
-            display: flex; justify-content: center; align-items: center;
-            border-bottom: 4px solid #3e2723; z-index: 10;
+            position: absolute; top: 0; width: 100%; height: 50px; 
+            background: linear-gradient(to bottom, #8d6e63, #3e2723);
+            display: flex; justify-content: space-between; align-items: center; 
+            [cite_start]padding: 0 15px; box-sizing: border-box; border-bottom: 3px solid #2d1b18; z-index: 10; [cite: 6, 7]
         }
 
         .day-badge {
-            background: #f44336; color: white; padding: 5px 20px;
-            border-radius: 10px; border: 3px solid #ffc107;
-            font-weight: 900; font-size: 20px; box-shadow: 0 4px 0 #b71c1c;
+            background: #f44336; color: white; padding: 2px 12px;
+            border-radius: 8px; border: 2px solid #ffc107;
+            [cite_start]font-weight: 900; font-size: 18px; box-shadow: 0 3px 0 #b71c1c; [cite: 8, 9]
         }
 
-        #progress-container {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 80%; height: 15px; background: #3e2723;
-            border-radius: 10px; border: 3px solid #795548; z-index: 10;
+        /* 聖水能量條：經典粉色計量感 */
+        #elixir-container {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            width: 80%; height: 12px; background: #263238;
+            [cite_start]border-radius: 10px; border: 2px solid #546e7a; z-index: 10; [cite: 10, 11]
         }
-        #progress-bar { width: 0%; height: 100%; background: #4caf50; border-radius: 5px; transition: 0.3s; }
+        #elixir-bar { 
+            width: 0%; height: 100%; 
+            background: linear-gradient(90deg, #ea80fc, #e040fb); 
+            border-radius: 5px; transition: width 0.1s linear; 
+        }
 
-        canvas { background: #9e9e9e; display: block; cursor: pointer; touch-action: none; }
+        [cite_start]canvas { background: #78909c; display: block; touch-action: none; [cite: 13] }
     </style>
 </head>
 <body>
@@ -38,139 +51,161 @@
 <div id="game-container">
     <div id="ui-header">
         <div class="day-badge">DAY <span id="day-val">1</span> / 30</div>
+        <div style="color: #fff; font-size: 12px; font-weight: bold;">PROG: <span id="prog-val">0</span>/2</div>
     </div>
-    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="elixir-container"><div id="elixir-bar"></div></div>
     <canvas id="game"></canvas>
 </div>
 
 <script>
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+[cite_start]const ctx = canvas.getContext('2d'); [cite: 14]
 canvas.width = 360; canvas.height = 640;
 
-// --- 速度參數 (維持用戶指定) ---
-const CFG = {
-    P_SPD: 850,
-    E_TYPES: [
-        { n: '主管', c: '#ff5252', s: 1000, sz: 60, icon: '🧛' },
-        { n: '改稿', c: '#ffab40', s: 1500, sz: 50, icon: '📜' },
-        { n: '會議', c: '#ffd740', s: 2300, sz: 40, icon: '⏰' }
-    ],
-    AMBUSH_SPD: 2500
+// 素材資源 (Emoji 表情圖片)
+const IMG_SRC = {
+    me: 'https://openmoji.org/data/color/svg/1F3C3.svg', // 跑者
+    boss: 'https://openmoji.org/data/color/svg/1F47A.svg', // 😈 主管
+    edit: 'https://openmoji.org/data/color/svg/1F4DC.svg', // 📜 改稿
+    meet: 'https://openmoji.org/data/color/svg/23F0.svg'  // ⏰ 會議
 };
 
-let day = 1, progress = 0, isPaused = false, lastT = 0;
-let player = { x: 150, y: 540, w: 60, h: 60, isFiring: false };
+const imgs = {};
+Object.entries(IMG_SRC).forEach(([k, src]) => {
+    imgs[k] = new Image();
+    imgs[k].src = src;
+});
+
+const CFG = {
+    [cite_start]P_SPD: 850, // 玩家速度 [cite: 15]
+    E_TYPES: [
+        { n: '主管', c: '#ff5252', s: 1000, sz: 65, img: 'boss' },
+        { n: '改稿', c: '#ffab40', s: 1500, sz: 55, img: 'edit' },
+        { n: '會議', c: '#ffd740', s: 2300, sz: 45, img: 'meet' }
+    ],
+    [cite_start]AMBUSH_SPD: 2500 // 攔截速度 [cite: 15]
+};
+
+[cite_start]let day = 1, progress = 0, isPaused = false, lastT = performance.now(); [cite: 16]
+[cite_start]let player = { x: 150, y: 530, w: 60, h: 60, isFiring: false }; [cite: 17]
+let elixir = 100; // 聖水值
 let enemies = [];
 
-// 音效 (聖水風格)
-const audio = new (window.AudioContext || window.webkitAudioContext)();
+[cite_start]const audio = new (window.AudioContext || window.webkitAudioContext)(); [cite: 18]
 function playSound(f, t, d) {
     if(audio.state === 'suspended') audio.resume();
-    const o = audio.createOscillator(), g = audio.createGain();
+    [cite_start]const o = audio.createOscillator(), g = audio.createGain(); [cite: 19]
     o.type = t; o.frequency.setValueAtTime(f, audio.currentTime);
     g.gain.setValueAtTime(0.1, audio.currentTime);
     g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
     o.connect(g); g.connect(audio.destination);
-    o.start(); o.stop(audio.currentTime + d);
+    [cite_start]o.start(); o.stop(audio.currentTime + d); [cite: 20]
 }
 
 function spawn(isAmbush = false, sideInput = null) {
-    const type = isAmbush ? CFG.E_TYPES[2] : CFG.E_TYPES[Math.floor(Math.random()*3)];
+    const type = isAmbush ? [cite_start]CFG.E_TYPES[2] : CFG.E_TYPES[Math.floor(Math.random()*3)]; [cite: 21]
     const side = sideInput || (Math.random() > 0.5 ? 1 : -1);
     enemies.push({
         x: side === 1 ? -120 : 480,
         y: 100 + Math.random() * 320,
         vx: (isAmbush ? CFG.AMBUSH_SPD : type.s) * side,
-        var: Math.random() * 2, // 用於忽快忽慢的位移
+        [cite_start]vVar: Math.random() * 5, // 忽快忽慢擾動值 [cite: 22]
         ...type
     });
 }
 
-setInterval(() => { if(!isPaused) spawn(); }, 280);
+setInterval(() => { if(!isPaused && !player.isFiring) spawn(); }, 300);
 
 function update(dt) {
     if (isPaused) return;
 
+    // 聖水恢復邏輯 (發射後需等待充能)
+    if (!player.isFiring) {
+        elixir = Math.min(100, elixir + dt * 45); 
+    } else {
+        elixir = 0;
+    }
+    document.getElementById('elixir-bar').style.width = elixir + '%';
+
     if (player.isFiring) {
-        player.y -= CFG.P_SPD * dt;
-        if (player.y < 50) {
+        [cite_start]player.y -= CFG.P_SPD * dt; [cite: 24]
+        [cite_start]if (player.y < 50) { [cite: 25]
             progress++;
             playSound(1000, 'sine', 0.2);
-            if (progress >= 2) { day++; progress = 0; }
+            if (progress >= 2) { day++; progress = 0; [cite_start]} [cite: 26]
             reset();
         }
     }
 
     enemies.forEach((e, i) => {
-        // 忽快忽慢效果 (Sine 波形擾動)
-        const wave = Math.sin(Date.now() / 150 + e.var) * 100;
+        [cite_start]// 忽快忽慢效果：動態速度擾動 [cite: 28]
+        const wave = Math.sin(Date.now() / 200 + e.vVar) * 120;
         e.x += (e.vx + wave) * dt;
 
-        if (player.isFiring && player.x < e.x + e.sz && player.x + player.w > e.x && player.y < e.y + e.sz && player.y + player.h > e.y) {
-            playSound(150, 'square', 0.3);
+        // 碰撞偵測 (微調判定範圍更精準)
+        if (player.isFiring && player.x < e.x + e.sz - 10 && player.x + player.w > e.x + 10 && 
+            player.y < e.y + e.sz - 10 && player.y + player.h > e.y + 10) {
+            [cite_start]playSound(150, 'square', 0.3); [cite: 28]
             reset();
         }
-        if (e.x < -300 || e.x > 600) enemies.splice(i, 1);
+        if (e.x < -300 || e.x > 660) enemies.splice(i, 1);
     });
 
-    document.getElementById('day-val').innerText = day;
+    [cite_start]document.getElementById('day-val').innerText = day; [cite: 29]
+    document.getElementById('prog-val').innerText = progress;
     document.getElementById('progress-bar').style.width = (progress / 2) * 100 + "%";
 }
 
-function reset() { player.y = 540; player.isFiring = false; }
+function reset() { 
+    player.y = 530; 
+    [cite_start]player.isFiring = false; [cite: 30]
+}
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 辦公室馬路背景
-    ctx.fillStyle = "#78909c"; // 地毯灰色
+    [cite_start]// 辦公室馬路背景 [cite: 31]
+    ctx.fillStyle = "#607d8b"; // 地毯灰色
     ctx.fillRect(0,0,360,640);
-    // 分道線
-    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    
+    [cite_start]// 分道線 [cite: 32, 33]
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 4;
     ctx.setLineDash([20, 20]);
     ctx.beginPath(); ctx.moveTo(120,0); ctx.lineTo(120,640); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(240,0); ctx.lineTo(240,640); ctx.stroke();
     ctx.setLineDash([]);
 
-    // 敵人 (卡牌化)
+    // 敵人繪製 (Emoji + 卡牌陰影)
     enemies.forEach(e => {
-        // 卡牌陰影
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.fillRect(e.x + 4, e.y + 4, e.sz, e.sz);
-        // 卡牌主體
-        ctx.fillStyle = "#fff";
-        ctx.strokeStyle = e.c;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.roundRect(e.x, e.y, e.sz, e.sz, 8);
-        ctx.fill(); ctx.stroke();
-        // 圖示與文字
-        ctx.fillStyle = "#3e2723";
-        ctx.font = `bold ${e.sz*0.4}px Arial`;
-        ctx.textAlign = "center";
-        ctx.fillText(e.icon, e.x + e.sz/2, e.y + e.sz*0.45);
-        ctx.font = `bold ${e.sz*0.25}px Arial`;
-        ctx.fillText(e.n, e.x + e.sz/2, e.y + e.sz*0.8);
+        // 地面陰影
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath(); ctx.ellipse(e.x + e.sz/2, e.y + e.sz, e.sz/2, 10, 0, 0, Math.PI*2); ctx.fill();
+        
+        // 角色圖像繪製
+        if(imgs[e.img]) {
+            ctx.drawImage(imgs[e.img], e.x, e.y, e.sz, e.sz);
+        }
+
+        // 血條裝飾感 (皇室單位特徵)
+        ctx.fillStyle = "#333"; ctx.fillRect(e.x, e.y - 12, e.sz, 6);
+        ctx.fillStyle = e.c; ctx.fillRect(e.x, e.y - 12, e.sz * 0.8, 6);
     });
 
-    // 玩家 (聖水小兵)
-    ctx.fillStyle = "#ffeb3b";
-    ctx.strokeStyle = "#f57f17";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.roundRect(player.x, player.y, player.w, player.h, 12);
-    ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#3e2723";
-    ctx.font = "bold 24px Arial";
-    ctx.fillText("我", player.x + player.w/2, player.y + player.h/2 + 8);
+    [cite_start]// 玩家繪製 [cite: 35, 36]
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.beginPath(); ctx.ellipse(player.x + player.w/2, player.y + player.h, player.w/2, 10, 0, 0, Math.PI*2); ctx.fill();
     
-    // 聖水特效
+    if(imgs.me) {
+        ctx.drawImage(imgs.me, player.x, player.y, player.w, player.h);
+    }
+    
+    [cite_start]// 彈射聖水特效 [cite: 38, 39]
     if(player.isFiring) {
-        ctx.shadowBlur = 15; ctx.shadowColor = "#00bcd4";
-        ctx.fillStyle = "rgba(0, 188, 212, 0.5)";
-        ctx.fillRect(player.x, player.y + player.h, player.w, 20);
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#00bcd4";
+        ctx.fillStyle = "rgba(0, 188, 212, 0.4)";
+        ctx.fillRect(player.x, player.y + player.h, player.w, 15);
         ctx.shadowBlur = 0;
     }
 }
@@ -178,26 +213,29 @@ function draw() {
 function loop(t) {
     let dt = (t - lastT) / 1000;
     lastT = t;
-    update(dt > 0.1 ? 0 : dt);
+    [cite_start]update(dt > 0.1 ? 0 : dt); [cite: 40]
     draw();
     requestAnimationFrame(loop);
 }
 
 const launch = () => {
-    if(!player.isFiring && !isPaused) {
+    // 只有聖水充滿且未在射擊時才可發動
+    if(!player.isFiring && !isPaused && elixir >= 95) {
         player.isFiring = true;
-        playSound(600, 'triangle', 0.1);
+        [cite_start]playSound(600, 'triangle', 0.1); [cite: 41]
+        
+        [cite_start]// 隱藏機制：發射時 40% 機率彈出兩側高速敵人 [cite: 41]
         if(Math.random() < 0.4) {
-            const m = Math.floor(Math.random()*3);
+            [cite_start]const m = Math.floor(Math.random()*3); [cite: 42]
             if(m===0){ spawn(true, 1); spawn(true, 1); }
             else if(m===1){ spawn(true, -1); spawn(true, -1); }
-            else { spawn(true, 1); spawn(true, -1); }
+            else { spawn(true, 1); spawn(true, -1); [cite_start]} [cite: 43, 44]
         }
     }
 };
 
 canvas.addEventListener('mousedown', launch);
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); launch(); });
+[cite_start]canvas.addEventListener('touchstart', (e) => { e.preventDefault(); launch(); }); [cite: 45]
 requestAnimationFrame(loop);
 </script>
 </body>
