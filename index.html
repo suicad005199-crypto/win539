@@ -2,96 +2,95 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEMO面版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>demo面板</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .num-btn { @apply w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 font-bold transition-all hover:bg-orange-50 text-slate-600; }
-        .num-btn.selected { @apply bg-orange-500 border-orange-600 text-white shadow-md scale-110; }
-        .hot-tag { @apply bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-bold border border-red-200; }
-        .tab-btn { @apply flex-1 py-3 text-sm font-bold transition-all border-b-2; }
-        .tab-active { @apply border-orange-500 text-orange-600 bg-orange-50; }
-        .tab-inactive { @apply border-transparent text-gray-400 hover:text-gray-600; }
+        /* iOS 禁止縮放與選取優化 */
+        body { -webkit-tap-highlight-color: transparent; user-select: none; background-color: #000; }
+        .num-btn { @apply w-full aspect-square flex items-center justify-center rounded-full border border-gray-800 font-bold text-lg transition-all active:scale-90 bg-zinc-900 text-gray-300; }
+        .num-btn.selected { @apply bg-orange-500 border-orange-400 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]; }
+        .ios-blur { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
-<body class="bg-slate-50 p-4 font-sans">
+<body class="text-white pb-32">
 
-    <div class="max-w-4xl mx-auto">
-        <div class="flex bg-white rounded-xl shadow-sm overflow-hidden mb-6 border border-slate-100">
-            <button onclick="switchSource('539')" id="tab-539" class="tab-btn tab-active">今彩 539</button>
-            <button onclick="switchSource('CA')" id="tab-CA" class="tab-btn tab-inactive">加州 539</button>
+    <div class="sticky top-0 z-50 bg-black/80 ios-blur border-b border-zinc-800 px-4 py-4">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-black text-orange-500 tracking-tighter">539 STRATEGY</h1>
+                <p id="current-label" class="text-[10px] text-zinc-500 font-bold uppercase">今彩 539 / 數據同步中</p>
+            </div>
+            <button onclick="fetchData()" class="bg-zinc-800 p-2 rounded-full active:bg-zinc-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="p-4 space-y-6">
+        
+        <div class="bg-zinc-900 p-1 rounded-xl flex border border-zinc-800">
+            <button onclick="switchSource('539')" id="tab-539" class="flex-1 py-2 text-sm rounded-lg font-bold transition-all bg-orange-500 text-white">今彩 539</button>
+            <button onclick="switchSource('fantasy5')" id="tab-fantasy5" class="flex-1 py-2 text-sm rounded-lg font-bold transition-all text-zinc-500">天天樂</button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div class="md:col-span-4 space-y-4">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                    <h3 class="font-bold text-slate-700 mb-4 flex items-center justify-between">
-                        <span>📊 趨勢分析</span>
-                        <span id="data-count" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-400">0 期</span>
-                    </h3>
-                    <div class="space-y-5">
-                        <div>
-                            <span class="text-xs text-slate-400 font-bold">強勢尾數 (追 2 星首選)</span>
-                            <div id="hot-tails" class="flex flex-wrap gap-2 mt-2">
-                                <span class="text-slate-300 text-xs italic">點擊更新讀取數據...</span>
-                            </div>
-                        </div>
-                        <div class="pt-4 border-t border-slate-50">
-                            <div class="flex justify-between text-xs font-bold mb-2">
-                                <span class="text-slate-400">大號分佈 (20-39)</span>
-                                <span id="size-ratio" class="text-slate-700">0%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div id="size-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl">
+                <p class="text-zinc-500 text-[10px] font-bold mb-2 uppercase">熱門尾數</p>
+                <div id="hot-tails" class="flex gap-2">
+                    <span class="text-orange-500 font-black text-xl">--</span>
                 </div>
-
-                <div class="bg-slate-900 p-5 rounded-2xl shadow-xl text-white">
-                    <h3 class="text-slate-400 text-xs font-bold mb-4">投注試算機</h3>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-end">
-                            <span class="text-sm text-slate-400">選取號碼</span>
-                            <span id="selected-count" class="text-2xl font-mono text-orange-400">0</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 pt-2">
-                            <div class="bg-slate-800 p-2 rounded">
-                                <p class="text-[10px] text-slate-500">2 星注數</p>
-                                <p id="star2-count" class="font-bold">0</p>
-                            </div>
-                            <div class="bg-slate-800 p-2 rounded">
-                                <p class="text-[10px] text-slate-500">3 星注數</p>
-                                <p id="star3-count" class="font-bold">0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button onclick="fetchData()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-200 transition-all active:scale-95">
-                    更新 API 數據
-                </button>
             </div>
-
-            <div class="md:col-span-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="font-bold text-slate-700 flex items-center">
-                        <span id="current-title">今彩 539</span>
-                        <span class="ml-2 text-xs font-normal text-slate-400">智能選號盤</span>
-                    </h2>
-                    <button onclick="clearSelection()" class="text-xs text-slate-400 hover:text-red-500">清除全部</button>
-                </div>
-                
-                <div class="grid grid-cols-5 sm:grid-cols-10 gap-2 mb-8" id="number-grid"></div>
-
-                <div class="border-t border-slate-50 pt-6">
-                    <h4 class="text-sm font-bold text-slate-700 mb-3">戰略過濾建議</h4>
-                    <div id="strategy-tip" class="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl leading-relaxed">
-                        請點擊更新數據，系統將分析 2026/01/01 至今的趨勢...
+            <div class="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl">
+                <p class="text-zinc-500 text-[10px] font-bold mb-2 uppercase">大號佔比</p>
+                <div class="flex items-end gap-2">
+                    <span id="size-ratio" class="text-white font-black text-xl">0%</span>
+                    <div class="flex-1 bg-zinc-800 h-1.5 rounded-full mb-1.5 overflow-hidden">
+                        <div id="size-bar" class="bg-orange-500 h-full transition-all duration-1000" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="bg-zinc-900/30 rounded-3xl p-4 border border-zinc-800">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <span class="text-xs font-bold text-zinc-400">智能選號盤 (01-39)</span>
+                <button onclick="clearSelection()" class="text-xs text-orange-500/50">RESET</button>
+            </div>
+            <div class="grid grid-cols-5 gap-3" id="number-grid">
+                </div>
+        </div>
+
+        <div class="bg-orange-500/10 border border-orange-500/20 p-4 rounded-2xl">
+            <p id="strategy-tip" class="text-orange-200 text-xs leading-relaxed text-center font-medium">
+                點擊上方刷新按鈕，獲取最新戰略建議。
+            </p>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-black/90 ios-blur border-t border-zinc-800 px-6 pt-4 safe-area-bottom">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex gap-4">
+                <div class="text-center">
+                    <p class="text-[10px] text-zinc-500 uppercase">2星注</p>
+                    <p id="star2-count" class="text-lg font-mono font-bold text-orange-500">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] text-zinc-500 uppercase">3星注</p>
+                    <p id="star3-count" class="text-lg font-mono font-bold text-white">0</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-zinc-500 uppercase">已選號碼</p>
+                <p id="selected-count" class="text-lg font-mono font-bold text-white">0</p>
+            </div>
+        </div>
+        <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="w-full bg-orange-500 text-black font-black py-4 rounded-2xl active:bg-orange-600 transition-all mb-4">
+            確認戰略組合
+        </button>
     </div>
 
     <script>
@@ -109,8 +108,11 @@
                 btn.innerText = num;
                 btn.onclick = () => {
                     btn.classList.toggle('selected');
-                    if (selectedNumbers.includes(num)) selectedNumbers = selectedNumbers.filter(n => n !== num);
-                    else selectedNumbers.push(num);
+                    if (selectedNumbers.includes(num)) {
+                        selectedNumbers = selectedNumbers.filter(n => n !== num);
+                    } else {
+                        selectedNumbers.push(num);
+                    }
                     updateCalc();
                 };
                 grid.appendChild(btn);
@@ -119,9 +121,10 @@
 
         function switchSource(type) {
             currentSource = type;
-            document.getElementById('tab-539').className = `tab-btn ${type==='539'?'tab-active':'tab-inactive'}`;
-            document.getElementById('tab-CA').className = `tab-btn ${type==='CA'?'tab-active':'tab-inactive'}`;
-            document.getElementById('current-title').innerText = type === '539' ? '今彩 539' : '加州 539';
+            const is539 = type === '539';
+            document.getElementById('tab-539').className = `flex-1 py-2 text-sm rounded-lg font-bold transition-all ${is539 ? 'bg-orange-500 text-white' : 'text-zinc-500'}`;
+            document.getElementById('tab-fantasy5').className = `flex-1 py-2 text-sm rounded-lg font-bold transition-all ${!is539 ? 'bg-orange-500 text-white' : 'text-zinc-500'}`;
+            document.getElementById('current-label').innerText = is539 ? '今彩 539 / 數據讀取中' : '天天樂 / 數據讀取中';
             clearSelection();
             fetchData();
         }
@@ -140,14 +143,12 @@
         }
 
         async function fetchData() {
-            const tip = document.getElementById('strategy-tip');
-            tip.innerText = "正在同步 Google Sheet 數據...";
             try {
                 const response = await fetch(`${API_URL}?sheet=${currentSource}`);
                 const data = await response.json();
                 analyzeData(data);
             } catch (e) {
-                tip.innerHTML = "<span class='text-red-500'>連線失敗，請確認 API 已發佈為「所有人」皆可存取。</span>";
+                document.getElementById('strategy-tip').innerText = "API 連線失敗，請檢查網路。";
             }
         }
 
@@ -157,7 +158,7 @@
             let totalBalls = 0;
 
             data.forEach(row => {
-                const nums = [row['獎號1'], row['獎號2'], row['獎號3'], row['獎號4'], row['獎號5']];
+                const nums = [row.num1, row.num2, row.num3, row.num4, row.num5];
                 nums.forEach(n => {
                     const val = parseInt(n);
                     if (!isNaN(val)) {
@@ -169,25 +170,17 @@
                 });
             });
 
-            // 渲染趨勢
             const sortedTails = Object.entries(tails).sort((a,b)=>b[1]-a[1]).slice(0,3);
-            document.getElementById('hot-tails').innerHTML = sortedTails.map(t=>`<span class="hot-tag">${t[0]} 尾</span>`).join('');
+            document.getElementById('hot-tails').innerHTML = sortedTails.map(t=>`<span class="text-orange-500 font-black text-xl">${t[0]}</span>`).join('<span class="text-zinc-700">/</span>');
             
             const bigRatio = ((bigCount / totalBalls) * 100).toFixed(0);
             document.getElementById('size-ratio').innerText = bigRatio + '%';
             document.getElementById('size-bar').style.width = bigRatio + '%';
-            document.getElementById('data-count').innerText = data.length + ' 期';
 
-            document.getElementById('strategy-tip').innerHTML = `
-                <b>策略解析：</b><br>
-                1. <b>追尾：</b>目前強勢尾數為 <b>${sortedTails.map(t=>t[0]).join(', ')}</b>，建議從中選 2 碼。<br>
-                2. <b>大小：</b>大號佔比 ${bigRatio}%，${bigRatio > 60 ? '近期大號偏多，建議配置 3大2小' : '分佈平均，建議 2大3小'}。<br>
-                3. <b>穩定獲利：</b>選取 6 碼進行 2 星連碰僅需 15 注，中 2 碼即保本。
-            `;
+            document.getElementById('strategy-tip').innerText = `近期 ${sortedTails[0][0]} 尾強勢，大號比例為 ${bigRatio}%，建議專攻 2 星組合。`;
         }
 
         initGrid();
     </script>
 </body>
 </html>
-
