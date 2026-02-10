@@ -1,142 +1,192 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>逃離生活 - Escape Life</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>539 智慧戰略面版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { margin: 0; background: #222; overflow: hidden; touch-action: none; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-        #game-container { border: 4px solid #333; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .num-btn { @apply w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 font-bold transition-all hover:bg-orange-50 text-slate-600; }
+        .num-btn.selected { @apply bg-orange-500 border-orange-600 text-white shadow-md scale-110; }
+        .hot-tag { @apply bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-bold border border-red-200; }
+        .tab-btn { @apply flex-1 py-3 text-sm font-bold transition-all border-b-2; }
+        .tab-active { @apply border-orange-500 text-orange-600 bg-orange-50; }
+        .tab-inactive { @apply border-transparent text-gray-400 hover:text-gray-600; }
     </style>
 </head>
-<body>
-    <div id="game-container"></div>
+<body class="bg-slate-50 p-4 font-sans">
 
-<script>
-const config = {
-    type: Phaser.AUTO,
-    width: 360,
-    height: 640,
-    parent: 'game-container',
-    physics: {
-        default: 'arcade',
-        arcade: { debug: false }
-    },
-    scene: { preload, create, update }
-};
+    <div class="max-w-4xl mx-auto">
+        <div class="flex bg-white rounded-xl shadow-sm overflow-hidden mb-6 border border-slate-100">
+            <button onclick="switchSource('539')" id="tab-539" class="tab-btn tab-active">今彩 539</button>
+            <button onclick="switchSource('CA')" id="tab-CA" class="tab-btn tab-inactive">加州 539</button>
+        </div>
 
-const game = new Phaser.Game(config);
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div class="md:col-span-4 space-y-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-700 mb-4 flex items-center justify-between">
+                        <span>📊 趨勢分析</span>
+                        <span id="data-count" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-400">0 期</span>
+                    </h3>
+                    <div class="space-y-5">
+                        <div>
+                            <span class="text-xs text-slate-400 font-bold">強勢尾數 (追 2 星首選)</span>
+                            <div id="hot-tails" class="flex flex-wrap gap-2 mt-2">
+                                <span class="text-slate-300 text-xs italic">點擊更新讀取數據...</span>
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-slate-50">
+                            <div class="flex justify-between text-xs font-bold mb-2">
+                                <span class="text-slate-400">大號分佈 (20-39)</span>
+                                <span id="size-ratio" class="text-slate-700">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="size-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-let player, enemies, scoreText;
-let score = 0;
-let isGameOver = false;
-const enemyNames = ['老闆', '房貸', '車貸', '主管', '老婆', 'KPI', '加班'];
+                <div class="bg-slate-900 p-5 rounded-2xl shadow-xl text-white">
+                    <h3 class="text-slate-400 text-xs font-bold mb-4">投注試算機</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <span class="text-sm text-slate-400">選取號碼</span>
+                            <span id="selected-count" class="text-2xl font-mono text-orange-400">0</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-2">
+                            <div class="bg-slate-800 p-2 rounded">
+                                <p class="text-[10px] text-slate-500">2 星注數</p>
+                                <p id="star2-count" class="font-bold">0</p>
+                            </div>
+                            <div class="bg-slate-800 p-2 rounded">
+                                <p class="text-[10px] text-slate-500">3 星注數</p>
+                                <p id="star3-count" class="font-bold">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="fetchData()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-200 transition-all active:scale-95">
+                    更新 API 數據
+                </button>
+            </div>
 
-function preload() {
-    // 這裡使用我為您準備的「逃離之路」背景圖 (Base64)
-    // 這樣可以避免圖片載入失敗的問題
-    this.load.image('bg', 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=60&w=400&ixlib=rb-4.0.3');
-}
+            <div class="md:col-span-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="font-bold text-slate-700 flex items-center">
+                        <span id="current-title">今彩 539</span>
+                        <span class="ml-2 text-xs font-normal text-slate-400">智能選號盤</span>
+                    </h2>
+                    <button onclick="clearSelection()" class="text-xs text-slate-400 hover:text-red-500">清除全部</button>
+                </div>
+                
+                <div class="grid grid-cols-5 sm:grid-cols-10 gap-2 mb-8" id="number-grid"></div>
 
-function create() {
-    // 背景設定
-    let bg = this.add.image(180, 320, 'bg').setDisplaySize(360, 640).setAlpha(0.6);
-    
-    // 簡單的馬路效果
-    let road = this.add.rectangle(180, 320, 280, 640, 0x333333).setAlpha(0.8);
+                <div class="border-t border-slate-50 pt-6">
+                    <h4 class="text-sm font-bold text-slate-700 mb-3">戰略過濾建議</h4>
+                    <div id="strategy-tip" class="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl leading-relaxed">
+                        請點擊更新數據，系統將分析 2026/01/01 至今的趨勢...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // 玩家 (社畜)
-    player = this.add.container(180, 550);
-    let playerBody = this.add.rectangle(0, 0, 40, 50, 0xffcc00);
-    let playerText = this.add.text(-15, -10, '社畜', { fontSize: '14px', fill: '#000', fontWeight: 'bold' });
-    player.add([playerBody, playerText]);
-    
-    this.physics.add.existing(player);
-    player.body.setCollideWorldBounds(true);
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxX4EPXapWEH0l7yodiQjAquQQMNq73WkChSIuWnsd3_p59grPf9AKsrN32TtMXydBa-A/exec';
+        let currentSource = '539';
+        let selectedNumbers = [];
 
-    // 敵人群組
-    enemies = this.physics.add.group();
-
-    // 計分板
-    scoreText = this.add.text(20, 20, '逃離值: 0', { 
-        fontSize: '24px', 
-        fill: '#fff', 
-        backgroundColor: '#000000aa',
-        padding: { x: 10, y: 5 }
-    }).setDepth(10);
-
-    // 生成敵人計時器
-    this.time.addEvent({
-        delay: 800,
-        callback: spawnEnemy,
-        callbackScope: this,
-        loop: true
-    });
-
-    // 碰撞偵測
-    this.physics.add.overlap(player, enemies, hitEnemy, null, this);
-
-    // 控制 (PC + iOS)
-    this.input.on('pointermove', (pointer) => {
-        if (!isGameOver) {
-            // 平滑跟隨手指或滑鼠位置
-            this.tweens.add({
-                targets: player,
-                x: Phaser.Math.Clamp(pointer.x, 60, 300),
-                duration: 100
-            });
+        function initGrid() {
+            const grid = document.getElementById('number-grid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 39; i++) {
+                const num = i.toString().padStart(2, '0');
+                const btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.innerText = num;
+                btn.onclick = () => {
+                    btn.classList.toggle('selected');
+                    if (selectedNumbers.includes(num)) selectedNumbers = selectedNumbers.filter(n => n !== num);
+                    else selectedNumbers.push(num);
+                    updateCalc();
+                };
+                grid.appendChild(btn);
+            }
         }
-    });
 
-    // 針對手機點擊重玩
-    this.input.on('pointerdown', () => {
-        if (isGameOver) window.location.reload();
-    });
-}
+        function switchSource(type) {
+            currentSource = type;
+            document.getElementById('tab-539').className = `tab-btn ${type==='539'?'tab-active':'tab-inactive'}`;
+            document.getElementById('tab-CA').className = `tab-btn ${type==='CA'?'tab-active':'tab-inactive'}`;
+            document.getElementById('current-title').innerText = type === '539' ? '今彩 539' : '加州 539';
+            clearSelection();
+            fetchData();
+        }
 
-function update() {
-    if (isGameOver) return;
-    score += 1;
-    scoreText.setText('逃離值: ' + Math.floor(score/10));
-}
+        function updateCalc() {
+            const n = selectedNumbers.length;
+            document.getElementById('selected-count').innerText = n;
+            document.getElementById('star2-count').innerText = n < 2 ? 0 : (n * (n - 1) / 2);
+            document.getElementById('star3-count').innerText = n < 3 ? 0 : (n * (n - 1) * (n - 2) / 6);
+        }
 
-function spawnEnemy() {
-    if (isGameOver) return;
+        function clearSelection() {
+            selectedNumbers = [];
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+            updateCalc();
+        }
 
-    let x = Phaser.Math.Between(60, 300);
-    let name = enemyNames[Phaser.Math.Between(0, enemyNames.length - 1)];
-    
-    let container = this.add.container(x, -50);
-    let box = this.add.rectangle(0, 0, 70, 40, 0xff4444);
-    let txt = this.add.text(-25, -10, name, { fontSize: '16px', fill: '#fff' });
-    container.add([box, txt]);
+        async function fetchData() {
+            const tip = document.getElementById('strategy-tip');
+            tip.innerText = "正在同步 Google Sheet 數據...";
+            try {
+                const response = await fetch(`${API_URL}?sheet=${currentSource}`);
+                const data = await response.json();
+                analyzeData(data);
+            } catch (e) {
+                tip.innerHTML = "<span class='text-red-500'>連線失敗，請確認 API 已發佈為「所有人」皆可存取。</span>";
+            }
+        }
 
-    enemies.add(container);
-    this.physics.add.existing(container);
-    
-    // 設定敵人向下衝的速度，隨分數增加
-    container.body.setVelocityY(200 + (score/20));
-    
-    // 增加一點點左右晃動，模擬生活的不穩定感
-    this.tweens.add({
-        targets: container,
-        x: container.x + (Math.random() > 0.5 ? 20 : -20),
-        duration: 1000,
-        yoyo: true,
-        repeat: -1
-    });
-}
+        function analyzeData(data) {
+            const tails = {};
+            let bigCount = 0;
+            let totalBalls = 0;
 
-function hitEnemy() {
-    isGameOver = true;
-    this.physics.pause();
-    player.setAlpha(0.3);
+            data.forEach(row => {
+                const nums = [row['獎號1'], row['獎號2'], row['獎號3'], row['獎號4'], row['獎號5']];
+                nums.forEach(n => {
+                    const val = parseInt(n);
+                    if (!isNaN(val)) {
+                        const tail = val % 10;
+                        tails[tail] = (tails[tail] || 0) + 1;
+                        if (val >= 20) bigCount++;
+                        totalBalls++;
+                    }
+                });
+            });
 
-    this.add.rectangle(180, 320, 360, 640, 0x000000, 0.7).setDepth(20);
-    this.add.text(180, 300, '你被現實抓住了！', { fontSize: '32px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setDepth(21);
-    this.add.text(180, 360, '點擊畫面重新投胎', { fontSize: '20px', fill: '#fff' }).setOrigin(0.5).setDepth(21);
-}
-</script>
+            // 渲染趨勢
+            const sortedTails = Object.entries(tails).sort((a,b)=>b[1]-a[1]).slice(0,3);
+            document.getElementById('hot-tails').innerHTML = sortedTails.map(t=>`<span class="hot-tag">${t[0]} 尾</span>`).join('');
+            
+            const bigRatio = ((bigCount / totalBalls) * 100).toFixed(0);
+            document.getElementById('size-ratio').innerText = bigRatio + '%';
+            document.getElementById('size-bar').style.width = bigRatio + '%';
+            document.getElementById('data-count').innerText = data.length + ' 期';
+
+            document.getElementById('strategy-tip').innerHTML = `
+                <b>策略解析：</b><br>
+                1. <b>追尾：</b>目前強勢尾數為 <b>${sortedTails.map(t=>t[0]).join(', ')}</b>，建議從中選 2 碼。<br>
+                2. <b>大小：</b>大號佔比 ${bigRatio}%，${bigRatio > 60 ? '近期大號偏多，建議配置 3大2小' : '分佈平均，建議 2大3小'}。<br>
+                3. <b>穩定獲利：</b>選取 6 碼進行 2 星連碰僅需 15 注，中 2 碼即保本。
+            `;
+        }
+
+        initGrid();
+    </script>
 </body>
 </html>
