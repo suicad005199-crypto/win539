@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI PRO - Professional Elite</title>
+    <title>539 AI PRO - RTP Optimized</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --main-color: #f97316; }
-        body { background-color: #000; color: #fff; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; overflow-x: hidden; }
+        body { background-color: #000; color: #fff; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
         .theme-539 { --main-color: #f97316; }
         .theme-fantasy5 { --main-color: #ef4444; }
         .ios-blur { backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
         .panel { @apply bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 mb-4; }
         .text-main { color: var(--main-color); }
         .tag-hit { background-color: var(--main-color); @apply text-black text-[10px] px-1.5 py-0.5 rounded font-black; }
-        .tag-strategy { @apply bg-zinc-800 text-zinc-400 text-[9px] px-2 py-0.5 rounded-full border border-zinc-700; }
         .num-match { color: var(--main-color); font-weight: 800; text-decoration: underline; }
         .log-green { color: #22c55e; }
+        .rtp-glow { text-shadow: 0 0 8px var(--main-color); }
         .custom-scroll::-webkit-scrollbar { width: 2px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
 <body class="theme-539 pb-10">
@@ -26,71 +25,61 @@
     <div class="sticky top-0 z-50 bg-black/80 ios-blur border-b border-zinc-800 px-6 py-4 flex justify-between items-end">
         <div>
             <h1 class="text-2xl font-black text-main tracking-tighter">539 AI PRO</h1>
-            <p id="status-text" class="text-[10px] text-zinc-500 font-bold uppercase italic tracking-widest">Tournament Selection v3.0</p>
+            <p class="text-[10px] text-zinc-500 font-bold uppercase italic tracking-widest">RTP Targeted: 98.5%</p>
         </div>
         <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-            <button onclick="switchSource('539')" id="btn-539" class="px-4 py-1.5 text-xs font-bold rounded-md bg-zinc-800 text-main">今彩</button>
-            <button onclick="switchSource('fantasy5')" id="btn-fa" class="px-4 py-1.5 text-xs font-bold rounded-md text-zinc-500">天天樂</button>
+            <button onclick="switchSource('539')" id="btn-539" class="px-4 py-1.5 text-xs font-bold rounded-md bg-zinc-800 text-main transition-all">今彩</button>
+            <button onclick="switchSource('fantasy5')" id="btn-fa" class="px-4 py-1.5 text-xs font-bold rounded-md text-zinc-500 transition-all">天天樂</button>
         </div>
     </div>
 
     <div class="p-4 max-w-lg mx-auto">
-        <div class="panel py-2 px-4 opacity-80">
-            <div id="logbox" class="h-10 overflow-y-auto font-mono text-[9px] log-green leading-relaxed custom-scroll">
-                > 職業級引擎啟動...
+        <div class="panel py-3 flex justify-around items-center border-main/20 bg-main/5">
+            <div class="text-center">
+                <p class="text-[9px] text-zinc-500 uppercase font-black">Est. RTP</p>
+                <p id="rtp-val" class="text-xl font-black text-main rtp-glow">--%</p>
+            </div>
+            <div class="w-px h-8 bg-zinc-800"></div>
+            <div class="text-center">
+                <p class="text-[9px] text-zinc-500 uppercase font-black">Safety Factor</p>
+                <p id="safety-val" class="text-xl font-black text-white">--</p>
             </div>
         </div>
 
-        <div class="panel border-main/40 shadow-lg shadow-main/5">
+        <div class="panel border-zinc-800">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-black text-main uppercase">Next Prediction</span>
-                    <span id="winner-tag" class="tag-strategy italic">--</span>
+                    <span class="text-xs font-black text-main uppercase italic">Elite Combo</span>
+                    <span id="winner-tag" class="text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded">--</span>
                 </div>
-                <div id="win-rate-tag" class="text-[9px] text-zinc-400 font-mono text-right leading-tight">穩定度: --<br>強度: --</div>
+                <div id="stats-23" class="text-[9px] text-zinc-400 font-mono text-right">穩定度: -- | 強度: --</div>
             </div>
-            <div class="space-y-6">
-                <div class="flex items-center justify-between px-2">
-                    <span class="text-xs font-bold text-zinc-500">連碰 (5碼)</span>
-                    <div id="pred-combo" class="flex gap-1 text-main font-mono font-black text-2xl italic tracking-tighter">--</div>
-                </div>
-                <div class="flex items-center justify-between border-t border-zinc-800 pt-4 px-2">
-                    <span class="text-xs font-bold text-zinc-500">立柱建議</span>
-                    <div class="flex gap-2 items-center text-sm font-mono font-bold">
-                        <span id="col-1" class="text-white bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700">--</span>
-                        <span class="text-main font-black">|</span>
-                        <span id="col-2" class="text-white bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700">--</span>
-                    </div>
+            <div id="pred-combo" class="flex justify-center gap-2 text-main font-mono font-black text-3xl italic tracking-tighter mb-6">--</div>
+            <div class="flex justify-between border-t border-zinc-800 pt-4 px-2">
+                <span class="text-xs font-bold text-zinc-500">立柱建議</span>
+                <div class="flex gap-2 items-center text-sm font-mono font-bold">
+                    <span id="col-1" class="text-white bg-zinc-800 px-3 py-1 rounded-lg border border-zinc-700">--</span>
+                    <span class="text-main font-black">|</span>
+                    <span id="col-2" class="text-white bg-zinc-800 px-3 py-1 rounded-lg border border-zinc-700">--</span>
                 </div>
             </div>
         </div>
 
-        <div class="panel border-zinc-800/50">
+        <div class="panel border-main/30 shadow-lg shadow-main/5">
             <div class="flex justify-between items-center mb-3">
-                <div class="text-[10px] text-zinc-500 font-black uppercase tracking-tighter">Smart Miss Strategy (五碼不中)</div>
-                <div id="miss-score" class="text-[9px] text-zinc-600 bg-zinc-950 px-2 py-0.5 rounded">避開熱門尾數與偏態</div>
+                <div class="text-[10px] text-main font-black uppercase tracking-tighter">Smart Miss Strategy</div>
+                <div id="miss-winrate" class="text-[9px] text-zinc-400 font-bold italic">歷史勝率: --%</div>
             </div>
-            <div id="pred-miss" class="flex justify-around font-mono text-xl font-bold text-zinc-700 italic">
+            <div id="pred-miss" class="flex justify-around font-mono text-2xl font-black text-zinc-600 italic">
                 <span>--</span><span>--</span><span>--</span><span>--</span><span>--</span>
             </div>
         </div>
 
         <div class="panel">
-            <div class="flex justify-between items-center mb-4">
-                <div class="text-xs font-black text-zinc-400 uppercase tracking-widest">Rolling Backtest (30D)</div>
-                <div id="total-stats" class="text-[10px] text-main font-bold italic">WAITING...</div>
-            </div>
-            <div class="max-h-96 overflow-y-auto custom-scroll">
+            <div class="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4">30D Rolling Backtest</div>
+            <div id="table-container" class="max-h-64 overflow-y-auto custom-scroll">
                 <table class="w-full text-left">
-                    <thead class="text-zinc-600 text-[9px] uppercase border-b border-zinc-800 sticky top-0 bg-black">
-                        <tr>
-                            <th class="py-2">日期</th>
-                            <th class="py-2 text-center">開獎</th>
-                            <th class="py-2 text-center">AI 預測組</th>
-                            <th class="py-2 text-right">結果</th>
-                        </tr>
-                    </thead>
-                    <tbody id="backtest-body" class="text-[9px] divide-y divide-zinc-900"></tbody>
+                    <tbody id="backtest-body" class="text-[10px] divide-y divide-zinc-900"></tbody>
                 </table>
             </div>
         </div>
@@ -100,89 +89,49 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbxX4EPXapWEH0l7yodiQjAquQQMNq73WkChSIuWnsd3_p59grPf9AKsrN32TtMXydBa-A/exec';
         let currentSource = '539';
 
-        function log(msg) {
-            const lb = document.getElementById('logbox');
-            lb.innerHTML += `> ${msg}<br>`;
-            lb.scrollTop = lb.scrollHeight;
+        function getRTPSelection(data) {
+            const rolling = data.slice(0, 30);
+            const freq = {}, skip = {}, lastSeen = {};
+            
+            // 初始化號碼池 (1-39)
+            for(let i=1; i<=39; i++) {
+                const n = String(i).padStart(2,'0');
+                freq[n] = 0; skip[n] = 0; lastSeen[n] = -1;
+            }
+
+            rolling.forEach((r, idx) => {
+                const nums = [r.num1, r.num2, r.num3, r.num4, r.num5].map(v=>String(v).padStart(2,'0'));
+                nums.forEach(n => {
+                    freq[n]++;
+                    if(lastSeen[n] === -1) lastSeen[n] = idx;
+                });
+            });
+
+            // 避險邏輯：排除過熱與過冷
+            const eligible = Object.keys(freq).filter(n => {
+                const isHot = freq[n] >= 8; // 近30期開超過8次 (太熱)
+                const isCold = lastSeen[n] > 15; // 超過15期沒開 (太冷，易反彈)
+                return !isHot && !isCold;
+            });
+
+            // 策略組生成
+            const sortedEligible = eligible.sort((a,b) => freq[b] - freq[a]);
+            const nextSet = sortedEligible.slice(0, 5).sort((a,b)=>a-b);
+            
+            return { set: nextSet.length === 5 ? nextSet : sortedEligible.slice(0,5), name: "穩定避險" };
         }
 
-        // --- 進階策略競爭引擎 ---
-        function getElitePrediction(data) {
+        function getMissRTP(data) {
             const rolling = data.slice(0, 30);
             const freq = {};
-            const tailFreq = {};
-            let odd = 0, even = 0;
+            rolling.forEach(r => [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
+                const s = String(n).padStart(2,'0');
+                freq[s] = (freq[s]||0)+1;
+            }));
 
-            rolling.forEach(r => {
-                [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
-                    const s = String(n).padStart(2, '0');
-                    freq[s] = (freq[s] || 0) + 1;
-                    tailFreq[parseInt(n)%10] = (tailFreq[parseInt(n)%10] || 0) + 1;
-                    parseInt(n)%2 === 0 ? even++ : odd++;
-                });
-            });
-
-            const sorted = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
-            const coldPool = Object.keys(freq).sort((a,b) => freq[a] - freq[b]); // 冷門池
-
-            // 1. 生成候選策略
-            const strategies = {
-                "強勢熱門": sorted.slice(0, 5),
-                "冷熱隔離": [sorted[0], sorted[1], sorted[2], coldPool[0], coldPool[1]],
-                "尾數狙擊": sorted.filter(n => [Object.keys(tailFreq).sort((a,b)=>tailFreq[b]-tailFreq[a])[0]].includes(String(parseInt(n)%10))).slice(0,5),
-                "概率平衡": sorted.filter(n => (odd > even ? parseInt(n)%2===0 : parseInt(n)%2!==0)).slice(0,5)
-            };
-
-            // 安全與補位處理
-            Object.keys(strategies).forEach(k => {
-                let s = strategies[k];
-                while(s.length < 5) {
-                    const candidate = coldPool.find(n => !s.includes(n)) || "01";
-                    s.push(candidate);
-                }
-                strategies[k] = [...new Set(s)].slice(0,5).sort((a,b)=>a-b);
-            });
-
-            // 2. 競爭篩選：窗口擴大至 25 期
-            let winner = "強勢熱門";
-            let maxScore = -1;
-            Object.keys(strategies).forEach(name => {
-                let score = 0;
-                rolling.slice(0, 25).forEach(r => {
-                    const win = [String(r.num1).padStart(2,'0'), String(r.num2).padStart(2,'0'), String(r.num3).padStart(2,'0'), String(r.num4).padStart(2,'0'), String(r.num5).padStart(2,'0')];
-                    const h = strategies[name].filter(n => win.includes(n)).length;
-                    if(h === 2) score += 2; if(h >= 3) score += 12; // 3星加權更高
-                });
-                if(score > maxScore) { maxScore = score; winner = name; }
-            });
-
-            return { set: strategies[winner], name: winner };
-        }
-
-        // --- 智能化 Smart Miss ---
-        function getSmartMiss(data) {
-            const recent = data.slice(0, 30);
-            const tailFreq = {};
-            let odd = 0, even = 0;
-            const freq = {};
-
-            recent.forEach(r => {
-                [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
-                    freq[n] = (freq[n]||0)+1;
-                    tailFreq[parseInt(n)%10] = (tailFreq[parseInt(n)%10] || 0) + 1;
-                    parseInt(n)%2 === 0 ? even++ : odd++;
-                });
-            });
-
-            const hotTails = Object.keys(tailFreq).sort((a,b)=>tailFreq[b]-tailFreq[a]).slice(0,3);
-            const targetParity = odd > even ? 1 : 0; // 若奇數多，不中號碼應找奇數(因為奇數更可能繼續開)
-
-            // 從低頻號碼中篩選符合條件的
-            return Object.keys(freq)
-                .filter(n => !hotTails.includes(String(parseInt(n)%10))) // 避開熱門尾數
-                .filter(n => parseInt(n)%2 === targetParity) // 匹配偏態奇偶
-                .sort((a,b) => freq[a] - freq[b])
-                .slice(0,5).sort((a,b)=>a-b);
+            // 選取頻率中位數附近的號碼 (最平穩，不易爆冷或爆熱)
+            const sorted = Object.keys(freq).sort((a,b) => freq[a] - freq[b]);
+            return sorted.slice(10, 15).sort((a,b)=>a-b);
         }
 
         async function switchSource(s) {
@@ -190,52 +139,59 @@
             document.body.className = `theme-${s} pb-10`;
             document.getElementById('btn-539').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='539' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
             document.getElementById('btn-fa').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='fantasy5' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
-            document.getElementById('backtest-body').innerHTML = '';
-            log(`策略同步中: ${s.toUpperCase()}`);
             
             try {
                 const response = await fetch(`${API_URL}?sheet=${currentSource}`);
                 const data = await response.json();
                 render(data);
-            } catch (e) { log("連線失敗"); }
+            } catch (e) { console.error(e); }
         }
 
         function render(data) {
+            // 1. 下期預測
+            const pred = getRTPSelection(data);
+            document.getElementById('pred-combo').innerText = pred.set.join(' ');
+            document.getElementById('winner-tag').innerText = pred.name;
+            document.getElementById('col-1').innerText = `${pred.set[0]},${pred.set[1]}`;
+            document.getElementById('col-2').innerText = `${pred.set[2]},${pred.set[3]},${pred.set[4]}`;
+
+            // 2. 五不中 RTP 監測
+            const missSet = getMissRTP(data);
+            document.getElementById('pred-miss').innerHTML = missSet.map(n => `<span>${n}</span>`).join('');
+
+            // 3. 滾動回測與統計
             const tbody = document.getElementById('backtest-body');
-            let s2 = 0, s3 = 0;
+            tbody.innerHTML = '';
+            let s2=0, s3=0, missWin=0;
+            const testNum = 30;
 
-            const next = getElitePrediction(data);
-            document.getElementById('pred-combo').innerText = next.set.join(' ');
-            document.getElementById('winner-tag').innerText = `Winner: ${next.name}`;
-            document.getElementById('col-1').innerText = `${next.set[0]},${next.set[1]}`;
-            document.getElementById('col-2').innerText = `${next.set[2]},${next.set[3]},${next.set[4]}`;
-
-            const miss = getSmartMiss(data);
-            document.getElementById('pred-miss').innerHTML = miss.map(n => `<span>${String(n).padStart(2,'0')}</span>`).join('');
-
-            const testRange = data.slice(0, 30);
-            testRange.forEach((row, index) => {
-                const history = data.slice(index + 1);
-                const pred = getElitePrediction(history).set;
-                const win = [String(row.num1).padStart(2,'0'), String(row.num2).padStart(2,'0'), String(row.num3).padStart(2,'0'), String(row.num4).padStart(2,'0'), String(row.num5).padStart(2,'0')];
-                const hits = pred.filter(n => win.includes(n));
+            data.slice(0, testNum).forEach((row, idx) => {
+                const history = data.slice(idx + 1);
+                const p = getRTPSelection(history).set;
+                const m = getMissRTP(history);
+                const win = [row.num1, row.num2, row.num3, row.num4, row.num5].map(v=>String(v).padStart(2,'0'));
                 
-                if(hits.length === 2) s2++;
-                if(hits.length >= 3) s3++;
+                const hits = p.filter(n => win.includes(n)).length;
+                if(hits === 2) s2++; if(hits >= 3) s3++;
+                if(m.filter(n => win.includes(n)).length === 0) missWin++;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-3 text-zinc-500 font-mono">${row.date.split('T')[0].substring(5)}</td>
-                    <td class="py-3 text-center font-mono">${win.map(n => pred.includes(n) ? `<span class="num-match">${n}</span>` : n).join(',')}</td>
-                    <td class="py-3 text-center text-zinc-600 font-mono scale-90">${pred.join(' ')}</td>
-                    <td class="py-3 text-right">${hits.length >= 2 ? `<span class="tag-hit">${hits.length}星</span>` : '<span class="text-zinc-800">槓</span>'}</td>
+                    <td class="py-2 text-zinc-500 font-mono">${row.date.split('T')[0].substring(5)}</td>
+                    <td class="py-2 text-center font-mono">${win.map(n => p.includes(n) ? `<span class="num-match">${n}</span>` : n).join(',')}</td>
+                    <td class="py-2 text-right">${hits >= 2 ? `<span class="tag-hit">${hits}星</span>` : '<span class="text-zinc-800">槓</span>'}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('total-stats').innerText = `2星: ${s2} | 3星: ${s3}`;
-            document.getElementById('win-rate-tag').innerHTML = `穩定度(2星): ${((s2/30)*100).toFixed(0)}%<br>強度(3星): ${((s3/30)*100).toFixed(0)}%`;
-            log(`分析完畢，推薦策略：${next.name}`);
+            // RTP 計算 (五不中賠率假設 1.9)
+            const missWinRate = (missWin / testNum);
+            const rtp = (missWinRate * 1.9 * 100).toFixed(1);
+            
+            document.getElementById('rtp-val').innerText = `${rtp}%`;
+            document.getElementById('safety-val').innerText = rtp > 95 ? "HIGH" : "MED";
+            document.getElementById('miss-winrate').innerText = `歷史勝率: ${(missWinRate*100).toFixed(1)}%`;
+            document.getElementById('stats-23').innerHTML = `穩定度(2星): ${((s2/testNum)*100).toFixed(0)}%<br>強度(3星): ${((s3/testNum)*100).toFixed(0)}%`;
         }
 
         window.onload = () => switchSource('539');
