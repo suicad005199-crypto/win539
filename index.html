@@ -3,28 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 AI PRO Elite - Rolling</title>
+    <title>AI PRO - Professional Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --main-color: #f97316; }
-        body { background-color: #000; color: #fff; -webkit-tap-highlight-color: transparent; transition: all 0.3s ease; font-family: -apple-system, sans-serif; }
+        body { background-color: #000; color: #fff; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; overflow-x: hidden; }
         .theme-539 { --main-color: #f97316; }
         .theme-fantasy5 { --main-color: #ef4444; }
         .ios-blur { backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
         .panel { @apply bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 mb-4; }
         .text-main { color: var(--main-color); }
         .tag-hit { background-color: var(--main-color); @apply text-black text-[10px] px-1.5 py-0.5 rounded font-black; }
+        .tag-strategy { @apply bg-zinc-800 text-zinc-400 text-[9px] px-2 py-0.5 rounded-full border border-zinc-700; }
         .num-match { color: var(--main-color); font-weight: 800; text-decoration: underline; }
         .log-green { color: #22c55e; }
         .custom-scroll::-webkit-scrollbar { width: 2px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
 <body class="theme-539 pb-10">
 
     <div class="sticky top-0 z-50 bg-black/80 ios-blur border-b border-zinc-800 px-6 py-4 flex justify-between items-end">
         <div>
-            <h1 class="text-2xl font-black text-main tracking-tighter transition-colors">539 AI PRO</h1>
-            <p id="status-text" class="text-[10px] text-zinc-500 font-bold uppercase">Rolling Backtest Mode</p>
+            <h1 class="text-2xl font-black text-main tracking-tighter">539 AI PRO</h1>
+            <p id="status-text" class="text-[10px] text-zinc-500 font-bold uppercase italic tracking-widest">Tournament Selection v3.0</p>
         </div>
         <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
             <button onclick="switchSource('539')" id="btn-539" class="px-4 py-1.5 text-xs font-bold rounded-md bg-zinc-800 text-main">今彩</button>
@@ -32,37 +34,42 @@
         </div>
     </div>
 
-    <div class="p-4">
-        <div class="panel py-2 px-4 border-zinc-800/50">
-            <div id="logbox" class="h-16 overflow-y-auto font-mono text-[10px] log-green leading-relaxed custom-scroll">
-                > 系統初始化中...<br>
-                > 準備執行動態滾動回測分析...
+    <div class="p-4 max-w-lg mx-auto">
+        <div class="panel py-2 px-4 opacity-80">
+            <div id="logbox" class="h-10 overflow-y-auto font-mono text-[9px] log-green leading-relaxed custom-scroll">
+                > 職業級引擎啟動...
             </div>
         </div>
 
-        <div class="panel">
+        <div class="panel border-main/40 shadow-lg shadow-main/5">
             <div class="flex justify-between items-center mb-4">
-                <div class="text-xs font-black text-main uppercase tracking-widest">Next Prediction</div>
-                <div id="win-rate-tag" class="text-[10px] text-zinc-500 font-mono italic">--</div>
-            </div>
-            <div class="space-y-6" id="prediction-content">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-zinc-500">連碰 (5碼)</span>
-                    <div id="pred-combo" class="flex gap-1 text-main font-mono font-black text-xl italic tracking-tighter">--</div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-black text-main uppercase">Next Prediction</span>
+                    <span id="winner-tag" class="tag-strategy italic">--</span>
                 </div>
-                <div class="flex items-center justify-between border-t border-zinc-800 pt-4">
-                    <span class="text-xs font-bold text-zinc-500">立柱 (2:3)</span>
-                    <div id="pred-column" class="flex gap-2 items-center">
-                        <span id="col-1" class="text-zinc-500 font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm">--</span>
+                <div id="win-rate-tag" class="text-[9px] text-zinc-400 font-mono text-right leading-tight">穩定度: --<br>強度: --</div>
+            </div>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between px-2">
+                    <span class="text-xs font-bold text-zinc-500">連碰 (5碼)</span>
+                    <div id="pred-combo" class="flex gap-1 text-main font-mono font-black text-2xl italic tracking-tighter">--</div>
+                </div>
+                <div class="flex items-center justify-between border-t border-zinc-800 pt-4 px-2">
+                    <span class="text-xs font-bold text-zinc-500">立柱建議</span>
+                    <div class="flex gap-2 items-center text-sm font-mono font-bold">
+                        <span id="col-1" class="text-white bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700">--</span>
                         <span class="text-main font-black">|</span>
-                        <span id="col-2" class="text-zinc-500 font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm">--</span>
+                        <span id="col-2" class="text-white bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700">--</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="panel">
-            <div class="text-[10px] text-zinc-500 font-black mb-3 uppercase tracking-widest text-center">Miss Strategy (五碼不中)</div>
+        <div class="panel border-zinc-800/50">
+            <div class="flex justify-between items-center mb-3">
+                <div class="text-[10px] text-zinc-500 font-black uppercase tracking-tighter">Smart Miss Strategy (五碼不中)</div>
+                <div id="miss-score" class="text-[9px] text-zinc-600 bg-zinc-950 px-2 py-0.5 rounded">避開熱門尾數與偏態</div>
+            </div>
             <div id="pred-miss" class="flex justify-around font-mono text-xl font-bold text-zinc-700 italic">
                 <span>--</span><span>--</span><span>--</span><span>--</span><span>--</span>
             </div>
@@ -70,21 +77,20 @@
 
         <div class="panel">
             <div class="flex justify-between items-center mb-4">
-                <div class="text-xs font-black text-zinc-400 uppercase tracking-widest">Rolling Backtest Results</div>
-                <div id="total-stats" class="text-[10px] text-main font-bold">--</div>
+                <div class="text-xs font-black text-zinc-400 uppercase tracking-widest">Rolling Backtest (30D)</div>
+                <div id="total-stats" class="text-[10px] text-main font-bold italic">WAITING...</div>
             </div>
-            <div class="overflow-x-auto">
+            <div class="max-h-96 overflow-y-auto custom-scroll">
                 <table class="w-full text-left">
-                    <thead class="text-zinc-500 text-[9px] uppercase border-b border-zinc-800">
+                    <thead class="text-zinc-600 text-[9px] uppercase border-b border-zinc-800 sticky top-0 bg-black">
                         <tr>
-                            <th class="pb-2">日期</th>
-                            <th class="pb-2 text-center">當期開獎</th>
-                            <th class="pb-2 text-center">歷史 AI 預測</th>
-                            <th class="pb-2 text-right">結果</th>
+                            <th class="py-2">日期</th>
+                            <th class="py-2 text-center">開獎</th>
+                            <th class="py-2 text-center">AI 預測組</th>
+                            <th class="py-2 text-right">結果</th>
                         </tr>
                     </thead>
-                    <tbody id="backtest-body" class="text-[9px]">
-                        </tbody>
+                    <tbody id="backtest-body" class="text-[9px] divide-y divide-zinc-900"></tbody>
                 </table>
             </div>
         </div>
@@ -100,103 +106,139 @@
             lb.scrollTop = lb.scrollHeight;
         }
 
-        function clearView() {
-            document.getElementById('pred-combo').innerText = "Loading...";
-            document.getElementById('col-1').innerText = "--";
-            document.getElementById('col-2').innerText = "--";
-            document.getElementById('pred-miss').innerHTML = "<span>--</span>".repeat(5);
-            document.getElementById('backtest-body').innerHTML = '<tr><td colspan="4" class="py-10 text-center text-zinc-600">正在重新加載數據...</td></tr>';
-            document.getElementById('total-stats').innerText = "CALCULATING...";
-        }
-
-        // AI 核心邏輯：給予一段數據，產出 5 碼
-        function getPrediction(dataSlice) {
+        // --- 進階策略競爭引擎 ---
+        function getElitePrediction(data) {
+            const rolling = data.slice(0, 30);
             const freq = {};
-            dataSlice.forEach(r => {
+            const tailFreq = {};
+            let odd = 0, even = 0;
+
+            rolling.forEach(r => {
                 [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
                     const s = String(n).padStart(2, '0');
                     freq[s] = (freq[s] || 0) + 1;
+                    tailFreq[parseInt(n)%10] = (tailFreq[parseInt(n)%10] || 0) + 1;
+                    parseInt(n)%2 === 0 ? even++ : odd++;
                 });
             });
-            return Object.keys(freq).sort((a,b) => freq[b] - freq[a]).slice(0, 5).sort();
+
+            const sorted = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
+            const coldPool = Object.keys(freq).sort((a,b) => freq[a] - freq[b]); // 冷門池
+
+            // 1. 生成候選策略
+            const strategies = {
+                "強勢熱門": sorted.slice(0, 5),
+                "冷熱隔離": [sorted[0], sorted[1], sorted[2], coldPool[0], coldPool[1]],
+                "尾數狙擊": sorted.filter(n => [Object.keys(tailFreq).sort((a,b)=>tailFreq[b]-tailFreq[a])[0]].includes(String(parseInt(n)%10))).slice(0,5),
+                "概率平衡": sorted.filter(n => (odd > even ? parseInt(n)%2===0 : parseInt(n)%2!==0)).slice(0,5)
+            };
+
+            // 安全與補位處理
+            Object.keys(strategies).forEach(k => {
+                let s = strategies[k];
+                while(s.length < 5) {
+                    const candidate = coldPool.find(n => !s.includes(n)) || "01";
+                    s.push(candidate);
+                }
+                strategies[k] = [...new Set(s)].slice(0,5).sort((a,b)=>a-b);
+            });
+
+            // 2. 競爭篩選：窗口擴大至 25 期
+            let winner = "強勢熱門";
+            let maxScore = -1;
+            Object.keys(strategies).forEach(name => {
+                let score = 0;
+                rolling.slice(0, 25).forEach(r => {
+                    const win = [String(r.num1).padStart(2,'0'), String(r.num2).padStart(2,'0'), String(r.num3).padStart(2,'0'), String(r.num4).padStart(2,'0'), String(r.num5).padStart(2,'0')];
+                    const h = strategies[name].filter(n => win.includes(n)).length;
+                    if(h === 2) score += 2; if(h >= 3) score += 12; // 3星加權更高
+                });
+                if(score > maxScore) { maxScore = score; winner = name; }
+            });
+
+            return { set: strategies[winner], name: winner };
+        }
+
+        // --- 智能化 Smart Miss ---
+        function getSmartMiss(data) {
+            const recent = data.slice(0, 30);
+            const tailFreq = {};
+            let odd = 0, even = 0;
+            const freq = {};
+
+            recent.forEach(r => {
+                [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
+                    freq[n] = (freq[n]||0)+1;
+                    tailFreq[parseInt(n)%10] = (tailFreq[parseInt(n)%10] || 0) + 1;
+                    parseInt(n)%2 === 0 ? even++ : odd++;
+                });
+            });
+
+            const hotTails = Object.keys(tailFreq).sort((a,b)=>tailFreq[b]-tailFreq[a]).slice(0,3);
+            const targetParity = odd > even ? 1 : 0; // 若奇數多，不中號碼應找奇數(因為奇數更可能繼續開)
+
+            // 從低頻號碼中篩選符合條件的
+            return Object.keys(freq)
+                .filter(n => !hotTails.includes(String(parseInt(n)%10))) // 避開熱門尾數
+                .filter(n => parseInt(n)%2 === targetParity) // 匹配偏態奇偶
+                .sort((a,b) => freq[a] - freq[b])
+                .slice(0,5).sort((a,b)=>a-b);
         }
 
         async function switchSource(s) {
-            if (currentSource === s && document.getElementById('backtest-body').innerText !== "") return;
             currentSource = s;
             document.body.className = `theme-${s} pb-10`;
             document.getElementById('btn-539').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='539' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
             document.getElementById('btn-fa').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='fantasy5' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
-            
-            clearView();
-            log(`切換數據源：${s === '539' ? '今彩' : '天天樂'}`, true);
+            document.getElementById('backtest-body').innerHTML = '';
+            log(`策略同步中: ${s.toUpperCase()}`);
             
             try {
                 const response = await fetch(`${API_URL}?sheet=${currentSource}`);
                 const data = await response.json();
-                runRollingAnalysis(data);
-            } catch (e) {
-                log("API 連線失敗");
-            }
+                render(data);
+            } catch (e) { log("連線失敗"); }
         }
 
-        function runRollingAnalysis(data) {
+        function render(data) {
             const tbody = document.getElementById('backtest-body');
-            tbody.innerHTML = '';
             let s2 = 0, s3 = 0;
 
-            // 1. 產出「下期」預測 (使用目前全部資料)
-            const nextPred = getPrediction(data);
-            document.getElementById('pred-combo').innerText = nextPred.join(' ');
-            document.getElementById('col-1').innerText = `${nextPred[0]},${nextPred[1]}`;
-            document.getElementById('col-1').className = "text-white font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm";
-            document.getElementById('col-2').innerText = `${nextPred[2]},${nextPred[3]},${nextPred[4]}`;
-            document.getElementById('col-2').className = "text-white font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm";
+            const next = getElitePrediction(data);
+            document.getElementById('pred-combo').innerText = next.set.join(' ');
+            document.getElementById('winner-tag').innerText = `Winner: ${next.name}`;
+            document.getElementById('col-1').innerText = `${next.set[0]},${next.set[1]}`;
+            document.getElementById('col-2').innerText = `${next.set[2]},${next.set[3]},${next.set[4]}`;
 
-            // 2. 產出「五碼不中」
-            const allNumsFreq = {};
-            data.forEach(r => [r.num1,r.num2,r.num3,r.num4,r.num5].forEach(n => {
-                const s = String(n).padStart(2,'0'); allNumsFreq[s] = (allNumsFreq[s]||0)+1;
-            }));
-            const missSet = Object.keys(allNumsFreq).sort((a,b) => allNumsFreq[a] - allNumsFreq[b]).slice(0, 5).sort();
-            document.getElementById('pred-miss').innerHTML = missSet.map(n => `<span class="text-zinc-400">${n}</span>`).join('');
+            const miss = getSmartMiss(data);
+            document.getElementById('pred-miss').innerHTML = miss.map(n => `<span>${String(n).padStart(2,'0')}</span>`).join('');
 
-            // 3. 滾動回測表格 (關鍵：每一期都要往前抓資料來預測)
-            // 從第 0 期 (最新) 開始，回溯分析
-            data.forEach((row, index) => {
-                // 回測該期：應使用 index+1 之後的所有舊資料來預測
-                const historyData = data.slice(index + 1);
-                if (historyData.length < 5) return; // 基礎資料太少不預測
-
-                const aiPredAtThatTime = getPrediction(historyData);
+            const testRange = data.slice(0, 30);
+            testRange.forEach((row, index) => {
+                const history = data.slice(index + 1);
+                const pred = getElitePrediction(history).set;
                 const win = [String(row.num1).padStart(2,'0'), String(row.num2).padStart(2,'0'), String(row.num3).padStart(2,'0'), String(row.num4).padStart(2,'0'), String(row.num5).padStart(2,'0')];
+                const hits = pred.filter(n => win.includes(n));
                 
-                const hits = aiPredAtThatTime.filter(n => win.includes(n));
-                const hitCount = hits.length;
-                if(hitCount >= 2) s2++;
-                if(hitCount >= 3) s3++;
-
-                const winDisplay = win.map(n => aiPredAtThatTime.includes(n) ? `<span class="num-match">${n}</span>` : n).join(',');
+                if(hits.length === 2) s2++;
+                if(hits.length >= 3) s3++;
 
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-all";
                 tr.innerHTML = `
                     <td class="py-3 text-zinc-500 font-mono">${row.date.split('T')[0].substring(5)}</td>
-                    <td class="py-3 text-center font-mono">${winDisplay}</td>
-                    <td class="py-3 text-center text-zinc-600 font-mono scale-90">${aiPredAtThatTime.join(' ')}</td>
-                    <td class="py-3 text-right">${hitCount >= 2 ? `<span class="tag-hit">${hitCount}星</span>` : '<span class="text-zinc-800">摃</span>'}</td>
+                    <td class="py-3 text-center font-mono">${win.map(n => pred.includes(n) ? `<span class="num-match">${n}</span>` : n).join(',')}</td>
+                    <td class="py-3 text-center text-zinc-600 font-mono scale-90">${pred.join(' ')}</td>
+                    <td class="py-3 text-right">${hits.length >= 2 ? `<span class="tag-hit">${hits.length}星</span>` : '<span class="text-zinc-800">槓</span>'}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('total-stats').innerText = `歷史 2星: ${s2}次 | 3星: ${s3}次`;
-            document.getElementById('win-rate-tag').innerText = `穩定度: ${s2 > 10 ? '極高' : '中等'}`;
-            log(`滾動回測完成，分析期數: ${data.length}`, false);
+            document.getElementById('total-stats').innerText = `2星: ${s2} | 3星: ${s3}`;
+            document.getElementById('win-rate-tag').innerHTML = `穩定度(2星): ${((s2/30)*100).toFixed(0)}%<br>強度(3星): ${((s3/30)*100).toFixed(0)}%`;
+            log(`分析完畢，推薦策略：${next.name}`);
         }
 
-        window.onload = () => {
-            switchSource('539');
-        };
+        window.onload = () => switchSource('539');
     </script>
 </body>
 </html>
