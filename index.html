@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 AI PRO Elite</title>
+    <title>539 AI PRO Elite - Rolling</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --main-color: #f97316; --main-bg: rgba(249,115,22,0.1); }
-        body { background-color: #000; color: #fff; -webkit-tap-highlight-color: transparent; transition: all 0.3s ease; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .theme-539 { --main-color: #f97316; --main-bg: rgba(249,115,22,0.1); }
-        .theme-fantasy5 { --main-color: #ef4444; --main-bg: rgba(239,68,68,0.1); }
-        
+        :root { --main-color: #f97316; }
+        body { background-color: #000; color: #fff; -webkit-tap-highlight-color: transparent; transition: all 0.3s ease; font-family: -apple-system, sans-serif; }
+        .theme-539 { --main-color: #f97316; }
+        .theme-fantasy5 { --main-color: #ef4444; }
         .ios-blur { backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
         .panel { @apply bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 mb-4; }
         .text-main { color: var(--main-color); }
-        .bg-main { background-color: var(--main-color); }
         .tag-hit { background-color: var(--main-color); @apply text-black text-[10px] px-1.5 py-0.5 rounded font-black; }
         .num-match { color: var(--main-color); font-weight: 800; text-decoration: underline; }
-        
-        /* 滾動條優化 */
+        .log-green { color: #22c55e; }
         .custom-scroll::-webkit-scrollbar { width: 2px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
 <body class="theme-539 pb-10">
@@ -28,66 +24,66 @@
     <div class="sticky top-0 z-50 bg-black/80 ios-blur border-b border-zinc-800 px-6 py-4 flex justify-between items-end">
         <div>
             <h1 class="text-2xl font-black text-main tracking-tighter transition-colors">539 AI PRO</h1>
-            <p id="status-text" class="text-[10px] text-zinc-500 font-bold uppercase">AI Model Active</p>
+            <p id="status-text" class="text-[10px] text-zinc-500 font-bold uppercase">Rolling Backtest Mode</p>
         </div>
         <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-            <button onclick="switchSource('539')" id="btn-539" class="px-4 py-1.5 text-xs font-bold rounded-md bg-zinc-800 text-main transition-all">今彩</button>
-            <button onclick="switchSource('fantasy5')" id="btn-fa" class="px-4 py-1.5 text-xs font-bold rounded-md text-zinc-500 transition-all">天天樂</button>
+            <button onclick="switchSource('539')" id="btn-539" class="px-4 py-1.5 text-xs font-bold rounded-md bg-zinc-800 text-main">今彩</button>
+            <button onclick="switchSource('fantasy5')" id="btn-fa" class="px-4 py-1.5 text-xs font-bold rounded-md text-zinc-500">天天樂</button>
         </div>
     </div>
 
     <div class="p-4">
-        <div class="panel py-2 px-4 opacity-60">
-            <div id="logbox" class="h-12 overflow-y-auto font-mono text-[9px] text-zinc-500 leading-relaxed custom-scroll">
-                > 系統初始化完成...<br>
-                > 預設載入今彩 539 數據...
+        <div class="panel py-2 px-4 border-zinc-800/50">
+            <div id="logbox" class="h-16 overflow-y-auto font-mono text-[10px] log-green leading-relaxed custom-scroll">
+                > 系統初始化中...<br>
+                > 準備執行動態滾動回測分析...
             </div>
         </div>
 
-        <div class="panel border-zinc-700">
+        <div class="panel">
             <div class="flex justify-between items-center mb-4">
                 <div class="text-xs font-black text-main uppercase tracking-widest">Next Prediction</div>
-                <div id="win-rate-tag" class="text-[10px] text-zinc-500 font-mono italic">穩定度評估中...</div>
+                <div id="win-rate-tag" class="text-[10px] text-zinc-500 font-mono italic">--</div>
             </div>
-            <div class="space-y-6">
+            <div class="space-y-6" id="prediction-content">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold text-zinc-500">連碰 (5碼)</span>
-                    <div id="pred-combo" class="flex gap-1 text-main font-mono font-black text-xl italic tracking-tighter">-- -- -- -- --</div>
+                    <div id="pred-combo" class="flex gap-1 text-main font-mono font-black text-xl italic tracking-tighter">--</div>
                 </div>
                 <div class="flex items-center justify-between border-t border-zinc-800 pt-4">
                     <span class="text-xs font-bold text-zinc-500">立柱 (2:3)</span>
-                    <div class="flex gap-2 items-center">
-                        <span id="col-1" class="text-white font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm">--</span>
+                    <div id="pred-column" class="flex gap-2 items-center">
+                        <span id="col-1" class="text-zinc-500 font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm">--</span>
                         <span class="text-main font-black">|</span>
-                        <span id="col-2" class="text-white font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm">--</span>
+                        <span id="col-2" class="text-zinc-500 font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm">--</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="panel border-zinc-800">
+        <div class="panel">
             <div class="text-[10px] text-zinc-500 font-black mb-3 uppercase tracking-widest text-center">Miss Strategy (五碼不中)</div>
-            <div id="pred-miss" class="flex justify-around font-mono text-xl font-bold text-zinc-600 italic">
+            <div id="pred-miss" class="flex justify-around font-mono text-xl font-bold text-zinc-700 italic">
                 <span>--</span><span>--</span><span>--</span><span>--</span><span>--</span>
             </div>
         </div>
 
         <div class="panel">
             <div class="flex justify-between items-center mb-4">
-                <div class="text-xs font-black text-zinc-400 uppercase tracking-widest">Backtest Results</div>
-                <div id="total-stats" class="text-[10px] text-main font-bold">加載中...</div>
+                <div class="text-xs font-black text-zinc-400 uppercase tracking-widest">Rolling Backtest Results</div>
+                <div id="total-stats" class="text-[10px] text-main font-bold">--</div>
             </div>
-            <div class="overflow-x-auto custom-scroll">
-                <table class="w-full text-left border-collapse">
-                    <thead class="text-zinc-500 text-[10px] uppercase border-b border-zinc-800">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="text-zinc-500 text-[9px] uppercase border-b border-zinc-800">
                         <tr>
-                            <th class="pb-2 font-bold">日期</th>
-                            <th class="pb-2 font-bold text-center">當期開獎</th>
-                            <th class="pb-2 font-bold text-center">AI 預測</th>
-                            <th class="pb-2 font-bold text-right">結果</th>
+                            <th class="pb-2">日期</th>
+                            <th class="pb-2 text-center">當期開獎</th>
+                            <th class="pb-2 text-center">歷史 AI 預測</th>
+                            <th class="pb-2 text-right">結果</th>
                         </tr>
                     </thead>
-                    <tbody id="backtest-body" class="text-[10px]">
+                    <tbody id="backtest-body" class="text-[9px]">
                         </tbody>
                 </table>
             </div>
@@ -97,7 +93,6 @@
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbxX4EPXapWEH0l7yodiQjAquQQMNq73WkChSIuWnsd3_p59grPf9AKsrN32TtMXydBa-A/exec';
         let currentSource = '539';
-        let currentBestSet = []; // 儲存當前 AI 預測號碼供回測比對
 
         function log(msg) {
             const lb = document.getElementById('logbox');
@@ -105,90 +100,102 @@
             lb.scrollTop = lb.scrollHeight;
         }
 
-        // 切換數據源
-        function switchSource(s) {
-            if (currentSource === s) return;
+        function clearView() {
+            document.getElementById('pred-combo').innerText = "Loading...";
+            document.getElementById('col-1').innerText = "--";
+            document.getElementById('col-2').innerText = "--";
+            document.getElementById('pred-miss').innerHTML = "<span>--</span>".repeat(5);
+            document.getElementById('backtest-body').innerHTML = '<tr><td colspan="4" class="py-10 text-center text-zinc-600">正在重新加載數據...</td></tr>';
+            document.getElementById('total-stats').innerText = "CALCULATING...";
+        }
+
+        // AI 核心邏輯：給予一段數據，產出 5 碼
+        function getPrediction(dataSlice) {
+            const freq = {};
+            dataSlice.forEach(r => {
+                [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
+                    const s = String(n).padStart(2, '0');
+                    freq[s] = (freq[s] || 0) + 1;
+                });
+            });
+            return Object.keys(freq).sort((a,b) => freq[b] - freq[a]).slice(0, 5).sort();
+        }
+
+        async function switchSource(s) {
+            if (currentSource === s && document.getElementById('backtest-body').innerText !== "") return;
             currentSource = s;
             document.body.className = `theme-${s} pb-10`;
             document.getElementById('btn-539').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='539' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
             document.getElementById('btn-fa').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='fantasy5' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
-            fetchAndAnalyze();
-        }
-
-        // 自動載入與分析
-        async function fetchAndAnalyze() {
-            log(`正在切換並同步 ${currentSource === '539' ? '今彩539' : '天天樂'} 數據...`);
+            
+            clearView();
+            log(`切換數據源：${s === '539' ? '今彩' : '天天樂'}`, true);
+            
             try {
                 const response = await fetch(`${API_URL}?sheet=${currentSource}`);
                 const data = await response.json();
-                runAIModel(data);
+                runRollingAnalysis(data);
             } catch (e) {
-                log("<span class='text-red-500'>連線錯誤，請檢查 API。</span>");
+                log("API 連線失敗");
             }
         }
 
-        function runAIModel(data) {
-            const freq = {};
-            data.forEach(r => {
-                [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
-                    freq[n] = (freq[n] || 0) + 1;
-                });
-            });
-
-            // 挑選邏輯優化 (取頻率最高組)
-            const sortedNums = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
-            currentBestSet = sortedNums.slice(0, 5).sort((a,b)=>a-b);
-            
-            // 更新預測面板
-            document.getElementById('pred-combo').innerText = currentBestSet.join(' ');
-            document.getElementById('col-1').innerText = `${currentBestSet[0]},${currentBestSet[1]}`;
-            document.getElementById('col-2').innerText = `${currentBestSet[2]},${currentBestSet[3]},${bestSet=currentBestSet[4]}`;
-
-            // 五碼不中
-            const missSet = Object.keys(freq).sort((a,b) => freq[a] - freq[b]).slice(0, 5).sort();
-            document.getElementById('pred-miss').innerHTML = missSet.map(n => `<span>${n}</span>`).join('');
-
-            // 渲染回測
-            renderBacktest(data);
-        }
-
-        function renderBacktest(data) {
+        function runRollingAnalysis(data) {
             const tbody = document.getElementById('backtest-body');
             tbody.innerHTML = '';
             let s2 = 0, s3 = 0;
 
-            data.forEach(r => {
-                const win = [String(r.num1).padStart(2,'0'), String(r.num2).padStart(2,'0'), String(r.num3).padStart(2,'0'), String(r.num4).padStart(2,'0'), String(r.num5).padStart(2,'0')];
+            // 1. 產出「下期」預測 (使用目前全部資料)
+            const nextPred = getPrediction(data);
+            document.getElementById('pred-combo').innerText = nextPred.join(' ');
+            document.getElementById('col-1').innerText = `${nextPred[0]},${nextPred[1]}`;
+            document.getElementById('col-1').className = "text-white font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm";
+            document.getElementById('col-2').innerText = `${nextPred[2]},${nextPred[3]},${nextPred[4]}`;
+            document.getElementById('col-2').className = "text-white font-mono font-bold bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 text-sm";
+
+            // 2. 產出「五碼不中」
+            const allNumsFreq = {};
+            data.forEach(r => [r.num1,r.num2,r.num3,r.num4,r.num5].forEach(n => {
+                const s = String(n).padStart(2,'0'); allNumsFreq[s] = (allNumsFreq[s]||0)+1;
+            }));
+            const missSet = Object.keys(allNumsFreq).sort((a,b) => allNumsFreq[a] - allNumsFreq[b]).slice(0, 5).sort();
+            document.getElementById('pred-miss').innerHTML = missSet.map(n => `<span class="text-zinc-400">${n}</span>`).join('');
+
+            // 3. 滾動回測表格 (關鍵：每一期都要往前抓資料來預測)
+            // 從第 0 期 (最新) 開始，回溯分析
+            data.forEach((row, index) => {
+                // 回測該期：應使用 index+1 之後的所有舊資料來預測
+                const historyData = data.slice(index + 1);
+                if (historyData.length < 5) return; // 基礎資料太少不預測
+
+                const aiPredAtThatTime = getPrediction(historyData);
+                const win = [String(row.num1).padStart(2,'0'), String(row.num2).padStart(2,'0'), String(row.num3).padStart(2,'0'), String(row.num4).padStart(2,'0'), String(row.num5).padStart(2,'0')];
                 
-                // 檢查命中並標記高亮
-                const hitNumbers = currentBestSet.filter(n => win.includes(String(n).padStart(2,'0')));
-                const hitCount = hitNumbers.length;
+                const hits = aiPredAtThatTime.filter(n => win.includes(n));
+                const hitCount = hits.length;
                 if(hitCount >= 2) s2++;
                 if(hitCount >= 3) s3++;
 
-                const winDisplay = win.map(n => {
-                    return currentBestSet.includes(n) ? `<span class="num-match">${n}</span>` : n;
-                }).join(',');
+                const winDisplay = win.map(n => aiPredAtThatTime.includes(n) ? `<span class="num-match">${n}</span>` : n).join(',');
 
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors";
+                tr.className = "border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-all";
                 tr.innerHTML = `
-                    <td class="py-3 text-zinc-500 font-mono">${r.date.split('(')[0].replace('2026-','')}</td>
-                    <td class="py-3 text-center font-mono tracking-tighter">${winDisplay}</td>
-                    <td class="py-3 text-center text-zinc-600 font-mono">${currentBestSet.join(' ')}</td>
-                    <td class="py-3 text-right">${hitCount >= 2 ? `<span class="tag-hit">${hitCount}星</span>` : '<span class="text-zinc-700">摃</span>'}</td>
+                    <td class="py-3 text-zinc-500 font-mono">${row.date.split('T')[0].substring(5)}</td>
+                    <td class="py-3 text-center font-mono">${winDisplay}</td>
+                    <td class="py-3 text-center text-zinc-600 font-mono scale-90">${aiPredAtThatTime.join(' ')}</td>
+                    <td class="py-3 text-right">${hitCount >= 2 ? `<span class="tag-hit">${hitCount}星</span>` : '<span class="text-zinc-800">摃</span>'}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             document.getElementById('total-stats').innerText = `歷史 2星: ${s2}次 | 3星: ${s3}次`;
-            document.getElementById('win-rate-tag').innerText = `穩定度: ${s2 > data.length/3 ? '極高' : '中等'}`;
-            log(`回測完成，共分析 ${data.length} 期數據。`);
+            document.getElementById('win-rate-tag').innerText = `穩定度: ${s2 > 10 ? '極高' : '中等'}`;
+            log(`滾動回測完成，分析期數: ${data.length}`, false);
         }
 
-        // 頁面加載後自動執行
         window.onload = () => {
-            fetchAndAnalyze();
+            switchSource('539');
         };
     </script>
 </body>
