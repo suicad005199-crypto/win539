@@ -37,10 +37,22 @@
 
         .active { display: flex; }
 
-        /* 1. Splash Screen */
+        /* 1. Splash Screen & Progress Bar */
         #splash-screen { background: white; justify-content: center; }
         .logo { font-size: 48px; font-weight: 900; line-height: 1; margin-bottom: 20px; color: var(--text-main); }
-        .loading-text { font-size: 14px; letter-spacing: 2px; color: #aaa; margin-top: 50px; }
+        
+        .progress-container {
+            width: 200px; height: 12px;
+            background: #eee; border-radius: 10px;
+            margin: 20px auto 10px; overflow: hidden;
+        }
+        .progress-bar {
+            width: 0%; height: 100%;
+            background: var(--text-main);
+            border-radius: 10px; transition: width 0.2s ease-out;
+        }
+        .loading-text { font-size: 14px; letter-spacing: 2px; color: #aaa; margin-top: 10px; }
+        #loading-percentage { font-size: 16px; font-weight: bold; color: var(--text-main); }
 
         /* 2. Home Screen & HUD */
         .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
@@ -59,7 +71,7 @@
         #game-layer { position: absolute; inset: 0; display: none; }
         #gameCanvas { display: block; width: 100%; height: 100%; }
 
-        /* 4. Settings & Result Overlay */
+        /* 4. Overlay Styles */
         .overlay {
             position: absolute; inset: 0; background: rgba(0,0,0,0.5);
             display: none; justify-content: center; align-items: center; z-index: 100;
@@ -75,6 +87,10 @@
 <div id="phone-wrapper">
     <div id="splash-screen" class="screen active">
         <div class="logo">SHEEP<br>RESCUE</div>
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div id="loading-percentage">0%</div>
         <div class="loading-text">LOADING...</div>
     </div>
 
@@ -96,18 +112,18 @@
         <div class="card">
             <h2 id="result-title">LEVEL CLEAR!</h2>
             <p id="result-score">COINS: 0</p>
-            <button class="play-btn" style="margin-bottom:10px;" onclick="initGame()">RETRY</button>
+            <button class="play-btn" style="margin-bottom:10px; width:100%;" onclick="initGame()">RETRY</button>
             <button class="icon-btn" style="width:100%;" onclick="toHome()">HOME</button>
         </div>
     </div>
 
     <div id="settings-overlay" class="overlay">
         <div class="card">
-            <button style="float:right; border:none; background:none; font-size:20px;" onclick="toggleSettings(false)">×</button>
+            <button style="float:right; border:none; background:none; font-size:20px; cursor:pointer;" onclick="toggleSettings(false)">×</button>
             <h3>SETTINGS</h3>
             <p>SOUND: ON</p>
             <p>MUSIC: ON</p>
-            <div style="font-size:10px; color:#ccc;">PRIVACY POLICY</div>
+            <div style="font-size:10px; color:#ccc; margin-top:20px;">PRIVACY POLICY</div>
         </div>
     </div>
 </div>
@@ -122,9 +138,22 @@
     let obstacles = [];
     let speed = 5;
 
-    // 介面切換邏輯
+    // --- 加載與介面切換 ---
     window.onload = () => {
-        setTimeout(() => showScreen('home-screen'), 2500);
+        let progress = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('loading-percentage');
+        
+        const loadingInterval = setInterval(() => {
+            progress += Math.floor(Math.random() * 8) + 2; 
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadingInterval);
+                setTimeout(() => showScreen('home-screen'), 400);
+            }
+            progressBar.style.width = progress + '%';
+            progressText.innerText = progress + '%';
+        }, 120);
     };
 
     function showScreen(id) {
@@ -141,14 +170,15 @@
         document.getElementById('settings-overlay').style.display = show ? 'flex' : 'none';
     }
 
-    // 遊戲核心邏輯
+    // --- 遊戲邏輯 ---
     function initGame() {
         document.getElementById('result-overlay').style.display = 'none';
         document.getElementById('home-screen').classList.remove('active');
         document.getElementById('game-layer').style.display = 'block';
         
-        canvas.width = document.getElementById('phone-wrapper').offsetWidth;
-        canvas.height = document.getElementById('phone-wrapper').offsetHeight;
+        const wrapper = document.getElementById('phone-wrapper');
+        canvas.width = wrapper.offsetWidth;
+        canvas.height = wrapper.offsetHeight;
         lanes = [canvas.width / 6, canvas.width / 2, (canvas.width / 6) * 5];
         
         gameRunning = true;
@@ -173,19 +203,19 @@
         if (!gameRunning) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 繪製跑道線
+        // 跑道線
         ctx.strokeStyle = '#f0f0f0';
         ctx.setLineDash([20, 20]);
         [canvas.width/3, canvas.width*2/3].forEach(x => {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
         });
 
-        // 繪製 🐣
+        // 🐣 主角
         ctx.font = '50px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('🐣', lanes[playerLane], canvas.height - 120);
 
-        // 障礙物與金幣
+        // 隨機生成
         if (Math.random() > 0.97) {
             const lane = Math.floor(Math.random() * 3);
             const isCoin = Math.random() > 0.3;
@@ -197,7 +227,7 @@
             o.y += speed;
             ctx.fillText(o.type, o.x, o.y);
 
-            // 碰撞檢測
+            // 碰撞
             if (Math.abs(o.y - (canvas.height - 120)) < 40 && o.lane === playerLane) {
                 if (o.type === '💰') {
                     score += 10;
@@ -221,10 +251,11 @@
         document.getElementById('result-overlay').style.display = 'flex';
     }
 
-    // 觸控控制
+    // --- 控制 ---
     document.getElementById('phone-wrapper').addEventListener('touchstart', (e) => {
         if (!gameRunning) return;
-        const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+        const rect = canvas.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
         if (touchX < canvas.width / 2) {
             if (playerLane > 0) playerLane--;
         } else {
