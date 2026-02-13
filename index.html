@@ -45,67 +45,32 @@
             font-size: 52px; font-weight: 900; line-height: 1.1;
             color: var(--gold-main);
             text-shadow: 2px 2px 0 #444, 4px 4px 0 #222;
-            letter-spacing: 2px;
             margin-top: 40px;
         }
 
-        .progress-container {
-            width: 220px; height: 12px;
-            background: #222; border-radius: 20px;
-            border: 2px solid var(--gold-main); padding: 3px;
-        }
-        .progress-bar {
-            width: 0%; height: 100%;
-            background: var(--gold-main);
-            border-radius: 10px; transition: width 0.2s ease-out;
-        }
-        #loading-percentage { color: var(--gold-main); font-weight: bold; margin-top: 10px; }
-        .loading-text { color: var(--text-gray); font-size: 14px; letter-spacing: 1px; margin-top: 5px; }
-
-        .top-bar {
-            position: absolute; top: 20px; left: 0; width: 100%;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; box-sizing: border-box; z-index: 20;
-            pointer-events: none;
-        }
-        .info-box {
-            background: rgba(0, 0, 0, 0.7); padding: 8px 16px;
-            border-radius: 25px; font-size: 15px; font-weight: bold;
-            color: var(--gold-main); border: 1.5px solid var(--gold-main);
-            pointer-events: auto;
-        }
-        .icon-btn {
-            width: 40px; height: 40px; background: rgba(0, 0, 0, 0.7);
-            border-radius: 12px; border: 1.5px solid var(--gold-main);
-            color: var(--gold-main); font-weight: bold; cursor: pointer; pointer-events: auto;
-        }
-
         .play-btn {
-            width: 220px; padding: 18px;
+            width: 220px; padding: 15px;
             background: var(--gold-main); border: none;
-            border-radius: 20px; font-size: 26px; font-weight: 900;
+            border-radius: 20px; font-size: 24px; font-weight: 900;
             color: #000; cursor: pointer;
-            box-shadow: 0 8px 0 #b38f00;
-            transition: all 0.1s; margin-bottom: 40px;
+            box-shadow: 0 6px 0 #b38f00;
+            transition: all 0.1s; margin-bottom: 20px;
         }
-        .play-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 4px 0 #b38f00;
-        }
+        .play-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #b38f00; }
 
         #game-layer { position: absolute; inset: 0; display: none; background: var(--road-black); }
         #gameCanvas { display: block; width: 100%; height: 100%; }
+
+        /* 排行榜樣式 */
+        .rank-list { text-align: left; width: 80%; margin: 10px 0; font-size: 18px; color: #fff; }
+        .rank-item { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--dash-gray); padding: 5px 0; }
+        .rank-gold { color: var(--gold-main); font-weight: bold; }
 
         .overlay {
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9);
             display: none; justify-content: center; align-items: center; z-index: 100;
         }
-        .card {
-            background: #111; width: 75%; border-radius: 30px;
-            padding: 30px; border: 3px solid var(--gold-main);
-            color: var(--gold-main);
-        }
-
+        .card { background: #111; width: 75%; border-radius: 30px; padding: 25px; border: 3px solid var(--gold-main); }
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
     </style>
@@ -116,48 +81,39 @@
     <div id="splash-screen" class="screen active">
         <div class="logo">逃離<br>辦公室</div>
         <div style="margin-bottom: 100px;">
-            <div class="progress-container">
-                <div id="progress-bar" class="progress-bar"></div>
+            <div style="width: 200px; height: 10px; background: #222; border: 2px solid var(--gold-main); border-radius: 10px; padding: 2px;">
+                <div id="progress-bar" style="width: 0%; height: 100%; background: var(--gold-main); border-radius: 10px;"></div>
             </div>
-            <div id="loading-percentage">0%</div>
-            <div class="loading-text">嘗試逃離生活...</div>
+            <div id="loading-text" style="margin-top: 10px; font-size: 14px;">嘗試逃離生活...</div>
         </div>
     </div>
 
     <div id="home-screen" class="screen">
-        <div class="top-bar">
-            <button class="icon-btn" onclick="toggleSettings(true)">⚙️</button>
-            <div class="info-box" id="coin-ui-home">存款 💰 0</div>
+        <div class="logo">逃離<br>辦公室</div>
+        <div id="leaderboard-home" class="rank-list">
+            <p style="text-align:center; color: var(--gold-main);">🏆 菁英社畜排行榜</p>
+            <div id="rank-content"></div>
         </div>
-        <div class="logo" style="font-size: 64px;">逃離<br>辦公室</div>
-        <button class="play-btn" onclick="initGame()">開始打卡</button>
+        <div>
+            <button class="play-btn" onclick="initGame()">開始打卡</button>
+        </div>
     </div>
 
     <div id="game-layer">
-        <div class="top-bar">
-            <div class="info-box">入職第 1 天</div>
-            <div class="info-box" id="coin-ui-game">💰 0</div>
+        <div style="position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 20; pointer-events: none;">
+            <div id="coin-ui-game" style="background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--gold-main);">💰 0</div>
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
     <div id="result-overlay" class="overlay">
         <div class="card fade-in">
-            <h2 id="result-title" style="margin-top:0; font-size: 32px;">你被開除了!!!</h2>
-            <p id="result-score" style="font-size:22px;">本次積蓄: 💰 0</p>
-            <button class="play-btn" style="width:100%;" onclick="initGame()">重新入職</button>
-            <button onclick="toHome()" style="background:none; border:none; color:var(--text-gray); cursor:pointer; font-weight:bold; margin-top:15px; font-size: 16px;">自請離職</button>
-        </div>
-    </div>
-
-    <div id="settings-overlay" class="overlay">
-        <div class="card fade-in">
-            <h3 style="margin-top:0;">公司規範</h3>
-            <div style="text-align:left; margin: 20px 0; line-height: 2;">
-                <p>🔈 環境音效: 開啟</p>
-                <p>⚠️ 訊息彈窗: 開啟</p>
-            </div>
-            <button class="play-btn" style="width:100%; margin-bottom:0;" onclick="toggleSettings(false)">返回崗位</button>
+            <h2 style="color: var(--gold-main); margin-top:0;">你被開除了!!!</h2>
+            <p id="result-score" style="font-size:22px; color: #fff;">本次積蓄: 💰 0</p>
+            <hr style="border: 0; border-top: 1px solid var(--dash-gray);">
+            <div id="leaderboard-result" class="rank-list" style="width: 100%; font-size: 16px;"></div>
+            <button class="play-btn" style="width:100%; margin-top: 15px;" onclick="initGame()">重新入職</button>
+            <button onclick="toHome()" style="background:none; border:none; color:var(--text-gray); cursor:pointer; font-weight:bold;">自請離職</button>
         </div>
     </div>
 </div>
@@ -165,74 +121,70 @@
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let gameRunning = false;
-    let score = 0;
+    let gameRunning = false, score = 0, playerLane = 1, visualX = 0, speed = 7, obstacles = [];
     let lanes = [];
-    let playerLane = 1;
-    let visualX = 0;
-    let obstacles = [];
-    let speed = 6.5;
+    let roadOffset = 0; // 用於車道捲動
 
-    const SPRITES = {
-        player: '👨‍💼',
-        bosses: ['👨‍💻', '🧛', '👹'],
-        item: '💰'
-    };
+    const SPRITES = { player: '👨‍💼', bosses: ['👨‍💻', '🧛', '👹'], item: '💰' };
+
+    // --- 排行榜邏輯 ---
+    function updateLeaderboard(newScore) {
+        let scores = JSON.parse(localStorage.getItem('office_ranks')) || [];
+        if (newScore !== undefined) {
+            scores.push(newScore);
+            scores.sort((a, b) => b - a);
+            scores = scores.slice(0, 5);
+            localStorage.setItem('office_ranks', JSON.stringify(scores));
+        }
+        
+        const html = scores.map((s, i) => `
+            <div class="rank-item ${i === 0 ? 'rank-gold' : ''}">
+                <span>No.${i + 1}</span>
+                <span>💰 ${s}</span>
+            </div>
+        `).join('') || '<p style="text-align:center; font-size:14px;">暫無紀錄，快去加班！</p>';
+        
+        document.getElementById('rank-content').innerHTML = html;
+        document.getElementById('leaderboard-result').innerHTML = `<p style="text-align:center; margin: 5px 0;">Top 5 紀錄</p>` + html;
+    }
 
     window.onload = () => {
-        let progress = 0;
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('loading-percentage');
-        const loadingInterval = setInterval(() => {
-            progress += Math.floor(Math.random() * 15) + 3; 
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(loadingInterval);
-                setTimeout(() => showScreen('home-screen'), 600);
-            }
-            progressBar.style.width = progress + '%';
-            progressText.innerText = progress + '%';
-        }, 100);
+        updateLeaderboard();
+        let prog = 0;
+        const bar = document.getElementById('progress-bar');
+        const itv = setInterval(() => {
+            prog += 5;
+            bar.style.width = prog + '%';
+            if (prog >= 100) { clearInterval(itv); showScreen('home-screen'); }
+        }, 50);
     };
 
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('game-layer').style.display = 'none';
-        const target = document.getElementById(id);
-        if(target) target.classList.add('active');
-    }
-
-    function toggleSettings(show) {
-        document.getElementById('settings-overlay').style.display = show ? 'flex' : 'none';
+        document.getElementById('game-layer').style.display = id === 'game' ? 'block' : 'none';
+        if (document.getElementById(id)) document.getElementById(id).classList.add('active');
     }
 
     function initGame() {
         document.getElementById('result-overlay').style.display = 'none';
-        document.getElementById('home-screen').classList.remove('active');
-        document.getElementById('game-layer').style.display = 'block';
-        
+        showScreen('game');
         const wrapper = document.getElementById('phone-wrapper');
         canvas.width = wrapper.offsetWidth;
         canvas.height = wrapper.offsetHeight;
         lanes = [canvas.width / 6, canvas.width / 2, (canvas.width / 6) * 5];
-        
         visualX = lanes[1];
-        gameRunning = true;
-        score = 0;
-        speed = 7;
-        obstacles = [];
-        playerLane = 1;
+        gameRunning = true; score = 0; speed = 7; obstacles = []; playerLane = 1; roadOffset = 0;
         updateUI();
         gameLoop();
     }
 
     function toHome() {
         document.getElementById('result-overlay').style.display = 'none';
+        updateLeaderboard();
         showScreen('home-screen');
     }
 
     function updateUI() {
-        document.getElementById('coin-ui-home').innerText = `存款 💰 ${score}`;
         document.getElementById('coin-ui-game').innerText = `💰 ${score}`;
     }
 
@@ -240,44 +192,41 @@
         if (!gameRunning) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 路面與灰色虛線
-        ctx.fillStyle = "#111111"; 
-        ctx.fillRect(0,0, canvas.width, canvas.height);
+        // 背景與動態虛線
+        ctx.fillStyle = "#111"; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.strokeStyle = '#444444'; 
-        ctx.setLineDash([30, 30]);
-        ctx.lineWidth = 2;
+        roadOffset = (roadOffset + speed) % 60; // 根據速度捲動
+        ctx.strokeStyle = '#444'; ctx.lineWidth = 2; ctx.setLineDash([30, 30]);
+        ctx.lineDashOffset = -roadOffset; // 這裡讓線條動起來
+
         [canvas.width/3, canvas.width*2/3].forEach(x => {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
         });
 
-        let targetX = lanes[playerLane];
-        visualX += (targetX - visualX) * 0.25;
-
-        // 玩家 Sprite
-        ctx.font = '60px Arial';
-        ctx.textAlign = 'center';
+        // 玩家移動
+        visualX += (lanes[playerLane] - visualX) * 0.25;
+        ctx.font = '60px Arial'; ctx.textAlign = 'center';
         ctx.fillText(SPRITES.player, visualX, canvas.height - 120);
 
-        // 障礙物生成
+        // 生成障礙
         if (Math.random() > 0.95) {
             const lane = Math.floor(Math.random() * 3);
             const isMoney = Math.random() > 0.45;
-            const sprite = isMoney ? SPRITES.item : SPRITES.bosses[Math.floor(Math.random() * SPRITES.bosses.length)];
-            obstacles.push({ x: lanes[lane], y: -60, type: sprite, lane: lane, isMoney: isMoney });
+            obstacles.push({
+                x: lanes[lane], y: -60, lane: lane, 
+                type: isMoney ? SPRITES.item : SPRITES.bosses[Math.floor(Math.random()*3)],
+                isMoney
+            });
         }
 
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let o = obstacles[i];
             o.y += speed;
-            ctx.font = '50px Arial';
-            ctx.fillText(o.type, o.x, o.y);
+            ctx.font = '50px Arial'; ctx.fillText(o.type, o.x, o.y);
 
             if (Math.abs(o.y - (canvas.height - 120)) < 55 && o.lane === playerLane) {
                 if (o.isMoney) {
-                    score += 100;
-                    updateUI();
-                    obstacles.splice(i, 1);
+                    score += 100; updateUI(); obstacles.splice(i, 1);
                 } else {
                     gameOver();
                 }
@@ -292,24 +241,24 @@
     function gameOver() {
         gameRunning = false;
         document.getElementById('result-score').innerText = `本次積蓄: 💰 ${score}`;
+        updateLeaderboard(score);
         document.getElementById('result-overlay').style.display = 'flex';
     }
 
-    window.addEventListener('keydown', (e) => {
-        if (!gameRunning) return;
-        if ((e.key === 'ArrowLeft' || e.key === 'a') && playerLane > 0) playerLane--;
-        if ((e.key === 'ArrowRight' || e.key === 'd') && playerLane < 2) playerLane++;
+    // 控制
+    window.addEventListener('keydown', e => {
+        if (gameRunning) {
+            if ((e.key==='ArrowLeft'||e.key==='a') && playerLane > 0) playerLane--;
+            if ((e.key==='ArrowRight'||e.key==='d') && playerLane < 2) playerLane++;
+        }
     });
 
-    canvas.addEventListener('touchstart', (e) => {
+    canvas.addEventListener('touchstart', e => {
         if (!gameRunning) return;
-        const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
-        if (touchX < canvas.width / 2) {
-            if (playerLane > 0) playerLane--;
-        } else {
-            if (playerLane < 2) playerLane++;
-        }
-    }, {passive: true});
+        const tx = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+        if (tx < canvas.width / 2) { if (playerLane > 0) playerLane--; }
+        else { if (playerLane < 2) playerLane++; }
+    });
 </script>
 
 </body>
