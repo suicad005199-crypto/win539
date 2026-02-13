@@ -6,80 +6,115 @@
     <title>Sheep Rescue: Hatchling Run</title>
     <style>
         :root {
-            --bg-color: #b1a7d1;
-            --text-main: #6b5b95;
-            --btn-bg: #f8f9fa;
+            --bg-black: #000000;
+            --gold-main: #ffcf40;
+            --text-gray: #aaaaaa;
+            --road-black: #111111;
+            --dash-gray: #444444;
         }
 
         body {
             margin: 0; padding: 0; overflow: hidden;
             font-family: 'Arial Rounded MT Bold', 'Helvetica', sans-serif;
-            background-color: var(--bg-color);
+            background-color: #1a1a1a;
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; color: var(--text-main);
+            height: 100vh; color: var(--gold-main);
             touch-action: none;
         }
 
         #phone-wrapper {
             position: relative;
-            width: 100%; height: 100%; max-width: 414px; max-height: 896px;
-            background: white; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%; height: 100%; max-width: 414px; max-height: 850px;
+            background: var(--bg-black); overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 10px solid #333;
+            border-radius: 40px;
         }
 
         .screen {
             position: absolute; inset: 0;
             display: none; flex-direction: column;
             align-items: center; justify-content: space-between;
-            padding: 40px 20px; text-align: center;
-            z-index: 10; background: white;
+            padding: 50px 20px; text-align: center;
+            z-index: 10; background: var(--bg-black);
         }
 
         .active { display: flex; }
 
-        /* 1. Splash Screen & Progress Bar */
-        #splash-screen { background: white; justify-content: center; }
-        .logo { font-size: 48px; font-weight: 900; line-height: 1; margin-bottom: 20px; color: var(--text-main); }
-        
+        /* Logo: 黑底黃字風格 */
+        .logo {
+            font-size: 56px; font-weight: 900; line-height: 0.85;
+            color: var(--gold-main);
+            text-shadow: 2px 2px 0 #444, 4px 4px 0 #222;
+            letter-spacing: -2px;
+            margin-top: 40px;
+        }
+
+        /* 加載條: 黃色風格 */
         .progress-container {
-            width: 200px; height: 12px;
-            background: #eee; border-radius: 10px;
-            margin: 20px auto 10px; overflow: hidden;
+            width: 220px; height: 12px;
+            background: #222; border-radius: 20px;
+            border: 2px solid var(--gold-main); padding: 3px;
         }
         .progress-bar {
             width: 0%; height: 100%;
-            background: var(--text-main);
+            background: var(--gold-main);
             border-radius: 10px; transition: width 0.2s ease-out;
         }
-        .loading-text { font-size: 14px; letter-spacing: 2px; color: #aaa; margin-top: 10px; }
-        #loading-percentage { font-size: 16px; font-weight: bold; color: var(--text-main); }
+        #loading-percentage { color: var(--gold-main); font-weight: bold; margin-top: 10px; }
+        .loading-text { color: var(--text-gray); font-size: 12px; letter-spacing: 2px; }
 
-        /* 2. Home Screen & HUD */
-        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
-        .icon-btn { width: 40px; height: 40px; background: #eee; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .info-box { background: #eee; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
-        
-        .play-btn {
-            width: 180px; padding: 15px;
-            background: var(--btn-bg); border: 2px solid #ddd;
-            border-radius: 12px; font-size: 24px; font-weight: bold;
-            color: var(--text-main); cursor: pointer;
-            transition: transform 0.1s; margin-bottom: 60px;
+        /* HUD: 半透明黑 */
+        .top-bar {
+            position: absolute; top: 20px; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px; box-sizing: border-box; z-index: 20;
+            pointer-events: none;
+        }
+        .info-box {
+            background: rgba(0, 0, 0, 0.7); padding: 8px 16px;
+            border-radius: 25px; font-size: 15px; font-weight: bold;
+            color: var(--gold-main); border: 1.5px solid var(--gold-main);
+            pointer-events: auto;
+        }
+        .icon-btn {
+            width: 40px; height: 40px; background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px; border: 1.5px solid var(--gold-main);
+            color: var(--gold-main); font-weight: bold; cursor: pointer; pointer-events: auto;
         }
 
-        /* 3. Gameplay Layer */
-        #game-layer { position: absolute; inset: 0; display: none; }
+        /* 按鈕: 黃色 3D 感 */
+        .play-btn {
+            width: 200px; padding: 18px;
+            background: var(--gold-main); border: none;
+            border-radius: 20px; font-size: 26px; font-weight: 900;
+            color: #000; cursor: pointer;
+            box-shadow: 0 8px 0 #b38f00;
+            transition: all 0.1s; margin-bottom: 40px;
+        }
+        .play-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #b38f00;
+        }
+
+        /* 遊戲畫布 */
+        #game-layer { position: absolute; inset: 0; display: none; background: var(--road-black); }
         #gameCanvas { display: block; width: 100%; height: 100%; }
 
-        /* 4. Overlay Styles */
+        /* 彈窗 */
         .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85);
             display: none; justify-content: center; align-items: center; z-index: 100;
         }
-        .card { background: white; width: 80%; border-radius: 20px; padding: 20px; position: relative; }
+        .card {
+            background: #111; width: 75%; border-radius: 30px;
+            padding: 30px; border: 3px solid var(--gold-main);
+            box-shadow: 0 0 20px rgba(255, 207, 64, 0.2);
+            color: var(--gold-main);
+        }
 
-        .fade-in { animation: fadeIn 0.5s forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -87,43 +122,49 @@
 <div id="phone-wrapper">
     <div id="splash-screen" class="screen active">
         <div class="logo">SHEEP<br>RESCUE</div>
-        <div class="progress-container">
-            <div id="progress-bar" class="progress-bar"></div>
+        <div style="margin-bottom: 100px;">
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="loading-percentage">0%</div>
+            <div class="loading-text">LOADING SYSTEM...</div>
         </div>
-        <div id="loading-percentage">0%</div>
-        <div class="loading-text">LOADING...</div>
     </div>
 
     <div id="home-screen" class="screen">
         <div class="top-bar">
-            <button class="icon-btn" onclick="toggleSettings(true)">S</button>
-            <div class="info-box">LV. 1</div>
-            <div class="info-box" id="coin-ui">💰 0</div>
+            <button class="icon-btn" onclick="toggleSettings(true)">⚙️</button>
+            <div class="info-box" id="coin-ui-home">💰 0</div>
         </div>
         <div class="logo">SHEEP<br>RESCUE</div>
         <button class="play-btn" onclick="initGame()">PLAY</button>
     </div>
 
     <div id="game-layer">
+        <div class="top-bar">
+            <div class="info-box">LV. 1</div>
+            <div class="info-box" id="coin-ui-game">💰 0</div>
+        </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
     <div id="result-overlay" class="overlay">
-        <div class="card">
-            <h2 id="result-title">LEVEL CLEAR!</h2>
-            <p id="result-score">COINS: 0</p>
-            <button class="play-btn" style="margin-bottom:10px; width:100%;" onclick="initGame()">RETRY</button>
-            <button class="icon-btn" style="width:100%;" onclick="toHome()">HOME</button>
+        <div class="card fade-in">
+            <h2 id="result-title" style="margin-top:0;">FAIL</h2>
+            <p id="result-score" style="font-size:24px;">COINS: 0</p>
+            <button class="play-btn" style="width:100%;" onclick="initGame()">RETRY</button>
+            <button onclick="toHome()" style="background:none; border:none; color:var(--text-gray); cursor:pointer; font-weight:bold; margin-top:15px;">MENU</button>
         </div>
     </div>
 
     <div id="settings-overlay" class="overlay">
-        <div class="card">
-            <button style="float:right; border:none; background:none; font-size:20px; cursor:pointer;" onclick="toggleSettings(false)">×</button>
-            <h3>SETTINGS</h3>
-            <p>SOUND: ON</p>
-            <p>MUSIC: ON</p>
-            <div style="font-size:10px; color:#ccc; margin-top:20px;">PRIVACY POLICY</div>
+        <div class="card fade-in">
+            <h3 style="margin-top:0;">SETTINGS</h3>
+            <div style="text-align:left; margin: 20px 0; line-height: 2;">
+                <p>🎵 MUSIC: ON</p>
+                <p>🔊 SOUND: ON</p>
+            </div>
+            <button class="play-btn" style="width:100%; margin-bottom:0;" onclick="toggleSettings(false)">BACK</button>
         </div>
     </div>
 </div>
@@ -135,43 +176,37 @@
     let score = 0;
     let lanes = [];
     let playerLane = 1;
-    let visualX = 0; // 用於平滑移動的視覺座標
+    let visualX = 0;
     let obstacles = [];
-    let speed = 5;
+    let speed = 5.5;
 
-    // --- 加載與介面切換 ---
     window.onload = () => {
         let progress = 0;
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('loading-percentage');
-        
         const loadingInterval = setInterval(() => {
-            progress += Math.floor(Math.random() * 8) + 2; 
+            progress += Math.floor(Math.random() * 12) + 2; 
             if (progress >= 100) {
                 progress = 100;
                 clearInterval(loadingInterval);
-                setTimeout(() => showScreen('home-screen'), 400);
+                setTimeout(() => showScreen('home-screen'), 500);
             }
             progressBar.style.width = progress + '%';
             progressText.innerText = progress + '%';
-        }, 120);
+        }, 80);
     };
 
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('game-layer').style.display = 'none';
         const target = document.getElementById(id);
-        if(target) {
-            target.classList.add('active');
-            target.classList.add('fade-in');
-        }
+        if(target) target.classList.add('active');
     }
 
     function toggleSettings(show) {
         document.getElementById('settings-overlay').style.display = show ? 'flex' : 'none';
     }
 
-    // --- 遊戲邏輯 ---
     function initGame() {
         document.getElementById('result-overlay').style.display = 'none';
         document.getElementById('home-screen').classList.remove('active');
@@ -182,10 +217,10 @@
         canvas.height = wrapper.offsetHeight;
         lanes = [canvas.width / 6, canvas.width / 2, (canvas.width / 6) * 5];
         
-        visualX = lanes[1]; // 初始位置在中線
+        visualX = lanes[1];
         gameRunning = true;
         score = 0;
-        speed = 5;
+        speed = 6;
         obstacles = [];
         playerLane = 1;
         updateUI();
@@ -198,44 +233,47 @@
     }
 
     function updateUI() {
-        document.getElementById('coin-ui').innerText = `💰 ${score}`;
+        document.getElementById('coin-ui-home').innerText = `💰 ${score}`;
+        document.getElementById('coin-ui-game').innerText = `💰 ${score}`;
     }
 
     function gameLoop() {
         if (!gameRunning) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 跑道線
-        ctx.strokeStyle = '#f0f0f0';
-        ctx.setLineDash([20, 20]);
+        // 圖三優化: 黑底背景
+        ctx.fillStyle = "#111111"; 
+        ctx.fillRect(0,0, canvas.width, canvas.height);
+        
+        // 圖三優化: 灰色虛線
+        ctx.strokeStyle = '#444444'; 
+        ctx.setLineDash([25, 25]);
+        ctx.lineWidth = 2;
         [canvas.width/3, canvas.width*2/3].forEach(x => {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
         });
 
-        // --- 平滑移動邏輯 ---
         let targetX = lanes[playerLane];
-        let diff = targetX - visualX;
-        visualX += diff * 0.2; // 0.2 是平滑度，數值越大移越快
+        visualX += (targetX - visualX) * 0.22;
 
-        // 🐣 主角 (使用 visualX 代替固定軌道座標)
-        ctx.font = '50px Arial';
+        // 🐣 角色
+        ctx.font = '55px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('🐣', visualX, canvas.height - 120);
 
-        // 隨機生成
-        if (Math.random() > 0.97) {
+        if (Math.random() > 0.96) {
             const lane = Math.floor(Math.random() * 3);
-            const isCoin = Math.random() > 0.3;
+            const isCoin = Math.random() > 0.35;
             obstacles.push({ x: lanes[lane], y: -50, type: isCoin ? '💰' : '🚜', lane: lane });
         }
 
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let o = obstacles[i];
             o.y += speed;
+            ctx.font = '45px Arial';
             ctx.fillText(o.type, o.x, o.y);
 
-            // 碰撞 (改用 lane 判定，確保精準)
-            if (Math.abs(o.y - (canvas.height - 120)) < 40 && o.lane === playerLane) {
+            if (Math.abs(o.y - (canvas.height - 120)) < 45 && o.lane === playerLane) {
                 if (o.type === '💰') {
                     score += 10;
                     updateUI();
@@ -253,159 +291,25 @@
 
     function gameOver() {
         gameRunning = false;
-        document.getElementById('result-title').innerText = "LEVEL FAIL!";
         document.getElementById('result-score').innerText = `COINS: ${score}`;
         document.getElementById('result-overlay').style.display = 'flex';
     }
 
-    // --- 控制邏輯 (PC + 手機) ---
-    
-    // PC 鍵盤控制
     window.addEventListener('keydown', (e) => {
         if (!gameRunning) return;
-        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-            if (playerLane > 0) playerLane--;
-        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-            if (playerLane < 2) playerLane++;
-        }
+        if ((e.key === 'ArrowLeft' || e.key === 'a') && playerLane > 0) playerLane--;
+        if ((e.key === 'ArrowRight' || e.key === 'd') && playerLane < 2) playerLane++;
     });
 
-    // 手機觸控控制
-    document.getElementById('phone-wrapper').addEventListener('touchstart', (e) => {
+    canvas.addEventListener('touchstart', (e) => {
         if (!gameRunning) return;
-        const rect = canvas.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
+        const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
         if (touchX < canvas.width / 2) {
             if (playerLane > 0) playerLane--;
         } else {
             if (playerLane < 2) playerLane++;
         }
-    });
-
-    // --- 加載與介面切換 ---
-    window.onload = () => {
-        let progress = 0;
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('loading-percentage');
-        
-        const loadingInterval = setInterval(() => {
-            progress += Math.floor(Math.random() * 8) + 2; 
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(loadingInterval);
-                setTimeout(() => showScreen('home-screen'), 400);
-            }
-            progressBar.style.width = progress + '%';
-            progressText.innerText = progress + '%';
-        }, 120);
-    };
-
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('game-layer').style.display = 'none';
-        const target = document.getElementById(id);
-        if(target) {
-            target.classList.add('active');
-            target.classList.add('fade-in');
-        }
-    }
-
-    function toggleSettings(show) {
-        document.getElementById('settings-overlay').style.display = show ? 'flex' : 'none';
-    }
-
-    // --- 遊戲邏輯 ---
-    function initGame() {
-        document.getElementById('result-overlay').style.display = 'none';
-        document.getElementById('home-screen').classList.remove('active');
-        document.getElementById('game-layer').style.display = 'block';
-        
-        const wrapper = document.getElementById('phone-wrapper');
-        canvas.width = wrapper.offsetWidth;
-        canvas.height = wrapper.offsetHeight;
-        lanes = [canvas.width / 6, canvas.width / 2, (canvas.width / 6) * 5];
-        
-        gameRunning = true;
-        score = 0;
-        speed = 5;
-        obstacles = [];
-        playerLane = 1;
-        updateUI();
-        gameLoop();
-    }
-
-    function toHome() {
-        document.getElementById('result-overlay').style.display = 'none';
-        showScreen('home-screen');
-    }
-
-    function updateUI() {
-        document.getElementById('coin-ui').innerText = `💰 ${score}`;
-    }
-
-    function gameLoop() {
-        if (!gameRunning) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 跑道線
-        ctx.strokeStyle = '#f0f0f0';
-        ctx.setLineDash([20, 20]);
-        [canvas.width/3, canvas.width*2/3].forEach(x => {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-        });
-
-        // 🐣 主角
-        ctx.font = '50px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('🐣', lanes[playerLane], canvas.height - 120);
-
-        // 隨機生成
-        if (Math.random() > 0.97) {
-            const lane = Math.floor(Math.random() * 3);
-            const isCoin = Math.random() > 0.3;
-            obstacles.push({ x: lanes[lane], y: -50, type: isCoin ? '💰' : '🚜', lane: lane });
-        }
-
-        for (let i = obstacles.length - 1; i >= 0; i--) {
-            let o = obstacles[i];
-            o.y += speed;
-            ctx.fillText(o.type, o.x, o.y);
-
-            // 碰撞
-            if (Math.abs(o.y - (canvas.height - 120)) < 40 && o.lane === playerLane) {
-                if (o.type === '💰') {
-                    score += 10;
-                    updateUI();
-                    obstacles.splice(i, 1);
-                } else {
-                    gameOver();
-                }
-            }
-            if (o.y > canvas.height) obstacles.splice(i, 1);
-        }
-
-        speed += 0.001;
-        requestAnimationFrame(gameLoop);
-    }
-
-    function gameOver() {
-        gameRunning = false;
-        document.getElementById('result-title').innerText = "LEVEL FAIL!";
-        document.getElementById('result-score').innerText = `COINS: ${score}`;
-        document.getElementById('result-overlay').style.display = 'flex';
-    }
-
-    // --- 控制 ---
-    document.getElementById('phone-wrapper').addEventListener('touchstart', (e) => {
-        if (!gameRunning) return;
-        const rect = canvas.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
-        if (touchX < canvas.width / 2) {
-            if (playerLane > 0) playerLane--;
-        } else {
-            if (playerLane < 2) playerLane++;
-        }
-    });
+    }, {passive: true});
 </script>
 
 </body>
