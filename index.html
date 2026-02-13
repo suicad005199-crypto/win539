@@ -2,199 +2,236 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>539 AI PRO - RTP Optimized</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sheep Rescue: Hatchling Run</title>
     <style>
-        :root { --main-color: #f97316; }
-        body { background-color: #000; color: #fff; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
-        .theme-539 { --main-color: #f97316; }
-        .theme-fantasy5 { --main-color: #ef4444; }
-        .ios-blur { backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
-        .panel { @apply bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 mb-4; }
-        .text-main { color: var(--main-color); }
-        .tag-hit { background-color: var(--main-color); @apply text-black text-[10px] px-1.5 py-0.5 rounded font-black; }
-        .num-match { color: var(--main-color); font-weight: 800; text-decoration: underline; }
-        .log-green { color: #22c55e; }
-        .rtp-glow { text-shadow: 0 0 8px var(--main-color); }
-        .custom-scroll::-webkit-scrollbar { width: 2px; }
+        :root {
+            --bg-color: #b1a7d1;
+            --text-main: #6b5b95;
+            --btn-bg: #f8f9fa;
+        }
+
+        body {
+            margin: 0; padding: 0; overflow: hidden;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica', sans-serif;
+            background-color: var(--bg-color);
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; color: var(--text-main);
+            touch-action: none;
+        }
+
+        #phone-wrapper {
+            position: relative;
+            width: 100%; height: 100%; max-width: 414px; max-height: 896px;
+            background: white; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .screen {
+            position: absolute; inset: 0;
+            display: none; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            padding: 40px 20px; text-align: center;
+            z-index: 10; background: white;
+        }
+
+        .active { display: flex; }
+
+        /* 1. Splash Screen */
+        #splash-screen { background: white; justify-content: center; }
+        .logo { font-size: 48px; font-weight: 900; line-height: 1; margin-bottom: 20px; color: var(--text-main); }
+        .loading-text { font-size: 14px; letter-spacing: 2px; color: #aaa; margin-top: 50px; }
+
+        /* 2. Home Screen & HUD */
+        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
+        .icon-btn { width: 40px; height: 40px; background: #eee; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .info-box { background: #eee; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
+        
+        .play-btn {
+            width: 180px; padding: 15px;
+            background: var(--btn-bg); border: 2px solid #ddd;
+            border-radius: 12px; font-size: 24px; font-weight: bold;
+            color: var(--text-main); cursor: pointer;
+            transition: transform 0.1s; margin-bottom: 60px;
+        }
+
+        /* 3. Gameplay Layer */
+        #game-layer { position: absolute; inset: 0; display: none; }
+        #gameCanvas { display: block; width: 100%; height: 100%; }
+
+        /* 4. Settings & Result Overlay */
+        .overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .card { background: white; width: 80%; border-radius: 20px; padding: 20px; position: relative; }
+
+        .fade-in { animation: fadeIn 0.5s forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body class="theme-539 pb-10">
+<body>
 
-    <div class="sticky top-0 z-50 bg-black/80 ios-blur border-b border-zinc-800 px-6 py-4 flex justify-between items-end">
-        <div>
-            <h1 class="text-2xl font-black text-main tracking-tighter">539 AI PRO</h1>
-            <p class="text-[10px] text-zinc-500 font-bold uppercase italic tracking-widest">RTP Targeted: 98.5%</p>
+<div id="phone-wrapper">
+    <div id="splash-screen" class="screen active">
+        <div class="logo">SHEEP<br>RESCUE</div>
+        <div class="loading-text">LOADING...</div>
+    </div>
+
+    <div id="home-screen" class="screen">
+        <div class="top-bar">
+            <button class="icon-btn" onclick="toggleSettings(true)">S</button>
+            <div class="info-box">LV. 1</div>
+            <div class="info-box" id="coin-ui">💰 0</div>
         </div>
-        <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-            <button onclick="switchSource('539')" id="btn-539" class="px-4 py-1.5 text-xs font-bold rounded-md bg-zinc-800 text-main transition-all">今彩</button>
-            <button onclick="switchSource('fantasy5')" id="btn-fa" class="px-4 py-1.5 text-xs font-bold rounded-md text-zinc-500 transition-all">天天樂</button>
+        <div class="logo">SHEEP<br>RESCUE</div>
+        <button class="play-btn" onclick="initGame()">PLAY</button>
+    </div>
+
+    <div id="game-layer">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="result-overlay" class="overlay">
+        <div class="card">
+            <h2 id="result-title">LEVEL CLEAR!</h2>
+            <p id="result-score">COINS: 0</p>
+            <button class="play-btn" style="margin-bottom:10px;" onclick="initGame()">RETRY</button>
+            <button class="icon-btn" style="width:100%;" onclick="toHome()">HOME</button>
         </div>
     </div>
 
-    <div class="p-4 max-w-lg mx-auto">
-        <div class="panel py-3 flex justify-around items-center border-main/20 bg-main/5">
-            <div class="text-center">
-                <p class="text-[9px] text-zinc-500 uppercase font-black">Est. RTP</p>
-                <p id="rtp-val" class="text-xl font-black text-main rtp-glow">--%</p>
-            </div>
-            <div class="w-px h-8 bg-zinc-800"></div>
-            <div class="text-center">
-                <p class="text-[9px] text-zinc-500 uppercase font-black">Safety Factor</p>
-                <p id="safety-val" class="text-xl font-black text-white">--</p>
-            </div>
-        </div>
-
-        <div class="panel border-zinc-800">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-black text-main uppercase italic">Elite Combo</span>
-                    <span id="winner-tag" class="text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded">--</span>
-                </div>
-                <div id="stats-23" class="text-[9px] text-zinc-400 font-mono text-right">穩定度: -- | 強度: --</div>
-            </div>
-            <div id="pred-combo" class="flex justify-center gap-2 text-main font-mono font-black text-3xl italic tracking-tighter mb-6">--</div>
-            <div class="flex justify-between border-t border-zinc-800 pt-4 px-2">
-                <span class="text-xs font-bold text-zinc-500">立柱建議</span>
-                <div class="flex gap-2 items-center text-sm font-mono font-bold">
-                    <span id="col-1" class="text-white bg-zinc-800 px-3 py-1 rounded-lg border border-zinc-700">--</span>
-                    <span class="text-main font-black">|</span>
-                    <span id="col-2" class="text-white bg-zinc-800 px-3 py-1 rounded-lg border border-zinc-700">--</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="panel border-main/30 shadow-lg shadow-main/5">
-            <div class="flex justify-between items-center mb-3">
-                <div class="text-[10px] text-main font-black uppercase tracking-tighter">Smart Miss Strategy</div>
-                <div id="miss-winrate" class="text-[9px] text-zinc-400 font-bold italic">歷史勝率: --%</div>
-            </div>
-            <div id="pred-miss" class="flex justify-around font-mono text-2xl font-black text-zinc-600 italic">
-                <span>--</span><span>--</span><span>--</span><span>--</span><span>--</span>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4">30D Rolling Backtest</div>
-            <div id="table-container" class="max-h-64 overflow-y-auto custom-scroll">
-                <table class="w-full text-left">
-                    <tbody id="backtest-body" class="text-[10px] divide-y divide-zinc-900"></tbody>
-                </table>
-            </div>
+    <div id="settings-overlay" class="overlay">
+        <div class="card">
+            <button style="float:right; border:none; background:none; font-size:20px;" onclick="toggleSettings(false)">×</button>
+            <h3>SETTINGS</h3>
+            <p>SOUND: ON</p>
+            <p>MUSIC: ON</p>
+            <div style="font-size:10px; color:#ccc;">PRIVACY POLICY</div>
         </div>
     </div>
+</div>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxX4EPXapWEH0l7yodiQjAquQQMNq73WkChSIuWnsd3_p59grPf9AKsrN32TtMXydBa-A/exec';
-        let currentSource = '539';
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let gameRunning = false;
+    let score = 0;
+    let lanes = [];
+    let playerLane = 1;
+    let obstacles = [];
+    let speed = 5;
 
-        function getRTPSelection(data) {
-            const rolling = data.slice(0, 30);
-            const freq = {}, skip = {}, lastSeen = {};
-            
-            // 初始化號碼池 (1-39)
-            for(let i=1; i<=39; i++) {
-                const n = String(i).padStart(2,'0');
-                freq[n] = 0; skip[n] = 0; lastSeen[n] = -1;
+    // 介面切換邏輯
+    window.onload = () => {
+        setTimeout(() => showScreen('home-screen'), 2500);
+    };
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('game-layer').style.display = 'none';
+        const target = document.getElementById(id);
+        if(target) {
+            target.classList.add('active');
+            target.classList.add('fade-in');
+        }
+    }
+
+    function toggleSettings(show) {
+        document.getElementById('settings-overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    // 遊戲核心邏輯
+    function initGame() {
+        document.getElementById('result-overlay').style.display = 'none';
+        document.getElementById('home-screen').classList.remove('active');
+        document.getElementById('game-layer').style.display = 'block';
+        
+        canvas.width = document.getElementById('phone-wrapper').offsetWidth;
+        canvas.height = document.getElementById('phone-wrapper').offsetHeight;
+        lanes = [canvas.width / 6, canvas.width / 2, (canvas.width / 6) * 5];
+        
+        gameRunning = true;
+        score = 0;
+        speed = 5;
+        obstacles = [];
+        playerLane = 1;
+        updateUI();
+        gameLoop();
+    }
+
+    function toHome() {
+        document.getElementById('result-overlay').style.display = 'none';
+        showScreen('home-screen');
+    }
+
+    function updateUI() {
+        document.getElementById('coin-ui').innerText = `💰 ${score}`;
+    }
+
+    function gameLoop() {
+        if (!gameRunning) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 繪製跑道線
+        ctx.strokeStyle = '#f0f0f0';
+        ctx.setLineDash([20, 20]);
+        [canvas.width/3, canvas.width*2/3].forEach(x => {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        });
+
+        // 繪製 🐣
+        ctx.font = '50px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🐣', lanes[playerLane], canvas.height - 120);
+
+        // 障礙物與金幣
+        if (Math.random() > 0.97) {
+            const lane = Math.floor(Math.random() * 3);
+            const isCoin = Math.random() > 0.3;
+            obstacles.push({ x: lanes[lane], y: -50, type: isCoin ? '💰' : '🚜', lane: lane });
+        }
+
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            let o = obstacles[i];
+            o.y += speed;
+            ctx.fillText(o.type, o.x, o.y);
+
+            // 碰撞檢測
+            if (Math.abs(o.y - (canvas.height - 120)) < 40 && o.lane === playerLane) {
+                if (o.type === '💰') {
+                    score += 10;
+                    updateUI();
+                    obstacles.splice(i, 1);
+                } else {
+                    gameOver();
+                }
             }
-
-            rolling.forEach((r, idx) => {
-                const nums = [r.num1, r.num2, r.num3, r.num4, r.num5].map(v=>String(v).padStart(2,'0'));
-                nums.forEach(n => {
-                    freq[n]++;
-                    if(lastSeen[n] === -1) lastSeen[n] = idx;
-                });
-            });
-
-            // 避險邏輯：排除過熱與過冷
-            const eligible = Object.keys(freq).filter(n => {
-                const isHot = freq[n] >= 8; // 近30期開超過8次 (太熱)
-                const isCold = lastSeen[n] > 15; // 超過15期沒開 (太冷，易反彈)
-                return !isHot && !isCold;
-            });
-
-            // 策略組生成
-            const sortedEligible = eligible.sort((a,b) => freq[b] - freq[a]);
-            const nextSet = sortedEligible.slice(0, 5).sort((a,b)=>a-b);
-            
-            return { set: nextSet.length === 5 ? nextSet : sortedEligible.slice(0,5), name: "穩定避險" };
+            if (o.y > canvas.height) obstacles.splice(i, 1);
         }
 
-        function getMissRTP(data) {
-            const rolling = data.slice(0, 30);
-            const freq = {};
-            rolling.forEach(r => [r.num1, r.num2, r.num3, r.num4, r.num5].forEach(n => {
-                const s = String(n).padStart(2,'0');
-                freq[s] = (freq[s]||0)+1;
-            }));
+        speed += 0.001;
+        requestAnimationFrame(gameLoop);
+    }
 
-            // 選取頻率中位數附近的號碼 (最平穩，不易爆冷或爆熱)
-            const sorted = Object.keys(freq).sort((a,b) => freq[a] - freq[b]);
-            return sorted.slice(10, 15).sort((a,b)=>a-b);
+    function gameOver() {
+        gameRunning = false;
+        document.getElementById('result-title').innerText = "LEVEL FAIL!";
+        document.getElementById('result-score').innerText = `COINS: ${score}`;
+        document.getElementById('result-overlay').style.display = 'flex';
+    }
+
+    // 觸控控制
+    document.getElementById('phone-wrapper').addEventListener('touchstart', (e) => {
+        if (!gameRunning) return;
+        const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+        if (touchX < canvas.width / 2) {
+            if (playerLane > 0) playerLane--;
+        } else {
+            if (playerLane < 2) playerLane++;
         }
+    });
+</script>
 
-        async function switchSource(s) {
-            currentSource = s;
-            document.body.className = `theme-${s} pb-10`;
-            document.getElementById('btn-539').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='539' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
-            document.getElementById('btn-fa').className = `px-4 py-1.5 text-xs font-bold rounded-md ${s==='fantasy5' ? 'bg-zinc-800 text-main' : 'text-zinc-500'}`;
-            
-            try {
-                const response = await fetch(`${API_URL}?sheet=${currentSource}`);
-                const data = await response.json();
-                render(data);
-            } catch (e) { console.error(e); }
-        }
-
-        function render(data) {
-            // 1. 下期預測
-            const pred = getRTPSelection(data);
-            document.getElementById('pred-combo').innerText = pred.set.join(' ');
-            document.getElementById('winner-tag').innerText = pred.name;
-            document.getElementById('col-1').innerText = `${pred.set[0]},${pred.set[1]}`;
-            document.getElementById('col-2').innerText = `${pred.set[2]},${pred.set[3]},${pred.set[4]}`;
-
-            // 2. 五不中 RTP 監測
-            const missSet = getMissRTP(data);
-            document.getElementById('pred-miss').innerHTML = missSet.map(n => `<span>${n}</span>`).join('');
-
-            // 3. 滾動回測與統計
-            const tbody = document.getElementById('backtest-body');
-            tbody.innerHTML = '';
-            let s2=0, s3=0, missWin=0;
-            const testNum = 30;
-
-            data.slice(0, testNum).forEach((row, idx) => {
-                const history = data.slice(idx + 1);
-                const p = getRTPSelection(history).set;
-                const m = getMissRTP(history);
-                const win = [row.num1, row.num2, row.num3, row.num4, row.num5].map(v=>String(v).padStart(2,'0'));
-                
-                const hits = p.filter(n => win.includes(n)).length;
-                if(hits === 2) s2++; if(hits >= 3) s3++;
-                if(m.filter(n => win.includes(n)).length === 0) missWin++;
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="py-2 text-zinc-500 font-mono">${row.date.split('T')[0].substring(5)}</td>
-                    <td class="py-2 text-center font-mono">${win.map(n => p.includes(n) ? `<span class="num-match">${n}</span>` : n).join(',')}</td>
-                    <td class="py-2 text-right">${hits >= 2 ? `<span class="tag-hit">${hits}星</span>` : '<span class="text-zinc-800">槓</span>'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // RTP 計算 (五不中賠率假設 1.9)
-            const missWinRate = (missWin / testNum);
-            const rtp = (missWinRate * 1.9 * 100).toFixed(1);
-            
-            document.getElementById('rtp-val').innerText = `${rtp}%`;
-            document.getElementById('safety-val').innerText = rtp > 95 ? "HIGH" : "MED";
-            document.getElementById('miss-winrate').innerText = `歷史勝率: ${(missWinRate*100).toFixed(1)}%`;
-            document.getElementById('stats-23').innerHTML = `穩定度(2星): ${((s2/testNum)*100).toFixed(0)}%<br>強度(3星): ${((s3/testNum)*100).toFixed(0)}%`;
-        }
-
-        window.onload = () => switchSource('539');
-    </script>
 </body>
 </html>
