@@ -135,8 +135,152 @@
     let score = 0;
     let lanes = [];
     let playerLane = 1;
+    let visualX = 0; // 用於平滑移動的視覺座標
     let obstacles = [];
     let speed = 5;
+
+    // --- 加載與介面切換 ---
+    window.onload = () => {
+        let progress = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('loading-percentage');
+        
+        const loadingInterval = setInterval(() => {
+            progress += Math.floor(Math.random() * 8) + 2; 
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadingInterval);
+                setTimeout(() => showScreen('home-screen'), 400);
+            }
+            progressBar.style.width = progress + '%';
+            progressText.innerText = progress + '%';
+        }, 120);
+    };
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('game-layer').style.display = 'none';
+        const target = document.getElementById(id);
+        if(target) {
+            target.classList.add('active');
+            target.classList.add('fade-in');
+        }
+    }
+
+    function toggleSettings(show) {
+        document.getElementById('settings-overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    // --- 遊戲邏輯 ---
+    function initGame() {
+        document.getElementById('result-overlay').style.display = 'none';
+        document.getElementById('home-screen').classList.remove('active');
+        document.getElementById('game-layer').style.display = 'block';
+        
+        const wrapper = document.getElementById('phone-wrapper');
+        canvas.width = wrapper.offsetWidth;
+        canvas.height = wrapper.offsetHeight;
+        lanes = [canvas.width / 6, canvas.width / 2, (canvas.width / 6) * 5];
+        
+        visualX = lanes[1]; // 初始位置在中線
+        gameRunning = true;
+        score = 0;
+        speed = 5;
+        obstacles = [];
+        playerLane = 1;
+        updateUI();
+        gameLoop();
+    }
+
+    function toHome() {
+        document.getElementById('result-overlay').style.display = 'none';
+        showScreen('home-screen');
+    }
+
+    function updateUI() {
+        document.getElementById('coin-ui').innerText = `💰 ${score}`;
+    }
+
+    function gameLoop() {
+        if (!gameRunning) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 跑道線
+        ctx.strokeStyle = '#f0f0f0';
+        ctx.setLineDash([20, 20]);
+        [canvas.width/3, canvas.width*2/3].forEach(x => {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        });
+
+        // --- 平滑移動邏輯 ---
+        let targetX = lanes[playerLane];
+        let diff = targetX - visualX;
+        visualX += diff * 0.2; // 0.2 是平滑度，數值越大移越快
+
+        // 🐣 主角 (使用 visualX 代替固定軌道座標)
+        ctx.font = '50px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🐣', visualX, canvas.height - 120);
+
+        // 隨機生成
+        if (Math.random() > 0.97) {
+            const lane = Math.floor(Math.random() * 3);
+            const isCoin = Math.random() > 0.3;
+            obstacles.push({ x: lanes[lane], y: -50, type: isCoin ? '💰' : '🚜', lane: lane });
+        }
+
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            let o = obstacles[i];
+            o.y += speed;
+            ctx.fillText(o.type, o.x, o.y);
+
+            // 碰撞 (改用 lane 判定，確保精準)
+            if (Math.abs(o.y - (canvas.height - 120)) < 40 && o.lane === playerLane) {
+                if (o.type === '💰') {
+                    score += 10;
+                    updateUI();
+                    obstacles.splice(i, 1);
+                } else {
+                    gameOver();
+                }
+            }
+            if (o.y > canvas.height) obstacles.splice(i, 1);
+        }
+
+        speed += 0.001;
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameOver() {
+        gameRunning = false;
+        document.getElementById('result-title').innerText = "LEVEL FAIL!";
+        document.getElementById('result-score').innerText = `COINS: ${score}`;
+        document.getElementById('result-overlay').style.display = 'flex';
+    }
+
+    // --- 控制邏輯 (PC + 手機) ---
+    
+    // PC 鍵盤控制
+    window.addEventListener('keydown', (e) => {
+        if (!gameRunning) return;
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+            if (playerLane > 0) playerLane--;
+        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+            if (playerLane < 2) playerLane++;
+        }
+    });
+
+    // 手機觸控控制
+    document.getElementById('phone-wrapper').addEventListener('touchstart', (e) => {
+        if (!gameRunning) return;
+        const rect = canvas.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
+        if (touchX < canvas.width / 2) {
+            if (playerLane > 0) playerLane--;
+        } else {
+            if (playerLane < 2) playerLane++;
+        }
+    });
 
     // --- 加載與介面切換 ---
     window.onload = () => {
