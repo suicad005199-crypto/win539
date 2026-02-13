@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Sheep Rescue: Hatchling Run</title>
+    <title>逃離辦公室 ESCAPE THE OFFICE</title>
     <style>
         :root {
             --bg-black: #000000;
@@ -15,7 +15,7 @@
 
         body {
             margin: 0; padding: 0; overflow: hidden;
-            font-family: 'Arial Rounded MT Bold', 'Helvetica', sans-serif;
+            font-family: 'Arial Rounded MT Bold', 'Microsoft JhengHei', sans-serif;
             background-color: #1a1a1a;
             display: flex; justify-content: center; align-items: center;
             height: 100vh; color: var(--gold-main);
@@ -41,16 +41,14 @@
 
         .active { display: flex; }
 
-        /* Logo: 黑底黃字風格 */
         .logo {
-            font-size: 56px; font-weight: 900; line-height: 0.85;
+            font-size: 52px; font-weight: 900; line-height: 1.1;
             color: var(--gold-main);
             text-shadow: 2px 2px 0 #444, 4px 4px 0 #222;
-            letter-spacing: -2px;
+            letter-spacing: 2px;
             margin-top: 40px;
         }
 
-        /* 加載條: 黃色風格 */
         .progress-container {
             width: 220px; height: 12px;
             background: #222; border-radius: 20px;
@@ -62,9 +60,8 @@
             border-radius: 10px; transition: width 0.2s ease-out;
         }
         #loading-percentage { color: var(--gold-main); font-weight: bold; margin-top: 10px; }
-        .loading-text { color: var(--text-gray); font-size: 12px; letter-spacing: 2px; }
+        .loading-text { color: var(--text-gray); font-size: 14px; letter-spacing: 1px; margin-top: 5px; }
 
-        /* HUD: 半透明黑 */
         .top-bar {
             position: absolute; top: 20px; left: 0; width: 100%;
             display: flex; justify-content: space-between; align-items: center;
@@ -83,9 +80,8 @@
             color: var(--gold-main); font-weight: bold; cursor: pointer; pointer-events: auto;
         }
 
-        /* 按鈕: 黃色 3D 感 */
         .play-btn {
-            width: 200px; padding: 18px;
+            width: 220px; padding: 18px;
             background: var(--gold-main); border: none;
             border-radius: 20px; font-size: 26px; font-weight: 900;
             color: #000; cursor: pointer;
@@ -97,19 +93,16 @@
             box-shadow: 0 4px 0 #b38f00;
         }
 
-        /* 遊戲畫布 */
         #game-layer { position: absolute; inset: 0; display: none; background: var(--road-black); }
         #gameCanvas { display: block; width: 100%; height: 100%; }
 
-        /* 彈窗 */
         .overlay {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85);
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9);
             display: none; justify-content: center; align-items: center; z-index: 100;
         }
         .card {
             background: #111; width: 75%; border-radius: 30px;
             padding: 30px; border: 3px solid var(--gold-main);
-            box-shadow: 0 0 20px rgba(255, 207, 64, 0.2);
             color: var(--gold-main);
         }
 
@@ -121,28 +114,28 @@
 
 <div id="phone-wrapper">
     <div id="splash-screen" class="screen active">
-        <div class="logo">SHEEP<br>RESCUE</div>
+        <div class="logo">逃離<br>辦公室</div>
         <div style="margin-bottom: 100px;">
             <div class="progress-container">
                 <div id="progress-bar" class="progress-bar"></div>
             </div>
             <div id="loading-percentage">0%</div>
-            <div class="loading-text">LOADING SYSTEM...</div>
+            <div class="loading-text">嘗試逃離生活...</div>
         </div>
     </div>
 
     <div id="home-screen" class="screen">
         <div class="top-bar">
             <button class="icon-btn" onclick="toggleSettings(true)">⚙️</button>
-            <div class="info-box" id="coin-ui-home">💰 0</div>
+            <div class="info-box" id="coin-ui-home">存款 💰 0</div>
         </div>
-        <div class="logo">SHEEP<br>RESCUE</div>
-        <button class="play-btn" onclick="initGame()">PLAY</button>
+        <div class="logo" style="font-size: 64px;">逃離<br>辦公室</div>
+        <button class="play-btn" onclick="initGame()">開始打卡</button>
     </div>
 
     <div id="game-layer">
         <div class="top-bar">
-            <div class="info-box">LV. 1</div>
+            <div class="info-box">入職第 1 天</div>
             <div class="info-box" id="coin-ui-game">💰 0</div>
         </div>
         <canvas id="gameCanvas"></canvas>
@@ -150,21 +143,21 @@
 
     <div id="result-overlay" class="overlay">
         <div class="card fade-in">
-            <h2 id="result-title" style="margin-top:0;">FAIL</h2>
-            <p id="result-score" style="font-size:24px;">COINS: 0</p>
-            <button class="play-btn" style="width:100%;" onclick="initGame()">RETRY</button>
-            <button onclick="toHome()" style="background:none; border:none; color:var(--text-gray); cursor:pointer; font-weight:bold; margin-top:15px;">MENU</button>
+            <h2 id="result-title" style="margin-top:0; font-size: 32px;">你被開除了!!!</h2>
+            <p id="result-score" style="font-size:22px;">本次積蓄: 💰 0</p>
+            <button class="play-btn" style="width:100%;" onclick="initGame()">重新入職</button>
+            <button onclick="toHome()" style="background:none; border:none; color:var(--text-gray); cursor:pointer; font-weight:bold; margin-top:15px; font-size: 16px;">自請離職</button>
         </div>
     </div>
 
     <div id="settings-overlay" class="overlay">
         <div class="card fade-in">
-            <h3 style="margin-top:0;">SETTINGS</h3>
+            <h3 style="margin-top:0;">公司規範</h3>
             <div style="text-align:left; margin: 20px 0; line-height: 2;">
-                <p>🎵 MUSIC: ON</p>
-                <p>🔊 SOUND: ON</p>
+                <p>🔈 環境音效: 開啟</p>
+                <p>⚠️ 訊息彈窗: 開啟</p>
             </div>
-            <button class="play-btn" style="width:100%; margin-bottom:0;" onclick="toggleSettings(false)">BACK</button>
+            <button class="play-btn" style="width:100%; margin-bottom:0;" onclick="toggleSettings(false)">返回崗位</button>
         </div>
     </div>
 </div>
@@ -178,22 +171,28 @@
     let playerLane = 1;
     let visualX = 0;
     let obstacles = [];
-    let speed = 5.5;
+    let speed = 6.5;
+
+    const SPRITES = {
+        player: '👨‍💼',
+        bosses: ['👨‍💻', '🧛', '👹'],
+        item: '💰'
+    };
 
     window.onload = () => {
         let progress = 0;
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('loading-percentage');
         const loadingInterval = setInterval(() => {
-            progress += Math.floor(Math.random() * 12) + 2; 
+            progress += Math.floor(Math.random() * 15) + 3; 
             if (progress >= 100) {
                 progress = 100;
                 clearInterval(loadingInterval);
-                setTimeout(() => showScreen('home-screen'), 500);
+                setTimeout(() => showScreen('home-screen'), 600);
             }
             progressBar.style.width = progress + '%';
             progressText.innerText = progress + '%';
-        }, 80);
+        }, 100);
     };
 
     function showScreen(id) {
@@ -220,7 +219,7 @@
         visualX = lanes[1];
         gameRunning = true;
         score = 0;
-        speed = 6;
+        speed = 7;
         obstacles = [];
         playerLane = 1;
         updateUI();
@@ -233,7 +232,7 @@
     }
 
     function updateUI() {
-        document.getElementById('coin-ui-home').innerText = `💰 ${score}`;
+        document.getElementById('coin-ui-home').innerText = `存款 💰 ${score}`;
         document.getElementById('coin-ui-game').innerText = `💰 ${score}`;
     }
 
@@ -241,41 +240,42 @@
         if (!gameRunning) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 圖三優化: 黑底背景
+        // 路面與灰色虛線
         ctx.fillStyle = "#111111"; 
         ctx.fillRect(0,0, canvas.width, canvas.height);
         
-        // 圖三優化: 灰色虛線
         ctx.strokeStyle = '#444444'; 
-        ctx.setLineDash([25, 25]);
+        ctx.setLineDash([30, 30]);
         ctx.lineWidth = 2;
         [canvas.width/3, canvas.width*2/3].forEach(x => {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
         });
 
         let targetX = lanes[playerLane];
-        visualX += (targetX - visualX) * 0.22;
+        visualX += (targetX - visualX) * 0.25;
 
-        // 🐣 角色
-        ctx.font = '55px Arial';
+        // 玩家 Sprite
+        ctx.font = '60px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('🐣', visualX, canvas.height - 120);
+        ctx.fillText(SPRITES.player, visualX, canvas.height - 120);
 
-        if (Math.random() > 0.96) {
+        // 障礙物生成
+        if (Math.random() > 0.95) {
             const lane = Math.floor(Math.random() * 3);
-            const isCoin = Math.random() > 0.35;
-            obstacles.push({ x: lanes[lane], y: -50, type: isCoin ? '💰' : '🚜', lane: lane });
+            const isMoney = Math.random() > 0.45;
+            const sprite = isMoney ? SPRITES.item : SPRITES.bosses[Math.floor(Math.random() * SPRITES.bosses.length)];
+            obstacles.push({ x: lanes[lane], y: -60, type: sprite, lane: lane, isMoney: isMoney });
         }
 
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let o = obstacles[i];
             o.y += speed;
-            ctx.font = '45px Arial';
+            ctx.font = '50px Arial';
             ctx.fillText(o.type, o.x, o.y);
 
-            if (Math.abs(o.y - (canvas.height - 120)) < 45 && o.lane === playerLane) {
-                if (o.type === '💰') {
-                    score += 10;
+            if (Math.abs(o.y - (canvas.height - 120)) < 55 && o.lane === playerLane) {
+                if (o.isMoney) {
+                    score += 100;
                     updateUI();
                     obstacles.splice(i, 1);
                 } else {
@@ -285,13 +285,13 @@
             if (o.y > canvas.height) obstacles.splice(i, 1);
         }
 
-        speed += 0.001;
+        speed += 0.002;
         requestAnimationFrame(gameLoop);
     }
 
     function gameOver() {
         gameRunning = false;
-        document.getElementById('result-score').innerText = `COINS: ${score}`;
+        document.getElementById('result-score').innerText = `本次積蓄: 💰 ${score}`;
         document.getElementById('result-overlay').style.display = 'flex';
     }
 
